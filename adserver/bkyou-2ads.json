@@ -1,0 +1,57 @@
+{
+  "version":"1.0",
+  "sessiontoken":"{TOKEN}",
+  "sessioncontext":"ARTE_3SCTE_LONG:{TOKEN}",
+  "playbackqueries":[
+    "sessionid={TOKEN}",
+    "dummy=12345"
+  ],
+  "creationtime_ms":31,
+  "lastrequest_ms":310,
+  "serviceid":"ARTE_3SCTE_LONG",
+  "timereference_ms":0,
+  "adpods":[
+    {
+      "id":"ARTE_3SCTE_LONG:{TOKEN}:slot:5:78:UNK_TRIGGER",
+      "starttime_ms":5000,
+      "duration_ms":10000,
+      "ads":[
+        {
+          "creativeid":"CreativeId_1",
+          "adid":"Ad_1",
+          "starttime_ms":5000,
+          "skippable_ms":5000,
+          "duration_ms":10000,
+          "nonLinear": {
+            "apiFramework": "SIMID",
+            "iframeResource": "https://explo.broadpeak.tv:8343/simid/app/banner_nonlinear_tv.html",
+            "adParameters": {
+              "numbers": "0687041234, 0687041667"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id":"ARTE_3SCTE_LONG:{TOKEN}:slot:90:163:UNK_TRIGGER",
+      "starttime_ms":30000,
+      "duration_ms":10000,
+      "ads":[
+        {
+          "creativeid":"CreativeId_2",
+          "adid":"Ad_2",
+          "starttime_ms":30000,
+          "skippable_ms":35000,
+          "duration_ms":10000,
+          "nonLinear": {
+            "apiFramework": "SIMID",
+            "iframeResource": "https://explo.broadpeak.tv:8343/simid/app/banner_nonlinear_tv.html",
+            "adParameters": {
+              "numbers": "0687041234, 0687041667"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

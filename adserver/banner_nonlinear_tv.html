@@ -1,0 +1,79 @@
+<html>
+<head>
+  <script src="../dist/simid.js"></script>
+  <script src="./banner_nonlinear_tv.js"></script>
+</head>
+<style>
+  body {
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 1.5vw;
+    opacity: 1;
+    text-align: right;
+    padding: 10px;
+    background-color: black;
+    color: white;
+  }
+  #banner {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+  img {
+    /* width: 100px; */
+    height: 100px;
+    /* position: absolute;
+    left: 160px;
+    bottom: 70px; */
+  }
+  #main > * {
+    vertical-align: middle;
+  }
+  button {
+    /* padding: 5px 15px 5px 15px; */
+    font-size: 2vw;
+    border-radius: 5px;
+  }
+  .focused {
+    background-color: white;
+    color: black;
+    border-color: black;
+  }
+  .unfocused {
+    background-color: black;
+    color: white;
+    border: 1px solid white;
+  }
+  #terms {
+    position: absolute;
+    padding: 10px;
+    bottom: 2px;
+    right: 15px;
+    font-size: 60%;
+  }
+</style>
+<body>
+  <div id="banner">
+    <!-- <img src="./orange_logo.svg.png"/> -->
+    <img src="./live_streaming_service.png"/>
+    <div id="main">
+      <!-- <span id="cta">RECEVEZ UN SMS DE L'OFFRE AU </span> -->
+      <span id="cta">Send message to </span>
+      <span id="user"></span>
+      <button id="other" type="button" class="unfocused">OTHER</button>
+      <button id="ok" class="focused">OK</button>  
+    </div>
+  </div>
+  <div id="terms">
+    <!-- <span id="reassurance">Votre num&eacute;ro ne sera jamais communiqu&eacute; &agrave; quiconque sans votre accord.</span> -->
+    <span id="reassurance"></span>Your number will never be communicated to anyone without your consent.</span>
+    <!-- <span id="conditions">En savoir +</span>  -->
+    <span id="conditions">Learn more</span> 
+  </div>
+  <script>
+    // This implementation is immediately ready but other creatives
+    // may wish to wait for assets to load before calling ready.
+    const bannerNonLinearTv = new BannerNonLinearTv();
+    bannerNonLinearTv.createSession();
+  </script>
+</body>
+</html>

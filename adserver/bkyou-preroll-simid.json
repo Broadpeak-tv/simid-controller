@@ -1,0 +1,48 @@
+{
+  "version":"1.0",
+  "sessiontoken":"{TOKEN}",
+  "sessioncontext":"ARTE_3SCTE_LONG:{TOKEN}",
+  "playbackqueries":[
+    "sessionid={TOKEN}",
+    "dummy=12345"
+  ],
+  "creationtime_ms":31,
+  "lastrequest_ms":310,
+  "serviceid":"ARTE_3SCTE_LONG",
+  "timereference_ms":0,
+  "adpods":[
+    {
+      "id":"ARTE_3SCTE_LONG:{TOKEN}:slot:5:78:UNK_TRIGGER",
+      "starttime_ms":0,
+      "duration_ms":15000,
+      "ads":[
+        {
+          "creativeid":"CreativeId_1",
+          "adid":"Ad_1",
+          "starttime_ms":0,
+          "skippable_ms":5000,
+          "duration_ms":15000,
+          "nonLinear": {
+            "apiFramework": "SIMID",
+            "iframeResource": "/adserver/banner_nonlinear_tv.html",
+            "adParameters": {
+              "logo": "https://pub-c13c3845af6d415c9ec016b868cafc4a.r2.dev/TF1_logo_2013.png",
+              "cta": "RECEVEZ UN SMS DE L'OFFRE AU ",
+              "confirmation":"SMS ENVOYE AU ",
+              "other":"AUTRE",
+              "other_typing": "EFFACER",
+              "empty_number": "__SAISIR__",
+              "reassurance": "Votre num&eacute;ro ne sera jamais communiqu&eacute; &agrave; quiconque sans votre accord.",
+              "conditions":"En savoir +",
+              "numbers": [
+                "0687041234",
+                "0687041667"
+              ],
+              "on_click_url":"https://mbalt.umanitus.com/sms_sent?url=https%3A%2F%2Fmbalt.umanitus.com%2Fclick%3Fimp_id%3Db45cb26e-01ea-4520-b961-03905feed879&msisdn=%%MSISDN%%"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

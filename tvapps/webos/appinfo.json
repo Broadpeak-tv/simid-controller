@@ -1,0 +1,10 @@
+{
+  "id": "tv.broadpeak.demo",
+  "version": "0.0.1",
+  "vendor": "Broadpeak",
+  "type": "web",
+  "main": "index.html",
+  "title": "BKClick Demo",
+  "icon": "broadpeak-logo.png",
+  "largeIcon": "broadpeak-logo.png"
+}

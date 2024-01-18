@@ -1,0 +1,304 @@
+<html>
+<head>
+  <title> A very simple SIMID player</title>
+  <script src="../simid_protocol.js"></script>
+  <script src="simid_player.js"></script>
+  <style>
+    .linear_simid_creative {
+      position: absolute;
+      top: 0;
+      border-width: 0px;
+      width: 640px;
+      height: 480px;
+    }
+    .overlayed {
+      position: absolute;
+      top: 0;
+      width: 640px;
+      height: 480px;
+    }
+    .content {
+      width: 640px;
+      height: 480px;
+    }
+    .nonlinear_inputs {
+      width: 50px;
+    }
+    .hidden {
+      display: none;
+    }    
+    .ad_type_label {
+      font-size: 16px;
+    }
+  </style>
+  <script>
+		/** If ad type is linear, a media file input appears while non-linear ads ask for dimensions instead. */
+    function setInputsForAdType() {
+      let linearButton = document.getElementById("linear_ad");
+      let creativeDimensions = document.getElementById("creative_dimensions");
+      let mediaFile = document.getElementById("media_file");
+      let creativeDuration = document.getElementById("creative_duration");
+      
+      if (linearButton.checked) {
+        creativeDimensions.classList.add("hidden");
+        mediaFile.classList.remove("hidden");
+        creativeDuration.classList.add("hidden");
+     
+      } else {
+        creativeDimensions.classList.remove("hidden");
+        mediaFile.classList.add("hidden");
+        creativeDuration.classList.remove("hidden");
+      }
+    }
+
+    let simidPlayer;
+    function initAd() {
+      // clean old ad if it exists
+      if (simidPlayer) {
+        simidPlayer.stopAd();
+      }
+
+      let isLinear = document.getElementById("linear_ad").checked;
+      // Init ad should be called before playad.
+      simidPlayer = new SimidPlayer(() => {simidPlayer = null;}, isLinear);
+      simidPlayer.initializeAd();
+    }
+
+    function playAd() {
+      if (!simidPlayer) {
+        initAd();
+      }
+      simidPlayer.playAd();
+      simidPlayer.setCreativeControlsState_(ENABLED);
+    }
+
+    function closeAd() {
+      if (!simidPlayer) {
+        return;
+      }
+      simidPlayer.stopAd();
+      simidPlayer.sendLog("User clicked close ad button on player");
+      simidPlayer.setCreativeControlsState_(DISABLED);
+    }
+
+    function skipAd() {
+      if (!simidPlayer) {
+        return;
+      }
+      simidPlayer.skipAd();
+      simidPlayer.sendLog("User clicked skip ad button on player");
+      simidPlayer.setCreativeControlsState_(DISABLED);
+    }
+
+    function fatalError() {
+      if (!simidPlayer) {
+        return;
+      }
+      simidPlayer.stopAd();
+      simidPlayer.sendLog("User clicked fatal error button on player");
+      simidPlayer.setCreativeControlsState_(DISABLED);
+    }
+
+    function pauseAd() {
+      if (!simidPlayer) {
+        return;
+      }
+      simidPlayer.pauseAd();
+      simidPlayer.sendLog("User clicked pause ad button on player");
+    }
+ 
+    function playAdVideo() {
+      if (!simidPlayer) {
+        return;
+      }
+      simidPlayer.playAdVideo();
+      simidPlayer.sendLog("User clicked play ad button on player");
+    }
+
+    function switchCreative(value) {
+      document.getElementById('creative_url').value = '../creatives/' + value;
+
+      document.getElementById('geolocation').classList.add("hidden");
+      // populate ad parameters with some hard coded values
+      let adParams = '';
+      let adParamsObj = '';
+      switch (value) {
+        case 'simid_overlay.html':
+          document.getElementById("linear_ad").checked = true;
+          break;
+        case 'survey.html':
+          document.getElementById("linear_ad").checked = true;
+          adParamsObj = [
+            {'question':'Would you like a survey?',
+             'answers':['Yes', 'No', 'Not Sure']},
+            {'question':'Are you certain?',
+             'answers':['Of course', 'Not Really', 'Well...']},
+            {'question':'What animals do you like?',
+             'answers':['Cats', 'Dogs', 'Other']}
+          ];
+          adParams = JSON.stringify(adParamsObj);
+          break;
+        case 'selector.html':
+          document.getElementById("linear_ad").checked = true;
+          break;
+        case 'extender.html':
+          document.getElementById("linear_ad").checked = true;
+          break;
+        case 'simid_map.html':
+          document.getElementById("linear_ad").checked = true;
+          document.getElementById('geolocation').classList.remove("hidden");
+          adParamsObj = {
+           "buttonLabel": "Park",
+           "searchQuery": "nearby park",
+           "marker": "http://maps.google.com/mapfiles/kml/shapes/parks.png"
+          };
+          
+          adParams = JSON.stringify(adParamsObj);
+          break;
+        case 'testers_nonlinear.html':
+          document.getElementById("nonlinear_ad").checked = true;
+          break;
+        case 'banner_nonlinear.html':
+          document.getElementById("nonlinear_ad").checked = true;
+          document.getElementById("duration").value = 10;
+          adParamsObj = {
+           "bannerText": "Click here to draw!",
+           "webUrl": "https://quickdraw.withgoogle.com/",
+          };
+          
+          adParams = JSON.stringify(adParamsObj);
+          break;
+        case 'hover_nonlinear.html':
+          document.getElementById("nonlinear_ad").checked = true;
+          break;
+      }
+      setInputsForAdType();
+      document.getElementById('ad_params').value = adParams;
+    }
+
+    window.getLocationPermission = () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+          const pos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+          let adParamObject = document.getElementById('ad_params').value;
+          let adParams = JSON.parse(adParamObject);
+          adParams.userCoordinates = pos;
+          adParamObject = JSON.stringify(adParams);
+          document.getElementById('ad_params').value = adParamObject;
+        }, (error) => { //callback function that takes a GeolocationPositionError 
+          handleLocationError(error, true);
+        });
+      } else {
+        // Browser doesn't support Geolocation
+        handleLocationError(error, false);
+      }
+    }
+
+    function handleLocationError (error, geolocationAllowed) {
+      let errorMessage = "ERROR: ";
+      if(!geolocationAllowed) {
+        errorMessage += "Browser does not support Geolocation."
+      } else {
+        errorMessage += "Geolocation failed due to: " + error;
+      }
+      /**
+       * Using console.error() in place of sendLog temporarily.
+       * Currently order of function calls makes sendLog ineffective.
+       */
+      console.error(errorMessage);
+    }
+  </script>
+</head>
+
+<body>
+
+  <div>
+    <p><h1><center>SIMID Sample Ad Player</center></h1></p>
+    <table>
+      <tr>
+        <td>Choose Sample Creative Template</td>
+        <td>
+        <button onclick="switchCreative('simid_overlay.html')">overlay</button>
+        <button onclick="switchCreative('survey.html')">survey</button>
+        <button onclick="switchCreative('selector.html')">selector</button>
+        <button onclick="switchCreative('extender.html')">extender</button>
+        <button onclick="switchCreative('simid_map.html')">map</button>
+        <button onclick="switchCreative('testers_nonlinear.html')">testers_nonlinear</button>
+        <button onclick="switchCreative('banner_nonlinear.html')">banner_nonlinear</button>
+        <button onclick="switchCreative('hover_nonlinear.html')">hover_nonlinear</button>
+        <button onclick="switchCreative('simid_map.html')">map</button>
+      </td>
+      </tr>
+      <tr>
+        <td>Ad type</td>
+        <td>
+          <input type="radio" id="linear_ad" name="ad_type" onclick="setInputsForAdType()" checked> <label for="linear_ad" class="ad_type_label">Linear
+        Ad</label>
+        <input type="radio" id="nonlinear_ad" name="ad_type" onclick="setInputsForAdType()"> <label for="nonlinear_ad" class="ad_type_label">Non-Linear
+          Ad</label>
+        </td>
+      </tr>
+      <tr id="creative_dimensions" class="hidden">
+        <td>Creative Dimensions</td>
+        <td>
+          <label for="x_val">X: </label>
+          <input type="number" id="x_val" value="5" min="0" class="nonlinear_inputs">
+
+          <label for="y_val">Y: </label>
+          <input type="number" id="y_val" value="5" min="0" class="nonlinear_inputs">
+
+          <label for="width">Width: </label>
+          <input type="number" id="width" value="500" min="0" class="nonlinear_inputs">
+
+          <label for="height">Height: </label>
+          <input type="number" id="height" value="120" min="0" class="nonlinear_inputs">
+        </td>
+      </tr>
+      <tr id="creative_duration" class="hidden">
+        <td>Ad Duration (seconds)</td>
+        <td><input type="number" id="duration" value="30" min="0" class="nonlinear_inputs">
+        </td>
+      </tr>
+      <tr id="media_file">
+        <td>Media File</td>
+        <td><input type="text" id="video_url" size = 30 
+           value="../media/IAB480-small.mp4">
+        </td>
+      </tr>
+      <tr>
+        <td>Interactive Creative File</td>
+        <td><input type="text" id="creative_url" size = 30 
+           value="../creatives/simid_overlay.html">
+        </td>
+      </tr>
+      <tr>
+        <td>AdParameters</td>
+        <td><textarea id="ad_params" rows = 5 cols = 50></textarea></td>
+      </tr>
+    </table>
+    <button onclick="playAd()"> Start ad playback </button>
+    <button onclick="initAd()"> Initialize the creative </button>
+    <button id="geolocation" class="hidden" onclick="getLocationPermission()">Allow Location Access</button>
+    <button class="ad_request" onclick="closeAd()" disabled> Close the ad </button> 
+    <button class="ad_request" onclick="skipAd()" disabled> Skip ad </button>
+    <button class="ad_request" onclick="fatalError()" disabled> Fatal Error </button>
+    <button class="ad_request" onclick="pauseAd()" disabled> Pause ad</button>
+    <button class="ad_request" onclick="playAdVideo()" disabled> Play ad</button>
+  </div>
+
+  <div id="player_div" style="position:absolute;">
+    <video id="video_player" class="content" src="../media/fakeContent.mp4" controls> </video>
+    <div id="ad_video_div" class="overlayed" style="display:none;">
+      <video id="ad_video_player" class="overlayed" style="display:none;" src="">
+    </div>
+    <!-- SIMID creative will be here. -->
+  </div>
+
+<script>
+</script>
+<body>
+
+</html>
