@@ -1,0 +1,10 @@
+{
+  "entryPoints": ["./src/index-creative.ts"],
+  "out": "doc",
+  "visibilityFilters": {
+    "protected": true,
+    "private": false,
+    "inherited": true,
+    "external": false
+  }
+}

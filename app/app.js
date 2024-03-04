@@ -11,6 +11,8 @@ var App = function () {
 
   this.stream = DEMO_STREAMS.live_preroll_family
 
+  this.useShaka = true
+
   this.video = null
   this.creativeSelect = null
   this.player = null
@@ -27,8 +29,13 @@ var App = function () {
       this.stream = DEMO_STREAMS[this.queryParams.stream]
     }
 
+
     // Install built-in polyfills to patch browser incompatibilities.
+    if (window['shaka']) {
     shaka.polyfill.installAll()
+    } else {
+      this.useShaka = false
+    }
 
     this.loadPlayer()
   }
@@ -62,12 +69,6 @@ var App = function () {
     if (this.player) {
       await this.stopPlayer()
     }
-
-    // Check to see if the browser supports the basic APIs Shaka needs.
-    // if (!shaka.Player.isBrowserSupported()) {
-    //   console.error('ShakaPlayer not supported on current browser!')
-    //   return
-    // }
 
     try {
       // Get stream domain name
@@ -104,40 +105,23 @@ var App = function () {
 
   App.prototype.initAd = function() {
     this.session.activateAdvertising()
-    // this.session.setAdParameter('url', this.bkyouUrl)
-    this.session.setAdEventsListener({
-      onAdBegin: (adData, adBreakData) => this.onAdStart(adData, adBreakData),
-      onAdEnd: (adData, adBreakData) => this.onAdEnd(adData, adBreakData),
-      onAdBreakBegin: () => {},
-      onAdBreakEnd: () => {},
-      onAdSkippable: () => {},
-    })
+
+    // PATCH: add non-linear creative data (not returned yet by bpk.io) 
+    if (this.stream.adsExtData) {
+      this.session.setAdParameter('adsExtData', this.stream.adsExtData)
+  }
+
+    // this.session.setAdEventsListener({
+    //   onAdBegin: (adData, adBreakData) => this.onAdStart(adData, adBreakData),
+    //   onAdEnd: (adData, adBreakData) => this.onAdEnd(adData, adBreakData),
+    //   onAdBreakBegin: () => {},
+    //   onAdBreakEnd: () => {},
+    //   onAdSkippable: () => {},
+    // })
   }
 
   App.prototype.onMessage = async function (message) {
     console.log('')
-  }
-
-  App.prototype.onAdStart = function(adData, adBreakData) {
-    console.log('### onAdStart', adData, adBreakData, Math.round(this.video.currentTime * 1000))
-    const nonLinearAd = adData.nonLinearAd || (this.stream.ads[adData.creativeId] ? this.stream.ads[adData.creativeId].ad : null)
-    if (!nonLinearAd || nonLinearAd.apiFramework.toLowerCase() !== 'simid') {
-      return
-    }
-    const creativeUri = nonLinearAd.iframeResource
-    let adParams = nonLinearAd.adParams
-    if (this.stream.ads[adData.creativeId] && this.stream.ads[adData.creativeId].adParams) {
-      adParams = {
-        ...adParams,
-        ...this.stream.ads[adData.creativeId].adParams
-      }
-    }
-    const duration = (adData.duration / 1000) - 2
-    this.simidPlayer = new simid.SimidPlayer(this.video, creativeUri, false, () => this.onAdCompleted(), JSON.stringify(adParams), duration)
-    this.simidPlayer.load()
-  }
-
-  App.prototype.onAdEnd = function(adData, adBreakData) {
   }
 
   App.prototype.startAd = function() {
@@ -194,31 +178,37 @@ var App = function () {
   }
   
   App.prototype.playerCreate = async function () {
+    if (this.useShaka) {
     // shaka
     this.player = new shaka.Player()
     await this.player.attach(this.video)
     this.player.addEventListener('error', (event) => console.error('Player error', event.detail))
-
+    } else {
     // dahsjs
-    // this.player = dashjs.MediaPlayer().create()
-    // this.player.initialize(this.video, undefined, true)
+      this.player = dashjs.MediaPlayer().create()
+      this.player.initialize(this.video, undefined, true)
+    }
   }
 
   App.prototype.playerLoad = async function (url) {
+    if (this.useShaka) {
     // shaka
     await this.player.load(url)
-
+    } else {
     // dahsjs
-    // this.player.attachSource(url)
+      this.player.attachSource(url)
+    }
   }
 
   App.prototype.playerStop = async function () {
+    if (this.useShaka) {
     // shaka
     await this.player.detach()
     await this.player.destroy()
-
+    } else {
     // dahsjs
-    // this.player.attachSource(null)
-    // this.player.destroy()
+      this.player.attachSource(null)
+      this.player.destroy()
+    }
   }
 }

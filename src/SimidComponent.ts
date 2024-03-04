@@ -38,6 +38,10 @@ export class SimidComponent {
   // #endregion MEMBERS
 
   // #region CONSTRUCTOR
+  /**
+   * Constructor
+   * @param type The protocol actor type ('Player' or 'Creative')
+   */
   constructor(type: string) {
     this._type = type
     this._listeners = new Map<String, MessageCallback[]>()
@@ -93,6 +97,8 @@ export class SimidComponent {
 
   /**
    * Add a listener for a given message.
+   * @param messageType the message type
+   * @param callback the listener callback
    */
   public addMessageListener(messageType: string, callback: MessageCallback) {
     if (!this._listeners.has(messageType)) {

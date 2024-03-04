@@ -46,7 +46,7 @@ export class SimidCreative extends SimidComponent {
   /**
    * Creates a new session.
    * This message is sent by the Creative to initialize the session.
-   * @param sessionId
+   * @param sessionId the session id
    */
   public createSession(sessionId?: string) {
     this._sessionId = sessionId || this._generateSessionId()
@@ -69,6 +69,10 @@ export class SimidCreative extends SimidComponent {
   }
 
   // #region PROTECTED METHODS
+  /**
+   * Invoked when a message is received from Player
+   * @param message the Player message
+   */
   protected onPlayerMessage(message: Message) {
     let rejectArgs = undefined
     switch(message.type) {
@@ -103,6 +107,10 @@ export class SimidCreative extends SimidComponent {
     }
   }
 
+  /**
+   * Invoked when a message is received from the ad Media
+   * @param message the Media message
+   */
   protected onMediaMessage(message: Message) {
     switch(message.type) {
     case MediaMessage.DURATION_CHANGE:
@@ -142,18 +150,35 @@ export class SimidCreative extends SimidComponent {
 
   // Creatives can override these methods to add message handler
   // Note: Creatives source code can be written in javascript, in which methods inheritance is not supported
+  /**
+   * Invoked when SIMID:Player:init message is received from Player
+   * @param message the message 
+   */
   protected onPlayerInit(message: Message): any {
     return undefined
   }
 
+  /**
+   * Invoked when SIMID:Player:keyDown message is received from Player
+   * @param message the message
+   */
   protected onPlayerKeyDown(message: Message): any {
     return undefined
   }
 
+  /**
+   * Invoked when SIMID:Player:resize message is received from Player
+   * @param message the message
+   */
   protected onPlayerResize(message: Message): any {
     return undefined
   }
 
+  /**
+   * Send message SIMID:Creative:requestResize message to the Player
+   * @param mediaDimensions the new player/media dimensions
+   * @param creativeDimensions the SIMID creative iframe dimensions 
+   */
   protected async sendRequestResize(mediaDimensions: Dimensions, creativeDimensions: Dimensions) {
     try {
       await this.sendMessage(CreativeMessage.REQUEST_RESIZE, {

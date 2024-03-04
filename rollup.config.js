@@ -2,21 +2,20 @@ import commonjs from 'rollup-plugin-commonjs'
 import typescript from 'rollup-plugin-typescript2'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
-const pkg = require("./package.json")
-const libraryName = "simid"
+const outDir = 'dist/'
+const name = 'simid'
 
-export default {
-  input: `src/index.ts`,
-  output: [
-    {
-      file: pkg.main,
+const packageExt = ['', '-creative', '-player']
+
+export default packageExt.map((ext) => ({
+  input: `src/index${ext}.ts`,
+  output: [{
+    file: outDir + name + ext + '.js',
       format: "umd",
       sourcemap: true,
       exports: "auto",
-      name: libraryName
-    }
-  ],
-
+    name
+  }],
   plugins: [
     // Compile TypeScript files
     typescript({ useTsconfigDeclarationDir: true }),
@@ -26,10 +25,8 @@ export default {
     }),
     nodeResolve()
   ],
-
   external: [],
-
   watch: {
     include: 'src/**'
   }
-}
+}))

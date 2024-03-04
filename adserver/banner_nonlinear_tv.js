@@ -1,5 +1,4 @@
-const WIDTH_PERCENTAGE = 1;
-const HEIGHT_PERCENTAGE = .14;
+const HEIGHT_PERCENTAGE = .15;
 
 const PUSHOVER_API_URL = 'https://api.pushover.net/1/messages.json'
 
@@ -68,20 +67,22 @@ class BannerNonLinearTv extends simid.SimidCreative {
   }
 
   _requestResize() {
-    // Set creative as a banner with height = 15% of player height
-    const height = Math.round(this.environmentData.creativeDimensions.height * 0.15)
-    let creativeDimensions = {};
-    creativeDimensions.x = 0;
-    creativeDimensions.y = this.environmentData.creativeDimensions.height - height;
-    creativeDimensions.width = this.environmentData.creativeDimensions.width;
-    creativeDimensions.height = height;
+    // Set creative as a bottom banner with height = 15% of player height
+    const height = Math.round(this.environmentData.creativeDimensions.height * HEIGHT_PERCENTAGE)
+    let creativeDimensions = {
+      x: 0,
+      y: this.environmentData.creativeDimensions.height - height,
+      width: this.environmentData.creativeDimensions.width,
+      height: height,
+    }
 
     // Resize video so that creative does not overlay on video
-    let videoDimensions = this.environmentData.videoDimensions
-    videoDimensions.x = 0;
-    videoDimensions.y = 0;
-    videoDimensions.width = this.environmentData.videoDimensions.width;
-    videoDimensions.height = videoDimensions.height - height;
+    let videoDimensions = {
+      x: 0,
+      y: 0,
+      width: this.environmentData.videoDimensions.width,
+      height: this.environmentData.videoDimensions.height - height,
+    }
 
     this.sendRequestResize(videoDimensions, creativeDimensions)
   }
