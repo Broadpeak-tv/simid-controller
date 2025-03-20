@@ -1,0 +1,40 @@
+{
+    "root": true,
+    "env": {
+        "browser": true,
+        "es6": true,
+        "mocha": true,
+        "node": true
+    },
+    "rules": {
+        "prettier/prettier": "error",
+        "@typescript-eslint/no-empty-function": "off"
+    },
+    "globals": {
+        "CdnLoadBalancer": "readonly",
+        "shaka": "readonly"
+    },
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "prettier"
+    ],
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint",
+        "prettier"
+    ],
+    // javascript settings for the demo page integration
+    "overrides": [
+        {
+            "files": "demo/**/*.js",
+            "extends": [
+                "eslint:recommended",
+                "prettier"
+            ],
+            "parser": "espree",
+            "plugins": ["prettier"]
+        }
+    ]
+}
