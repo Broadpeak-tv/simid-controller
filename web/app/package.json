@@ -1,0 +1,26 @@
+{
+  "name": "@broadpeak/simid-demo-app",
+  "version": "0.0.1",
+  "description": "Broadpeak SIMID demo app",
+  "scripts": {
+    "start": "webpack serve",
+    "build": "webpack",
+    "clean": "rimraf ./public/dist"
+  },
+  "keywords": [],
+  "author": "Broadpeak",
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@broadpeak/simid-controller": "file:../controller",
+    "@types/node": "18.11.18",
+    "@types/webpack": "5.28.0",
+    "rimraf": "6.0.1",
+    "ts-loader": "9.4.2",
+    "ts-node": "10.9.1",
+    "typescript": "5.5.3",
+    "webpack": "5.92.1",
+    "webpack-cli": "5.1.4",
+    "webpack-dev-server": "5.0.4"
+  }
+}
