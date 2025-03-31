@@ -2,7 +2,7 @@
   "entryPoints": ["./src/index.ts"],
   "out": "doc",
   "visibilityFilters": {
-    "protected": true,
+    "protected": false,
     "private": false,
     "inherited": true,
     "external": false

@@ -14,18 +14,16 @@ import {
   ProtocolMessage,
   Dimensions,
   CreativeRequestResizeMessageArgs
-} from '../../common/Types'
+} from '../../common/SimidMessages'
 import { SimidComponent } from "../../common/SimidComponent"
 
-/*
-* A subclass of a SIMID ad that implements functionality that will be the same for all simid ads.
-*/
+/** 
+ * All the logic for a simple SIMID creative
+ */
+
 export class SimidCreative extends SimidComponent {
 
   // #region MEMBERS
-  // The SIMID version, once the player makes it known.
-  protected simidVersion: string
-
   // The session environment data
   protected environmentData: EnvironmentData
 
@@ -39,7 +37,6 @@ export class SimidCreative extends SimidComponent {
 
   constructor() {
     super('Creative')
-    this.simidVersion = ''
     this._addMessageListeners()
   }
  
@@ -55,16 +52,6 @@ export class SimidCreative extends SimidComponent {
     }, () => {
       // If this ever happens, it may be impossible for the ad to ever communicate with the player.
       console.log('Session creation was rejected.')
-    })
-  }
-
-  private _addMessageListeners() {
-    Object.values(PlayerMessage).forEach(value => {
-      this.addMessageListener(value, (message: Message) => this.onPlayerMessage(message))
-    })
-
-    Object.values(MediaMessage).forEach(value => {
-      this.addMessageListener(value, (message: Message) => this.onMediaMessage(message))
     })
   }
 
@@ -192,6 +179,16 @@ export class SimidCreative extends SimidComponent {
   // #endregion PROTECTED METHODS
 
   // #region PRIVATE METHODS
+  private _addMessageListeners() {
+    Object.values(PlayerMessage).forEach(value => {
+      this.addMessageListener(value, (message: Message) => this.onPlayerMessage(message))
+    })
+
+    Object.values(MediaMessage).forEach(value => {
+      this.addMessageListener(value, (message: Message) => this.onMediaMessage(message))
+    })
+  }
+
   private _onPlayerInit(message: Message): any {
     const args = message.args as PlayerInitMessageArgs
     this.environmentData = args.environmentData
