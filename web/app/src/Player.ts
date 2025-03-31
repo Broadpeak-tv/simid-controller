@@ -1,0 +1,127 @@
+import { SimidController, MediaState } from '@broadpeak/simid-controller'
+
+declare const shaka: any
+
+export default class Player {
+
+  private appContainer: HTMLElement
+  private playerContainer: HTMLElement
+  private videoElement: HTMLMediaElement
+  private simidIframe: HTMLIFrameElement | undefined
+
+  private player: any // ShakaPlayer
+
+  private simidAdData: any = undefined
+
+  private simidController: SimidController | undefined
+
+  constructor(appContainer: HTMLElement, playerContainer: HTMLElement, videoElement: HTMLMediaElement) {
+    this.appContainer = appContainer
+    this.playerContainer = playerContainer
+    this.videoElement = videoElement
+
+    this.simidIframe = undefined
+
+    this.loadPlayer()
+  }
+
+  public async load(url: string) {
+    await this.player.load(url)
+    this.videoElement.play()
+    // .then(_ => console.log("OK"))
+    .catch(error => {
+      // console.error(error)
+      this.videoElement.muted = true
+      this.videoElement.play()
+    })
+  }
+  
+  public async stop() {
+    await this.player.unload()
+  }
+
+  public loadSimid(creativeUri: string, duration: number) {
+
+    // Consider player container dimensions as initial creative dimensions
+    const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
+
+    this.simidController = new SimidController(playerRect, creativeUri, '', duration)
+
+    this.simidController.onGetMediaState = () => this.getMediaState()
+    this.simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(iframe)
+    this.simidController.onShowSimid = (show: boolean) => this.showSimidIframe(show)
+    this.simidController.onResizeSimid = (dimensions: DOMRect) => this.resizeSimid(dimensions)
+    this.simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
+    this.simidController.onComplete = (skipped: boolean) => this.completeAd(skipped)
+
+    this.simidController.load()
+  }
+
+  private async loadPlayer() {
+    shaka.polyfill.installAll()
+    this.player = new shaka.Player()
+    await this.player.attach(this.videoElement)
+  }
+
+  private getMediaState(): MediaState {
+    return {
+      currentTime: this.videoElement.currentTime
+    }
+  }
+
+  private addSimidIframe(iframe: HTMLIFrameElement): boolean {
+    this.appContainer.appendChild(iframe)
+    this.simidIframe = iframe
+    return true
+  }
+
+  private showSimidIframe(show: boolean) {
+    if (!this.simidIframe) {
+      return
+    }
+    this.simidIframe.style.display = show ? 'block' : 'none'
+  }
+
+  private resizeSimid(dimensions: DOMRect): boolean {
+    if (!this.simidIframe) {
+      return false
+    }
+    // Check if requested SIMID dimensions is not outside original player dimensions
+    const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
+    const widthFits = dimensions.x + dimensions.width <= playerRect.width
+    const heightFits = dimensions.y + dimensions.height <= playerRect.height
+    if (!widthFits || !heightFits) {
+      return false;
+    }
+
+    this.setElementDimensions(this.simidIframe, dimensions)
+    return true
+  }
+
+  private resizePlayer(dimensions: DOMRect) {
+    this.setElementDimensions(this.playerContainer, dimensions)
+  }
+
+  private completeAd(skipped: boolean) {
+    if (skipped && this.simidAdData) {
+      this.skipCurrentAd(this.simidAdData)
+    }
+  }
+
+  private setElementDimensions(element: HTMLElement, dimensions: DOMRect) {
+    console.log(`[Player] Resize ${element.id} x:${dimensions.x} y:${dimensions.y} w:${dimensions.width} h:${dimensions.height}`)
+    element.style.height = `${dimensions.height}`
+    element.style.width = `${dimensions.width}`
+    element.style.left = `${dimensions.x}`
+    element.style.top = `${dimensions.y}`
+  }
+
+  private skipCurrentAd(adData: any) {
+    if (!adData) {
+      return
+    }
+    this.player.currentTime = (adData.startPosition + adData.duration) / 1000
+  }
+
+  
+}

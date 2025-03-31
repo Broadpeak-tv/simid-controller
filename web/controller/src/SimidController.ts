@@ -1,7 +1,5 @@
 import {
   CreativeData,
-  CreativeExpandNonLinearResolveMessageArgs,
-  CreativeErrorCode,
   CreativeGetMediaStateMessageArgs,
   CreativeMessage,
   Dimensions,
@@ -17,7 +15,7 @@ import {
   SkippableState,
   StopCode,
   CreativeRequestResizeMessageArgs,
-} from '../../../common/Types'
+} from '../../../common/SimidMessages'
 import { SimidComponent } from "../../../common/SimidComponent"
 
 const NO_REQUESTED_DURATION = 0
@@ -26,18 +24,13 @@ const UNLIMITED_DURATION = -2
 const MEDIA_STATE_POLL_INTERVAL_MS = 500
 
 /** 
- * All the logic for a simple SIMID player
+ * All the logic for a simple SIMID player/controller
  */
-export class SimidPlayer extends SimidComponent {
+export class SimidController extends SimidComponent {
 
   // #region MEMBERS
-  // A reference to the main application container in which SIMID creative iframe has to be appended.
-  private _appContainerElement: HTMLElement
 
-  // A reference to the application container element that contains the main video player
-  private _mainPlayerElement: HTMLElement
-
-  // The initial main player container element dimensions.
+  // The initial main player container element dimensions
   private _mainPlayerDimensions: Dimensions | undefined
 
   // The creative URI
@@ -46,63 +39,56 @@ export class SimidPlayer extends SimidComponent {
   // The ad parameters
   private _adParameters: string
 
-  // A reference to the iframe holding the SIMID creative.
+  // A reference to the iframe holding the SIMID creative
   private _simidIframe: HTMLIFrameElement
   
-  // A boolean indicating if current is stopping.
+  // A boolean indicating if current is stopping
   private _isStopping: boolean
 
-  // A boolean indicating if current ad can be skipped (handled by creative).
+  // A boolean indicating if current ad can be skipped (handled by creative)
   private _adSkippable: boolean
 
-  // A number indicating when the non linear ad started.
+  // A number indicating when the non linear ad started
   private _nonLinearStartTime: number | undefined
 
-  // The duration requested by the ad.
+  // The duration requested by the ad
   private _requestedDuration: number
 
-  // An object containing the resized nonlinear creative's dimensions.
-  private _nonLinearDimensions: Dimensions | undefined
-
   // Callback functions
-  private _onGetMediaState: () => MediaState | undefined
-  private _onPlayMedia: () => boolean | undefined
-  private _onPauseMedia: () => boolean | undefined
-  private _onAddSimid: (HTMLIFrameElement) => void | undefined
-  private _onShowSimid: (boolean) => void | undefined
-  private _onResizePlayer: (DOMRect) => void | undefined
-  private _onResizeSimid: (DOMRect) => void | undefined
-  private _onComplete: (boolean) => void | undefined
+  private _onGetMediaState: (() => MediaState) | undefined
+  private _onPlayMedia: (() => boolean) | undefined
+  private _onPauseMedia: (() => boolean) | undefined
+  private _onAddSimid: ((HTMLIFrameElement) => void) | undefined
+  private _onShowSimid: ((boolean) => void) | undefined
+  private _onResizeSimid: ((DOMRect) => boolean) | undefined
+  private _onResizePlayer: ((DOMRect) => void) | undefined
+  private _onComplete: ((boolean) => void) | undefined
 
   private _intervalMediaState: number | undefined
 
   // The unique ID for the interval used to compares the requested change duration and the current ad time.
   private _durationInterval: number
+
   // #endregion MEMBERS
 
   /**
-   * Sets up the creative iframe and starts listening for messages from the creative.
-   * @param appContainerElement The main application container in which SIMID creative iframe has to be appended
-   * @param mainPlayerElement The application container element that contains the main video player
+   * Set up the SIMId controller starts listening for messages from the creative.
+   * @param playerDimensions the main player dimensions
    * @param creativeUri The creative URI
-   * @param adParameters the creative ad parameters as stringified json
-   * @param adDuration the display duration of the creative (0 by default meaning no requested duration)
+   * @param adParameters the creative ad parameters
+   * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
    * @param adSkippable true if the linear ad is skippable (false by default)
    */
   constructor(
-    appContainerElement: HTMLElement,
-    mainPlayerElement: HTMLElement,
+    playerDimensions: DOMRect, 
     creativeUri: string,
     adParameters = '',
     adDuration = NO_REQUESTED_DURATION,
     adSkippable = false) {
     
     super('Player')
-    this._addCreativeMessageListeners()
 
-    this._appContainerElement = appContainerElement
-    this._mainPlayerElement = mainPlayerElement
-    this._mainPlayerDimensions = mainPlayerElement.getBoundingClientRect()
+    this._mainPlayerDimensions = playerDimensions as Dimensions
 
     this._creativeUri = creativeUri
     this._adParameters = adParameters
@@ -112,8 +98,9 @@ export class SimidPlayer extends SimidComponent {
     this._simidIframe = undefined
     this._nonLinearStartTime = undefined
     this._requestedDuration = adDuration
-    this._nonLinearDimensions = undefined
     this._durationInterval = NaN
+ 
+    this.addCreativeMessageListeners()
   }
 
   // #region PUBLIC METHODS 
@@ -135,28 +122,35 @@ export class SimidPlayer extends SimidComponent {
   /**
    * Set the callback function called when the main video has to be paused. 
    */
-  public set onPlauseMedia(cb: () => boolean) {
+  public set onPauseMedia(cb: () => boolean) {
     this._onPauseMedia = cb
   }
 
   /**
    * Set the callback function called when a new SIMID iframe has to be added in application DOM. 
    */
-  public set onAddSimid(cb: (HTMLIFrameElement) => boolean) {
+  public set onAddSimid(cb: (iframe: HTMLIFrameElement) => boolean) {
     this._onAddSimid = cb
   }
 
   /**
    * Set the callback function called when a the SIMID iframe has to be showed of hidden. 
    */
-  public set onShowSimid(cb: (boolean) => boolean) {
+  public set onShowSimid(cb: (show: boolean) => void) {
     this._onShowSimid = cb
   }
 
   /**
+   * Set the callback function called when the SIMID iframe has to be resized. 
+   */
+    public set onResizeSimid(cb: (dimensions: DOMRect) => boolean) {
+      this._onResizeSimid = cb
+    }
+  
+  /**
    * Set the callback function called when the media player element has to be resized. 
    */
-  public set onResizePlayer(cb: (DOMRect) => boolean) {
+  public set onResizePlayer(cb: (dimensions: DOMRect) => void) {
     this._onResizePlayer = cb
   }
 
@@ -181,12 +175,10 @@ export class SimidPlayer extends SimidComponent {
   public reset() {
     this._stopAd()
   }
-  // #endregion PUBLIC METHODS 
+  // #endregion PUBLIC METHODS
 
-  protected _addCreativeMessageListeners() {
+  protected addCreativeMessageListeners() {
     this.addMessageListener(ProtocolMessage.CREATE_SESSION, (message: Message) => this.onCreateSession(message))
-    this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, (message: Message) => this.onCreativeCollapseNonLinear(message))
-    this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, (message: Message) => this.onCreativeExpandNonLinear(message))
     this.addMessageListener(CreativeMessage.FATAL_ERROR, (message: Message) => this.onCreativeFatalError(message))
     this.addMessageListener(CreativeMessage.GET_MEDIA_STATE, (message: Message) => this.onCreativeGetMediaState(message))
     this.addMessageListener(CreativeMessage.REQUEST_PAUSE, (message: Message) => this.onCreativeRequestPause(message))
@@ -196,40 +188,12 @@ export class SimidPlayer extends SimidComponent {
     this.addMessageListener(CreativeMessage.REQUEST_STOP, (message: Message) => this.onCreativeRequestStop(message))
   }
 
+  // #region PROTECTED METHODS
   // #region CREATIVE MESSAGE HANDLERS
   protected onCreateSession(message: Message) {
     // [3] - createSession sent by the creative (resolve message done in SimidComponent::_handleProtocolMessage())
     // [4] - send Player:init message
     this._sendInitMessage()
-  }
-
-  protected onCreativeCollapseNonLinear(message: Message) {
-    const creativeDimensions = this._getNonlinearDimensions()
-    if (!this._isValidDimensions(creativeDimensions)) {
-      this.rejectMessage(message, {
-        errorCode: PlayerErrorCode.UNSPECIFIED,
-        message: 'Unable to collapse to dimensions bigger than the player. Please modify dimensions to a smaller size'
-      } as RejectMessageArgsValue)
-    }
-
-    // In response to collapseNonlinear, the player resizes the ad to its original state and resumes the content media playback.
-    this._setSimidIframeDimensions(creativeDimensions)
-    this._simidIframe.style.position = "absolute"
-
-    this._onPlayMedia?.()
-    this.resolveMessage(message)  
-  }
-
-  protected onCreativeExpandNonLinear(message: Message) {
-    const fullDimensions = this._getFullDimensions(this._mainPlayerElement)
-    this._setSimidIframeDimensions(fullDimensions)
-    
-    this._onPauseMedia?.()
-
-    const args: CreativeExpandNonLinearResolveMessageArgs = {
-      creativeDimensions: fullDimensions
-    }
-    this.resolveMessage(message, args)
   }
 
   protected onCreativeFatalError(message: Message) {
@@ -260,38 +224,39 @@ export class SimidPlayer extends SimidComponent {
     this._onPlayMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message)
   }
 
+  protected onCreativeRequestResize(message: Message) {
+    const args = message.args as CreativeRequestResizeMessageArgs
+
+    if (!this._onResizeSimid(args.creativeDimensions as DOMRect)) {
+      this.rejectMessage(message, {
+        errorCode : PlayerErrorCode.UNSPECIFIED,
+        message: 'Unable to resize a non-linear ad with dimensions bigger than the player'
+      } as RejectMessageArgsValue)
+    } else {
+      this._onResizePlayer(args.mediaDimensions as DOMRect)
+      this.resolveMessage(message)
+    }
+  }
+
   protected onCreativeRequestSkip(message: Message) {
     this.resolveMessage(message)
     this._skipAd()
   }
-  
+
   protected onCreativeRequestStop(message: Message) {
     this.resolveMessage(message)
     this._stopAd(StopCode.CREATIVE_INITIATED)
   }
-
-  protected onCreativeRequestResize(message: Message) {
-    const args = message.args as CreativeRequestResizeMessageArgs
-    if (!this._isValidDimensions(args.creativeDimensions)) {
-      this.rejectMessage(message, {
-        errorCode : CreativeErrorCode.EXPAND_NOT_POSSIBLE,
-        message: 'Unable to resize a non-linear ad with dimensions bigger than the player. Please modify dimensions to a smaller size.'
-      } as RejectMessageArgsValue)
-    } else {
-      this._nonLinearDimensions = args.creativeDimensions
-      this._setSimidIframeDimensions(args.creativeDimensions)
-      this._setElementDimensions(this._mainPlayerElement, args.mediaDimensions)
-      this.resolveMessage(message)
-    }
-  }
   // #endregion CREATIVE MESSAGE HANDLERS
+  // #endregion PROTECTED METHODS
 
   // #region PRIVATE METHODS
   private async _sendInitMessage() {
     // [4] - send Player:init message
-    const videoDimensions = this._getFullDimensions(this._mainPlayerElement)
-    // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions.
-    const creativeDimensions = this._getNonlinearDimensions()
+
+    // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
+    const videoDimensions = this._mainPlayerDimensions
+    const creativeDimensions = this._mainPlayerDimensions
 
     const mediaState = this._onGetMediaState?.()
 
@@ -330,19 +295,9 @@ export class SimidPlayer extends SimidComponent {
       this._startCreative()
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
-      this._resetSession()
+      this._completeAd()
     }
   }
-
-  /**
-   * Stop/reset session
-   * Remove and destroy the SIMID creative iframe and resumes video playback.
-   */
-  private _resetSession(skipped = false) {
-    this._setElementDimensions(this._mainPlayerElement, this._mainPlayerDimensions)
-    this._onComplete?.(skipped)
-    this._onPlayMedia?.()
-  }  
 
   // #region IFRAME MANAGEMENT
   private _createSimidIframe(): HTMLIFrameElement {
@@ -351,6 +306,7 @@ export class SimidPlayer extends SimidComponent {
 
     // [2] - create iframe element
     const simidIframe = document.createElement('iframe') as HTMLIFrameElement
+    simidIframe.id = 'iframe'
     simidIframe.style.display = 'none'
     simidIframe.style.zIndex = '10'
     simidIframe.style.width = '100%'
@@ -364,8 +320,8 @@ export class SimidPlayer extends SimidComponent {
     simidIframe.src = this._creativeUri
 
     // [2.2] - add do DOM
-    this._appContainerElement.appendChild(simidIframe)
-    // this._onAddSimid?.(simidIframe)
+    // this._appContainerElement.appendChild(simidIframe)
+    this._onAddSimid?.(simidIframe)
 
     // The target of the player to send messages to is the newly created iframe.
     this.setMessageTarget(simidIframe.contentWindow)
@@ -380,31 +336,9 @@ export class SimidPlayer extends SimidComponent {
     this._simidIframe.remove()
     this._simidIframe = null
   }
-
-  private _showSimidIFrame() {
-    if (!this._simidIframe) {
-      return
-    }
-    this._simidIframe.style.display = 'block'
-  }
-
-  private _hideSimidIFrame() {
-    if (!this._simidIframe) {
-      return
-    }
-    this._simidIframe.style.display = 'none'
-    this._onShowSimid?.(false)
-  }
-
-  private _setSimidIframeDimensions(dimensions: Dimensions) {
-    if (!this._simidIframe) {
-      return
-    }
-    this._setElementDimensions(this._simidIframe, dimensions)
-  }  
   // #endregion IFRAME
 
-  // #region AD PLAYBACK
+  // #region CREATIVE AD MANAGEMENT
   private async _startCreative() {
 
     const mediaState = this._onGetMediaState?.()
@@ -412,7 +346,7 @@ export class SimidPlayer extends SimidComponent {
 
     try {
       await this.sendMessage(PlayerMessage.START_CREATIVE)
-      this._showSimidIFrame()
+      this._onShowSimid?.(true)
       this._startPollingMediaState()
     } catch (e) {
       console.error('[PLAYER] Failed to start creative', e)
@@ -439,9 +373,10 @@ export class SimidPlayer extends SimidComponent {
     }
     this._isStopping = true
     this._stopPollingMediaState()
-    // The iframe is only hidden on ad stoppage. The ad might still request tracking pixels before it is cleaned up.
-    this._hideSimidIFrame()
-    this._resetSession(skipped)
+    // The iframe is only hidden on ad stoppage. The ad might still request tracking pixels before it is cleaned up
+    this._onShowSimid?.(false)
+
+    this._completeAd(skipped)
 
     // Wait for the SIMID creative to acknowledge stop and then clean up the iframe.
     skipped ? 
@@ -449,10 +384,23 @@ export class SimidPlayer extends SimidComponent {
       await this.sendMessage(PlayerMessage.AD_STOPPED, {
         code: reason
       } as PlayerAdStoppedMessageArgs)
+    
     this._destroySimidIframe()
   }
-  
-  // #endregion AD PLAYBACK
+
+  private _completeAd(skipped = false) {
+
+    // Resize the main player to its original dimensions
+    this._onResizePlayer?.(this._mainPlayerDimensions as DOMRect)
+
+    // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
+    this._onComplete?.(skipped)
+
+    // Resume main video playback
+    this._onPlayMedia?.()
+  }  
+      
+  // #endregion CREATIVE AD MANAGEMENT
 
   // #region MAIN VIDEO STATE
   private _startPollingMediaState() {
@@ -485,49 +433,4 @@ export class SimidPlayer extends SimidComponent {
   // #endregion MAIN VIDEO STATE
 
   // #endregion PRIVATE METHODS
-
-  private _getFullDimensions(element: Element): Dimensions {
-    const videoRect = element.getBoundingClientRect()
-    return {
-      x : 0,
-      y : 0,
-      width : videoRect.width,
-      height : videoRect.height,
-    }
-  }
-
-  /**
-   * Checks whether the input dimensions are valid and fit in the player window.
-   * @param dimensions A dimension that contains x, y, width & height fields.
-   * @return true if the input dimensions are valid and fit in the player window
-   */
-  private _isValidDimensions(dimensions: Dimensions): boolean {
-    const playerRect = this._mainPlayerElement.getBoundingClientRect()
-
-    const heightFits = dimensions.y + dimensions.height <= playerRect.height
-    const widthFits = dimensions.x + dimensions.width <= playerRect.width
-    
-    return heightFits && widthFits
-  }
-
-  /**
-   * Returns the specified dimensions of the non-linear creative.
-   * @return the dimensions of the non-linear creative
-   */
-  private _getNonlinearDimensions(): Dimensions {
-    if (this._nonLinearDimensions) {
-      return this._nonLinearDimensions
-    }
-
-    // Take player container dimensions as initial creative dimensions
-    return this._getFullDimensions(this._mainPlayerElement)
-  }
-
-  private _setElementDimensions(element: HTMLElement, dimensions: Dimensions) {
-    this.log(`[SIMID][Player] Resize ${element.localName} x:${dimensions.x} y:${dimensions.y} w:${dimensions.width} h:${dimensions.height}`)
-    element.style.height = `${dimensions.height}`
-    element.style.width = `${dimensions.width}`
-    element.style.left = `${dimensions.x}`
-    element.style.top = `${dimensions.y}`
-  }
 }

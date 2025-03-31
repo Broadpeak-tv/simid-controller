@@ -5,7 +5,7 @@ import {
   ProtocolMessage,
   RejectMessageArgsValue,
   ResolveMessageArgs
-} from './Types'
+} from './SimidMessages'
 
 
 const SIMID_NS = 'SIMID:' 
@@ -64,12 +64,12 @@ export class SimidComponent {
     this._target = window.top
 
     window.addEventListener('message', (event) => {
-      setTimeout(() => this._receiveMessage(event), 0)
+      setTimeout(() => this.receiveMessage(event), 0)
     }, false)
   }
   // #endregion CONSTRUCTOR
 
-  // #region PUBLIC METHODS
+  // #region PROTECTED METHODS
   /**
    * Sends a message using post message.
    * Returns a promise that will resolve or reject after the message receives a response.
@@ -77,7 +77,7 @@ export class SimidComponent {
    * @param messageArgs The arguments for the message, may be null.
    * @return A promise that will be fulfilled when client resolves or rejects.
    */
-  public sendMessage(messageType: string, messageArgs?: any): Promise<void> {
+  protected sendMessage(messageType: string, messageArgs?: any): Promise<void> {
     // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
 
     // Incrementing between messages keeps each message id unique.
@@ -99,13 +99,13 @@ export class SimidComponent {
       // up a promise that will call resolve or reject with its parameters.
       return new Promise((resolve, reject) => {
         this._addResponseListener(messageId, resolve, reject)
-        this._sendMessage(message)
+        this.postMessage(message)
       })
     }
     // A default promise will just resolve immediately.
     // It is assumed no one would listen to these promises, but if they do it will "just work".
     return new Promise((resolve, reject) => {
-      this._sendMessage(message)
+      this.postMessage(message)
       resolve()
     })
 	}
@@ -115,7 +115,7 @@ export class SimidComponent {
    * @param messageType the message type
    * @param callback the listener callback
    */
-  public addMessageListener(messageType: string, callback: MessageCallback) {
+  protected addMessageListener(messageType: string, callback: MessageCallback) {
     if (!this._listeners.has(messageType)) {
       this._listeners.set(messageType, [])
     }
@@ -125,26 +125,24 @@ export class SimidComponent {
   /**
    * Reset/revert this protocol to its original state
    */
-  public reset() {
+  protected reset() {
     this._listeners.clear()
     this._sessionId = ''
     this._nextMessageId = 1
     // TODO: Perhaps we should reject all associated promises.
     this._responseListeners.clear()
   }
-  // #endregion PUBLIC METHODS
 
-  // #region PROTECTED METHODS
   protected setMessageTarget(target: Window) {
     this._target = target
   }
 
-  protected _sendMessage(message: Message) {
+  protected postMessage(message: Message) {
     this.log(`[SIMID][${this._type}][S] ` + JSON.stringify(message))
     this._target.postMessage(JSON.stringify(message), '*')
   }
 
-  protected _receiveMessage(event: MessageEvent) {
+  protected receiveMessage(event: MessageEvent) {
     if (!event || !event.data) {
       return
     }
@@ -204,7 +202,7 @@ export class SimidComponent {
       timestamp: Date.now(),
       args,
     }
-    this._sendMessage(message)
+    this.postMessage(message)
   }
 
   /**
@@ -225,7 +223,7 @@ export class SimidComponent {
       timestamp: Date.now(),
       args,
     }
-    this._sendMessage(message)
+    this.postMessage(message)
   }
 
   protected log(message) {
