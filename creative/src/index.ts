@@ -5,6 +5,6 @@ export {
   PlayerMessage,
   MediaMessage,
   StopCode
-} from '../../common/Types'
+} from '../../common/SimidMessages'
 export { SimidComponent } from '../../common/SimidComponent'
 export { SimidCreative } from './SimidCreative'
