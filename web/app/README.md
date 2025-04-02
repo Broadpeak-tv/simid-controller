@@ -1,6 +1,6 @@
 # SIMID web demo app
 
-A sample web application to load SIMId creatives.
+A sample web application to load SIMID creatives.
 
 ### Run the demo
 
