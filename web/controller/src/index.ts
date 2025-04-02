@@ -6,6 +6,6 @@ export {
   MediaMessage,
   MediaState,
   StopCode
-} from '../../../common/SimidMessages'
-export { SimidComponent } from '../../../common/SimidComponent'
+} from './SimidMessages'
+export { SimidComponent } from './SimidComponent'
 export { SimidController } from './SimidController'
