@@ -15,8 +15,8 @@ import {
   SkippableState,
   StopCode,
   CreativeRequestResizeMessageArgs,
-} from '../../../common/SimidMessages'
-import { SimidComponent } from "../../../common/SimidComponent"
+} from './SimidMessages'
+import { SimidComponent } from "./SimidComponent"
 
 const NO_REQUESTED_DURATION = 0
 const UNLIMITED_DURATION = -2
