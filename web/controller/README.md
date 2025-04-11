@@ -26,22 +26,22 @@ simidController.onAddSimid = () => {
   // ...
 }
 
-simidController.onShowSimid((show: boolean) => void) {
+simidController.onShowSimid = (show: boolean) => {
   // Show or hide the SIMID iframe
   // ...
 }
 
-simidController.onResizeSimid((dimensions: DOMRect) => boolean) {
+simidController.onResizeSimid = (dimensions: DOMRect) => {
   // Resize the SIMID iframe
   // ...
 }
   
-simidController.onResizePlayer((dimensions: DOMRect) => void) {
+simidController.onResizePlayer = (dimensions: DOMRect) => {
   // Resize the main player video
   // ...
 }
 
-simidController.onComplete((skipped: boolean) => void) {
+simidController.onComplete = (skipped: boolean) => {
   // Handle the completion of the non linear ad, with indication if ad has been skipped
   // ...
 }
