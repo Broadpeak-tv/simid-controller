@@ -49,3 +49,8 @@ simidController.onComplete((skipped: boolean) => void) {
 // Load the SIMID creative
 simidController.load()
 ```
+
+### Build the library
+
+``# npm ci``
+``# npm run build``
