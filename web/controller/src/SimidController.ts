@@ -15,11 +15,9 @@ import {
   SkippableState,
   StopCode,
   CreativeRequestResizeMessageArgs,
+  CreativeErrorCode,
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
-
-const NO_REQUESTED_DURATION = 0
-const UNLIMITED_DURATION = -2
 
 const MEDIA_STATE_POLL_INTERVAL_MS = 500
 
@@ -52,7 +50,7 @@ export class SimidController extends SimidComponent {
   private _nonLinearStartTime: number | undefined
 
   // The duration requested by the ad
-  private _requestedDuration: number
+  private _adDuration: number
 
   // Callback functions
   private _onGetMediaState: (() => MediaState) | undefined
@@ -64,7 +62,7 @@ export class SimidController extends SimidComponent {
   private _onResizePlayer: ((DOMRect) => void) | undefined
   private _onComplete: ((boolean) => void) | undefined
 
-  private _intervalMediaState: number | undefined
+  private _timerMediaState: number | undefined
 
   // The unique ID for the interval used to compares the requested change duration and the current ad time.
   private _durationInterval: number
@@ -83,7 +81,7 @@ export class SimidController extends SimidComponent {
     playerDimensions: DOMRect, 
     creativeUri: string,
     adParameters = '',
-    adDuration = NO_REQUESTED_DURATION,
+    adDuration = 0,
     adSkippable = false) {
     
     super('Player')
@@ -97,7 +95,7 @@ export class SimidController extends SimidComponent {
 
     this._simidIframe = undefined
     this._nonLinearStartTime = undefined
-    this._requestedDuration = adDuration
+    this._adDuration = adDuration
     this._durationInterval = NaN
  
     this.addCreativeMessageListeners()
@@ -157,7 +155,7 @@ export class SimidController extends SimidComponent {
   /**
    * Set the callback function called when the current SIMID duration has completed. 
    */
-  public set onComplete(cb: (boolean) => void) {
+  public set onComplete(cb: (skipped: boolean) => void) {
     this._onComplete = cb
   }
 
@@ -191,7 +189,7 @@ export class SimidController extends SimidComponent {
   // #region PROTECTED METHODS
   // #region CREATIVE MESSAGE HANDLERS
   protected onCreateSession(message: Message) {
-    // [3] - createSession sent by the creative (resolve message done in SimidComponent::_handleProtocolMessage())
+    // [3] - createSession sent by the creative (message resolved in SimidComponent::receiveMessage())
     // [4] - send Player:init message
     this._sendInitMessage()
   }
@@ -217,22 +215,21 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestPause(message: Message) {
-    this._onPauseMedia() ? this.resolveMessage(message) : this.rejectMessage(message)
+    this._onPauseMedia() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
   }
 
   protected onCreativeRequestPlay(message: Message) {
-    this._onPlayMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message)
+    this._onPlayMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
   }
 
   protected onCreativeRequestResize(message: Message) {
     const args = message.args as CreativeRequestResizeMessageArgs
 
+    // Resize SIMID iframe
     if (!this._onResizeSimid(args.creativeDimensions as DOMRect)) {
-      this.rejectMessage(message, {
-        errorCode : PlayerErrorCode.UNSPECIFIED,
-        message: 'Unable to resize a non-linear ad with dimensions bigger than the player'
-      } as RejectMessageArgsValue)
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to resize a non-linear ad with dimensions bigger than the player')
     } else {
+      // Then if successfull, resize the main player
       this._onResizePlayer(args.mediaDimensions as DOMRect)
       this.resolveMessage(message)
     }
@@ -256,17 +253,16 @@ export class SimidController extends SimidComponent {
 
     // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
     const videoDimensions = this._mainPlayerDimensions
-    const creativeDimensions = this._mainPlayerDimensions
 
     const mediaState = this._onGetMediaState?.()
 
     const environmentData: EnvironmentData = {
       videoDimensions: videoDimensions,
-      creativeDimensions: creativeDimensions,
+      creativeDimensions: videoDimensions,
       fullscreen: false,
       fullscreenAllowed: true,
       variableDurationAllowed: true,
-      skippableState: this._adSkippable ? SkippableState.AD_HANDLES : SkippableState.NOT_SKIPPABLE, // This player does not render a skip button.
+      skippableState: this._adSkippable ? SkippableState.AD_HANDLES : SkippableState.NOT_SKIPPABLE,
       version: this._version,
       siteUrl: document.location.host,
       appId: '', // This is not relevant on desktop
@@ -340,7 +336,6 @@ export class SimidController extends SimidComponent {
 
   // #region CREATIVE AD MANAGEMENT
   private async _startCreative() {
-
     const mediaState = this._onGetMediaState?.()
     this._nonLinearStartTime = mediaState?.currentTime
 
@@ -372,6 +367,7 @@ export class SimidController extends SimidComponent {
       return
     }
     this._isStopping = true
+    this.resetSession()
     this._stopPollingMediaState()
     // The iframe is only hidden on ad stoppage. The ad might still request tracking pixels before it is cleaned up
     this._onShowSimid?.(false)
@@ -386,10 +382,10 @@ export class SimidController extends SimidComponent {
       } as PlayerAdStoppedMessageArgs)
     
     this._destroySimidIframe()
+    this.reset()
   }
 
   private _completeAd(skipped = false) {
-
     // Resize the main player to its original dimensions
     this._onResizePlayer?.(this._mainPlayerDimensions as DOMRect)
 
@@ -405,7 +401,12 @@ export class SimidController extends SimidComponent {
   // #region MAIN VIDEO STATE
   private _startPollingMediaState() {
     this._stopPollingMediaState()
-    this._intervalMediaState = window.setInterval(() => {
+
+    if (this._adDuration <= 0) {
+      return
+    }
+
+    this._timerMediaState = window.setInterval(() => {
       const mediaState = this._onGetMediaState?.()
       if (mediaState) {
         this._mediaTimeUpdated(mediaState.currentTime)
@@ -414,18 +415,18 @@ export class SimidController extends SimidComponent {
   }
 
   private _stopPollingMediaState() {
-    if (this._intervalMediaState === undefined) {
+    if (this._timerMediaState === undefined) {
       return
     }
-    window.clearInterval(this._intervalMediaState)
-    this._intervalMediaState = undefined
+    window.clearInterval(this._timerMediaState)
+    this._timerMediaState = undefined
   }
 
   private _mediaTimeUpdated(currentTime: number) {
     // For non-linear ads, stop the ad once requested duration is over
-    if (this._requestedDuration > 0 &&
+    if (this._adDuration > 0 &&
       this._nonLinearStartTime &&
-      currentTime - this._nonLinearStartTime > this._requestedDuration) {
+      currentTime - this._nonLinearStartTime > this._adDuration) {
       this._nonLinearStartTime = undefined
       this._stopAd(StopCode.NON_LINEAR_DURATION_COMPLETE)
     }

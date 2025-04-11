@@ -155,6 +155,11 @@ export type RejectMessageArgsValue = {
   message: string,
 }
 
+export type RejectMessageArgs = {
+  messageId: number,
+  value: RejectMessageArgsValue,
+}
+
 // #region COMMON MESSAGES ARGS
 export type DurationMessageArgs = {
   duration: number

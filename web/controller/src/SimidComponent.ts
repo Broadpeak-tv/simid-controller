@@ -70,45 +70,9 @@ export class SimidComponent {
   // #endregion CONSTRUCTOR
 
   // #region PROTECTED METHODS
-  /**
-   * Sends a message using post message.
-   * Returns a promise that will resolve or reject after the message receives a response.
-   * @param messageType The name of the message.
-   * @param messageArgs The arguments for the message, may be null.
-   * @return A promise that will be fulfilled when client resolves or rejects.
-   */
-  protected sendMessage(messageType: string, messageArgs?: any): Promise<void> {
-    // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
-
-    // Incrementing between messages keeps each message id unique.
-    const messageId = this._nextMessageId++
-    // Only create session does not need to be in the SIMID name space
-    // because it is part of the protocol.
-    const nameSpacedMessage = messageType === ProtocolMessage.CREATE_SESSION ? messageType : SIMID_NS + messageType
-    // The message object as defined by the SIMID spec.
-    const message: Message = {
-      sessionId: this._sessionId,
-      messageId: messageId,
-      type: nameSpacedMessage,
-      timestamp: Date.now(),
-      args: messageArgs
-    }
-
-    if (MessagesWithResponse.includes(messageType)) {
-      // If the message requires a callback this code will set
-      // up a promise that will call resolve or reject with its parameters.
-      return new Promise((resolve, reject) => {
-        this._addResponseListener(messageId, resolve, reject)
-        this.postMessage(message)
-      })
-    }
-    // A default promise will just resolve immediately.
-    // It is assumed no one would listen to these promises, but if they do it will "just work".
-    return new Promise((resolve, reject) => {
-      this.postMessage(message)
-      resolve()
-    })
-	}
+  protected setMessageTarget(target: Window) {
+    this._target = target
+  }
 
   /**
    * Add a listener for a given message.
@@ -123,24 +87,18 @@ export class SimidComponent {
   }
 
   /**
-   * Reset/revert this protocol to its original state
+   * Sends a message using post message.
+   * Returns a promise that will resolve or reject after the message receives a response.
+   * @param messageType The name of the message.
+   * @param messageArgs The arguments for the message, may be null.
+   * @return A promise that will be fulfilled when client resolves or rejects.
    */
-  protected reset() {
-    this._listeners.clear()
-    this._sessionId = ''
-    this._nextMessageId = 1
-    // TODO: Perhaps we should reject all associated promises.
-    this._responseListeners.clear()
-  }
+  protected sendMessage(messageType: string, messageArgs?: any): Promise<void> {
+    // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
 
-  protected setMessageTarget(target: Window) {
-    this._target = target
-  }
-
-  protected postMessage(message: Message) {
-    this.log(`[SIMID][${this._type}][S] ` + JSON.stringify(message))
-    this._target.postMessage(JSON.stringify(message), '*')
-  }
+    const message: Message = this._createMessage(SIMID_NS + messageType, messageArgs)
+    return this._sendMessage(message)
+	}
 
   protected receiveMessage(event: MessageEvent) {
     if (!event || !event.data) {
@@ -158,16 +116,14 @@ export class SimidComponent {
       return
     }
 
-    const sessionId = message.sessionId
-    const type = message.type
     // A sessionId is valid in one of two cases:
     // 1. It is not set and the message type is createSession.
     // 2. The session ids match exactly.
-    const isCreatingSession = this._sessionId === '' && type === ProtocolMessage.CREATE_SESSION
-    const isSessionIdMatch = this._sessionId === sessionId
+    const isCreatingSession = this._sessionId === '' && message.type === ProtocolMessage.CREATE_SESSION
+    const isSessionIdMatch = this._sessionId === message.sessionId
     const validSessionId = isCreatingSession || isSessionIdMatch
 
-    if (!validSessionId || type == null) {
+    if (!validSessionId || message.type == null) {
       // Ignore invalid messages.
       return
     }
@@ -176,33 +132,31 @@ export class SimidComponent {
     // 1. Protocol messages (like resolve, reject and createSession)
     // 2. Messages starting with SIMID:
     // All other messages are ignored.
-    if (Object.values(ProtocolMessage).includes(type)) {
-      this._handleProtocolMessage(message)
-    } else if (type.startsWith(SIMID_NS)) {
-      // Remove SIMID: from the front of the message so we can compare them with the map.
-      message.type = type.substring(6)
-      // console.log(`[SIMID][${this._type}] R`, message.type, message.args || {})
-      const listeners = this._listeners.get(message.type)
-      if (listeners) {
-        listeners.forEach((listener) => listener(message))
+    switch (message.type) {
+      case ProtocolMessage.CREATE_SESSION:
+        this._sessionId = message.sessionId
+        this.resolveMessage(message)
+        this._invokeMessageListeners(message)
+        break
+      case ProtocolMessage.RESOLVE:
+      case ProtocolMessage.REJECT:
+        this._invokeResponseListener(message)
+        break
+      default:
+        if (message.type.startsWith(SIMID_NS)) {
+          this._invokeMessageListeners(message)
+        }    
+        break
       }
-    }
   }
 
   protected resolveMessage(incomingMessage: Message, outgoingArgs?: any) {
-    const messageId = this._nextMessageId++
     const args: ResolveMessageArgs = {
       messageId: incomingMessage.messageId,
       value: outgoingArgs,
     }
-    const message: Message = {
-      sessionId: this._sessionId,
-      messageId: messageId,
-      type: ProtocolMessage.RESOLVE,
-      timestamp: Date.now(),
-      args,
-    }
-    this.postMessage(message)
+    const message = this._createMessage(ProtocolMessage.RESOLVE, args)
+    this._postMessage(message)
   }
 
   /**
@@ -210,20 +164,17 @@ export class SimidComponent {
    * @param {!Object} incomingMessage the message that is being resolved.
    * @param {!Object} outgoingArgs Any arguments that are part of the resolution.
    */
-  protected rejectMessage(incomingMessage: Message, outgoingArgs?: any) {
-    const messageId = this._nextMessageId++
+  protected rejectMessage(incomingMessage: Message, errorCode?: number, errorMessage?: string) {
+    const value: RejectMessageArgsValue = {
+      errorCode,
+      message: errorMessage,
+    }
     const args: ResolveMessageArgs = {
       messageId: incomingMessage.messageId,
-      value: outgoingArgs,
+      value,
     }
-    const message: Message = {
-      sessionId: this._sessionId,
-      messageId: messageId,
-      type: ProtocolMessage.REJECT,
-      timestamp: Date.now(),
-      args,
-    }
-    this.postMessage(message)
+    const message = this._createMessage(ProtocolMessage.REJECT, args)
+    this._postMessage(message)
   }
 
   protected log(message) {
@@ -231,9 +182,58 @@ export class SimidComponent {
     console.log('%c' + message, color)
   }
 
+  /**
+   * Reset/revert this protocol to its original state
+   */
+  protected resetSession() {
+    this._listeners.clear()
+    this._sessionId = ''
+    this._nextMessageId = 1
+    // TODO: Perhaps we should reject all associated promises.
+    this._responseListeners.clear()
+  }
+
   // #endregion PROTECTED METHODS
 
   // #region PRIVATE METHODS
+  private _createMessage(type: string, args?: any): Message {
+    // Incrementing between messages keeps each message id unique.
+    const messageId = this._nextMessageId++
+
+    // The message object as defined by the SIMID spec.
+    const message: Message = {
+      sessionId: this._sessionId,
+      messageId: messageId,
+      type: type,
+      timestamp: Date.now(),
+      args: args
+    }
+
+    return message
+  }
+
+  private _sendMessage(message: Message): Promise<void> {
+    if (MessagesWithResponse.includes(message.type)) {
+      // If the message requires a callback this code will set
+      // up a promise that will call resolve or reject with its parameters.
+      return new Promise((resolve, reject) => {
+        this._addResponseListener(message.messageId, resolve, reject)
+        this._postMessage(message)
+      })
+    }
+    // A default promise will just resolve immediately.
+    // It is assumed no one would listen to these promises, but if they do it will "just work".
+    return new Promise((resolve, reject) => {
+      this._postMessage(message)
+      resolve()
+    })
+  }
+
+  protected _postMessage(message: Message) {
+    this.log(`[SIMID][${this._type}][S] ` + JSON.stringify(message))
+    this._target.postMessage(JSON.stringify(message), '*')
+  }
+
   /**
    * Sets up a listener for response resolve/reject messages.
    * @private
@@ -249,35 +249,16 @@ export class SimidComponent {
     this._responseListeners.set(messageId, listener.bind(this))
   }
 
-  /**
-   * Handles incoming messages specifically for the protocol
-   * @param {Message} message the protocol message
-   * @private
-   */
-  private _handleProtocolMessage(message: Message) {
-    switch (message.type) {
-      case ProtocolMessage.CREATE_SESSION:
-        this._sessionId = message.sessionId
-        this.resolveMessage(message)
-        const listeners = this._listeners.get(message.type)
-        if (listeners) {
-          // calls each of the listeners with the data.
-          listeners.forEach((listener) => listener(message))
-        }
-        break
-      case ProtocolMessage.RESOLVE:
-        // intentional fallthrough
-      case ProtocolMessage.REJECT:
-        const args = message.args as ResolveMessageArgs
-        const correlatingId = args.messageId
-        const resolutionFunction = this._responseListeners.get(correlatingId)
-        if (resolutionFunction) {
-          // If the listener exists call it once only.
-          resolutionFunction(message)
-          this._responseListeners.delete(correlatingId)
-        }
-        break
-    } 
+  private _invokeResponseListener(message: Message) {
+    const args = message.args as ResolveMessageArgs
+    const correlatingId = args.messageId
+    this._responseListeners.get(correlatingId)?.(message)
+    this._responseListeners.delete(correlatingId)
+  }
+
+  private _invokeMessageListeners(message: Message) {
+    const type = message.type.replace(SIMID_NS, '')
+    this._listeners.get(type)?.forEach((listener) => listener(message))
   }
 }
 // #endregion PRIVATE METHODS
