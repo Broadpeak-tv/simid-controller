@@ -40,7 +40,7 @@ export default class App {
     this.creativeButtonLoad.onclick = (e) => this.loadSimid()
 
     this.streamEditUrl.value = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-    this.creativeEditUrl.value = 'https://explo.broadpeak.tv/simid/adserver/l-banner_vitamont.html'
+    this.creativeEditUrl.value = ''
     this.creativeEditDuration.value = '10'
   }
 
