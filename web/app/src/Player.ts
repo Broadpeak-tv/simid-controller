@@ -1,6 +1,7 @@
 import { SimidController, MediaState } from '@broadpeak/simid-controller'
 
 declare const shaka: any
+declare let SmartLib: any
 
 export default class Player {
 
@@ -11,8 +12,8 @@ export default class Player {
 
   private player: any // ShakaPlayer
 
+  private smartlibSession: any // 
   private simidAdData: any = undefined
-
   private simidController: SimidController | undefined
 
   constructor(appContainer: HTMLElement, playerContainer: HTMLElement, videoElement: HTMLMediaElement) {
@@ -26,7 +27,21 @@ export default class Player {
   }
 
   public async load(url: string) {
-    await this.player.load(url)
+
+    // Get stream domain name
+    const domain = (new URL(url)).hostname
+
+    // Initialize SmartLib session
+    SmartLib.getInstance().init('', '', domain)
+    this.smartlibSession = SmartLib.getInstance().createStreamingSession()
+    this.setAdEventsListeners(this.smartlibSession)
+
+    // Attach player to smartlib session
+    this.smartlibSession.attachPlayer(this.player)
+
+    const result = await this.smartlibSession.getURL(url)
+
+    await this.player.load(result.url || url)
     this.videoElement.play()
     // .then(_ => console.log("OK"))
     .catch(error => {
@@ -61,6 +76,44 @@ export default class Player {
     shaka.polyfill.installAll()
     this.player = new shaka.Player()
     await this.player.attach(this.videoElement)
+  }
+
+  private setAdEventsListeners(session: any/*: SmartLib.Session*/) {
+    // this.session.attachSimidController(new BpkSimidControllerApi(window))
+    session.activateAdvertising()
+    session.setAdEventsListener({
+        onPrepareAdBreak: (adBreakData: any) => {
+            console.log('[SmartLib] onPrepareAdBreak:', adBreakData)
+        },
+        onAdBreakBegin: (adBreakData: any) => {
+          console.log('[SmartLib] onAdBreakBegin:', adBreakData)
+        },
+        onPrepareAd: (adData: any, adBreakData: any) => {
+          console.log('[SmartLib] onPrepareAd:', adData)
+        },
+        onAdBegin: (adData: any, adBreakData: any) => {
+          console.log('[SmartLib] onAdBegin:', adData)
+          if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
+            this.simidAdData = adData
+            const duration = adData.duration ? (adData.duration / 1000) : 0
+            this.loadSimid(adData.nonLinearIframeResources[0].url, duration)
+          }
+        },
+        onAdSkippable: (adData: any, adBreakData: any, adSkippablePosition: any, adEndPosition: any, adBreakEndPosition: any) => {
+          console.log('[SmartLib] onAdSkippable:', adData)
+        },
+        onAdEnd: (adData: any, adBreakData: any) => {
+          console.log('[SmartLib] onAdEnd:', adData)
+          if (this.simidAdData && this.simidController) {
+            this.simidController.reset()
+            this.simidController = undefined
+            this.simidAdData = undefined
+          }
+        },
+        onAdBreakEnd: (adBreakData: any) => {
+          console.log('[SmartLib] onAdBreakEnd:', adBreakData)
+        }
+    })
   }
 
   private getMediaState(): MediaState {
@@ -106,6 +159,7 @@ export default class Player {
     if (skipped && this.simidAdData) {
       this.skipCurrentAd(this.simidAdData)
     }
+    this.simidController = undefined
   }
 
   private setElementDimensions(element: HTMLElement, dimensions: DOMRect) {
@@ -121,7 +175,5 @@ export default class Player {
       return
     }
     this.player.currentTime = (adData.startPosition + adData.duration) / 1000
-  }
-
-  
+  } 
 }
