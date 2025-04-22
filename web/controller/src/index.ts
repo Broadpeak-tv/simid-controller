@@ -5,6 +5,7 @@ export {
   PlayerMessage,
   MediaMessage,
   MediaState,
+  Message,
   StopCode
 } from './SimidMessages'
 export { SimidComponent } from './SimidComponent'
