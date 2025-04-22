@@ -55,12 +55,12 @@ export default class Player {
     await this.player.unload()
   }
 
-  public loadSimid(creativeUri: string, duration: number) {
+  public loadSimid(creativeUri: string, adParameters: string, duration: number) {
 
     // Consider player container dimensions as initial creative dimensions
     const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
 
-    this.simidController = new SimidController(playerRect, creativeUri, '', duration)
+    this.simidController = new SimidController(playerRect, creativeUri, adParameters, duration)
 
     this.simidController.onGetMediaState = () => this.getMediaState()
     this.simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(iframe)
@@ -95,8 +95,9 @@ export default class Player {
           console.log('[SmartLib] onAdBegin:', adData)
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
             this.simidAdData = adData
+            const iframeResources = adData.nonLinearIframeResources[0]
             const duration = adData.duration ? (adData.duration / 1000) : 0
-            this.loadSimid(adData.nonLinearIframeResources[0].url, duration)
+            this.loadSimid(iframeResources.url, iframeResources.parameters, duration)
           }
         },
         onAdSkippable: (adData: any, adBreakData: any, adSkippablePosition: any, adEndPosition: any, adBreakEndPosition: any) => {
