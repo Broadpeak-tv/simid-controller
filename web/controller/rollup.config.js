@@ -32,7 +32,7 @@ export default arg => {
     },
     {
       // path to your declaration files root
-      input: './dist/types/web/controller/src/index.d.ts',
+      input: './dist/types/index.d.ts',
       output: [
         {
           file: 'dist/index.d.ts',
