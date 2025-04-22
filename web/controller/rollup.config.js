@@ -1,5 +1,5 @@
 import commonjs from '@rollup/plugin-commonjs'
-import typescript from 'rollup-plugin-typescript2'
+import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
@@ -19,7 +19,7 @@ export default arg => {
       }],
       plugins: [
         // Compile TypeScript files
-        typescript({ useTsconfigDeclarationDir: true }),
+        typescript(),
         // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
         commonjs({
           include: 'node_modules/**'
