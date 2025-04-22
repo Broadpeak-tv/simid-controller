@@ -1,5 +1,5 @@
 {
-  "name": "@broadpeak/simid-demo-app",
+  "name": "@broadpeak-tv/simid-demo-app",
   "version": "0.0.1",
   "description": "Broadpeak SIMID demo app",
   "scripts": {
@@ -12,7 +12,7 @@
   "dependencies": {
   },
   "devDependencies": {
-    "@broadpeak/simid-controller": "file:../controller",
+    "@broadpeak-tv/simid-controller": "file:../controller",
     "@types/node": "18.11.18",
     "@types/webpack": "5.28.0",
     "rimraf": "6.0.1",
