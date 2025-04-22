@@ -1,7 +1,9 @@
-import { SimidController, MediaState } from '@broadpeak/simid-controller'
+import { MediaState } from '@broadpeak-tv/simid-controller'
+import SimidController from './SimidController'
 
 declare const shaka: any
-declare let SmartLib: any
+declare const SmartLib: any
+declare const GenericSimidControllerApi: any
 
 export default class Player {
 
@@ -12,9 +14,10 @@ export default class Player {
 
   private player: any // ShakaPlayer
 
-  private smartlibSession: any // 
+  private smartlibSession: any // SmartLib.Session
   private simidAdData: any = undefined
   private simidController: SimidController | undefined
+  private bpkSimidController: any /*GenericSimidControllerApi*/
 
   constructor(appContainer: HTMLElement, playerContainer: HTMLElement, videoElement: HTMLMediaElement) {
     this.appContainer = appContainer
@@ -22,6 +25,8 @@ export default class Player {
     this.videoElement = videoElement
 
     this.simidIframe = undefined
+
+    this.bpkSimidController = new GenericSimidControllerApi()
 
     this.loadPlayer()
   }
@@ -39,6 +44,9 @@ export default class Player {
     // Attach player to smartlib session
     this.smartlibSession.attachPlayer(this.player)
 
+    // Attach bpkSimidController to the session
+    this.smartlibSession.attachSimidController(this.bpkSimidController)
+
     const result = await this.smartlibSession.getURL(url)
 
     await this.player.load(result.url || url)
@@ -52,6 +60,7 @@ export default class Player {
   }
   
   public async stop() {
+    this.smartlibSession.stopStreamingSession()
     await this.player.unload()
   }
 
@@ -68,6 +77,8 @@ export default class Player {
     this.simidController.onResizeSimid = (dimensions: DOMRect) => this.resizeSimid(dimensions)
     this.simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
     this.simidController.onComplete = (skipped: boolean) => this.completeAd(skipped)
+
+    this.simidController.simidControllerApi = this.bpkSimidController
 
     this.simidController.load()
   }
