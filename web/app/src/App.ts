@@ -1,5 +1,3 @@
-
-import { SimidController, MediaState } from '@broadpeak/simid-controller'
 import Player from './Player'
 
 const STORAGE_BASE_KEY = 'simid-demo-app:'
@@ -18,8 +16,6 @@ export default class App {
   private creativeEditDuration: HTMLTextAreaElement
 
   private player: Player
-
-  private simidController: SimidController | undefined
 
   constructor() {
     this.appContainer = document.getElementById('main') as HTMLElement
