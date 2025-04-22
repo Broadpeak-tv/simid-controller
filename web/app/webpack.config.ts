@@ -35,7 +35,6 @@ const config: webpack.Configuration = {
     port: 8080,
     open: 'index.html',
     compress: true,
-    hot: true,
   },
   plugins: [
     new webpack.HotModuleReplacementPlugin(),
