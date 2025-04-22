@@ -150,13 +150,18 @@ export class SimidComponent {
       }
   }
 
+  protected postMessage(message: Message) {
+    this.log(`[SIMID][${this._type}][S] ` + JSON.stringify(message))
+    this._target.postMessage(JSON.stringify(message), '*')
+  }
+
   protected resolveMessage(incomingMessage: Message, outgoingArgs?: any) {
     const args: ResolveMessageArgs = {
       messageId: incomingMessage.messageId,
       value: outgoingArgs,
     }
     const message = this._createMessage(ProtocolMessage.RESOLVE, args)
-    this._postMessage(message)
+    this.postMessage(message)
   }
 
   /**
@@ -174,7 +179,7 @@ export class SimidComponent {
       value,
     }
     const message = this._createMessage(ProtocolMessage.REJECT, args)
-    this._postMessage(message)
+    this.postMessage(message)
   }
 
   protected log(message) {
@@ -218,20 +223,15 @@ export class SimidComponent {
       // up a promise that will call resolve or reject with its parameters.
       return new Promise((resolve, reject) => {
         this._addResponseListener(message.messageId, resolve, reject)
-        this._postMessage(message)
+        this.postMessage(message)
       })
     }
     // A default promise will just resolve immediately.
     // It is assumed no one would listen to these promises, but if they do it will "just work".
     return new Promise((resolve, reject) => {
-      this._postMessage(message)
+      this.postMessage(message)
       resolve()
     })
-  }
-
-  protected _postMessage(message: Message) {
-    this.log(`[SIMID][${this._type}][S] ` + JSON.stringify(message))
-    this._target.postMessage(JSON.stringify(message), '*')
   }
 
   /**
