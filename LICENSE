@@ -1,0 +1,24 @@
+[Broadpeak SIMID Controller SDK]
+https://github.com/Broadpeak-tv/simid-controller
+Copyright © 2024-25 Broadpeak, S.A. 
+All Rights Reserved.
+
+This code is licensed under the Apache License, Version 2.0 (the "License").
+You may not use this file except in compliance with the License.
+You may obtain a copy of the terms of the License at: 
+ http://www.apache.org/licenses/LICENSE-2.0 
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+NB/ Broadpeak, S.A., as copyright owner, reserves the right to make available and publish such code under other terms of its choice.
+
+Open Source Software project & Component 
+The Broadpeak SIMID Controller SDK is written based on and by reference to the following: 
+
+NAME OF OPEN SOURCE: Secure Interactive Media Interface Definition (SIMID) – from IAB (iabtechlab.com - https://iabtechlab.com/SIMID)
+Version: 1.1 / License :  Apache 2.0
+Link: https://github.com/InteractiveAdvertisingBureau/SIMID/blob/master/LICENSE 
