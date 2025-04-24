@@ -39,7 +39,7 @@ simidController.onResizePlayer { dimensions: DOMRect ->
   // Called by the SIMID controller when the main player element has to be resized
 }
 
-simidController.onComplete = {skipped: boolean ->
+simidController.onComplete = {skipped: Boolean ->
   // Called by the SIMID controller when the SIMID non-linear ad is completed  with indication if ad has been skipped
 }
 
