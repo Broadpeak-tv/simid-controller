@@ -1,4 +1,4 @@
-# SIMID controller
+# SIMID controller for Web platform
 
 Library/module that provides a base SIMID controller (a.k.a. as SIMID player) as specified by IAB: https://interactiveadvertisingbureau.github.io/SIMID/simid-1.1.0.html
 
@@ -9,10 +9,11 @@ In the main application, when the application wants to load and display a SIMID 
 The following source code illustrates how to instantiate and manage the provided ``simid.SimidController``.
 
 ```js
-// Create SIMID controller 
-const simidController = new SimidController(playerRect, creativeUri, adParameters, duration)
+// 1 - Creates SIMID controller 
+const simidController = new SimidController(playerDimensions, creativeUri, adParameters, duration)
 
-// Provides callback functions
+// 2 - Provides callback functions to the SIMID controller which delegates UI process to the application
+
 simidController.onGetMediaState = () => {
   // Returns media state such as duration, currentTime, paused etc
   return {
@@ -21,36 +22,34 @@ simidController.onGetMediaState = () => {
   }
 }
 
-simidController.onAddSimid = () => {
-  // Add SIMID iframe into current DOM
-  // ...
+simidController.onAddSimid = (iframe: HTMLIFrameElement) => {
+  // Called by the SIMID controller when a SIMID iframe needs to be integrated into current DOM
 }
 
 simidController.onShowSimid = (show: boolean) => {
-  // Show or hide the SIMID iframe
-  // ...
+  // Called by the SIMID controller when to show or hide the SIMID iframe
 }
 
 simidController.onResizeSimid = (dimensions: DOMRect) => {
-  // Resize the SIMID iframe
-  // ...
+  // Called by the SIMID controller when the SIMID iframe has to be resized
 }
   
 simidController.onResizePlayer = (dimensions: DOMRect) => {
-  // Resize the main player video
-  // ...
+  // Called by the SIMID controller when the main player element has to be resized
 }
 
 simidController.onComplete = (skipped: boolean) => {
-  // Handle the completion of the non linear ad, with indication if ad has been skipped
-  // ...
+  // Called by the SIMID controller when the SIMID non-linear ad is completed  with indication if ad has been skipped
 }
 
-// Load the SIMID creative
+// 3 - Loads the SIMID creative
+// Once SIMID iframe is loaded (see onAddSimid callback) the SIMID creative and controller will initiate the session 
 simidController.load()
 ```
 
-### Build the library
+## Build the library
 
-``# npm ci``
-``# npm run build``
+```sh
+# npm clean install
+# npm run build
+```
