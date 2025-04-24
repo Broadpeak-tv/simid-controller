@@ -1,4 +1,4 @@
-# SIMID controller for Web platform
+# SIMID controller for Web platforms
 
 Library/module that provides a base SIMID controller (a.k.a. as SIMID player) as specified by IAB: https://interactiveadvertisingbureau.github.io/SIMID/simid-1.1.0.html
 
