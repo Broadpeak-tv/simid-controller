@@ -4,8 +4,8 @@ const STORAGE_BASE_KEY = 'simid-demo-app:'
 
 export default class App {
 
-  private appContainer: HTMLElement
   private playerContainer: HTMLElement
+  private playerElement: HTMLElement
   private videoElement: HTMLMediaElement
 
   private streamEditUrl: HTMLTextAreaElement
@@ -18,8 +18,8 @@ export default class App {
   private player: Player
 
   constructor() {
-    this.appContainer = document.getElementById('main') as HTMLElement
-    this.playerContainer = document.getElementById('player') as HTMLElement
+    this.playerContainer = document.getElementById('main') as HTMLElement
+    this.playerElement = document.getElementById('player') as HTMLElement
     this.videoElement = document.getElementById('video') as HTMLMediaElement
     this.streamEditUrl = document.getElementById('stream-edit-url') as HTMLTextAreaElement
     this.streamButtonLoad = document.getElementById('stream-button-load') as HTMLButtonElement
@@ -28,7 +28,7 @@ export default class App {
     this.creativeEditUrl = document.getElementById('creative-edit-url') as HTMLTextAreaElement
     this.creativeEditDuration = document.getElementById('creative-edit-duration') as HTMLTextAreaElement
 
-    this.player = new Player(this.appContainer, this.playerContainer, this.videoElement)
+    this.player = new Player(this.playerContainer, this.playerElement, this.videoElement)
   }
 
   public async init() {

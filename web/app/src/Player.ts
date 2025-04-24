@@ -7,8 +7,8 @@ declare const GenericSimidControllerApi: any
 
 export default class Player {
 
-  private appContainer: HTMLElement
   private playerContainer: HTMLElement
+  private playerElement: HTMLElement
   private videoElement: HTMLMediaElement
   private simidIframe: HTMLIFrameElement | undefined
 
@@ -19,9 +19,9 @@ export default class Player {
   private simidController: SimidController | undefined
   private bpkSimidController: any /*GenericSimidControllerApi*/
 
-  constructor(appContainer: HTMLElement, playerContainer: HTMLElement, videoElement: HTMLMediaElement) {
-    this.appContainer = appContainer
+  constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
+    this.playerElement = playerElement
     this.videoElement = videoElement
 
     this.simidIframe = undefined
@@ -135,7 +135,7 @@ export default class Player {
   }
 
   private addSimidIframe(iframe: HTMLIFrameElement): boolean {
-    this.appContainer.appendChild(iframe)
+    this.playerContainer.appendChild(iframe)
     this.simidIframe = iframe
     return true
   }
@@ -164,7 +164,7 @@ export default class Player {
   }
 
   private resizePlayer(dimensions: DOMRect) {
-    this.setElementDimensions(this.playerContainer, dimensions)
+    this.setElementDimensions(this.playerElement, dimensions)
   }
 
   private completeAd(skipped: boolean) {
