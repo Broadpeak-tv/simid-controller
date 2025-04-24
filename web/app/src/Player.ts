@@ -94,16 +94,16 @@ export default class Player {
     session.activateAdvertising()
     session.setAdEventsListener({
         onPrepareAdBreak: (adBreakData: any) => {
-            console.log('[SmartLib] onPrepareAdBreak:', adBreakData)
+            console.log('[Player] onPrepareAdBreak:', adBreakData)
         },
         onAdBreakBegin: (adBreakData: any) => {
-          console.log('[SmartLib] onAdBreakBegin:', adBreakData)
+          console.log('[Player] onAdBreakBegin:', adBreakData)
         },
         onPrepareAd: (adData: any, adBreakData: any) => {
-          console.log('[SmartLib] onPrepareAd:', adData)
+          console.log('[Player] onPrepareAd:', adData)
         },
         onAdBegin: (adData: any, adBreakData: any) => {
-          console.log('[SmartLib] onAdBegin:', adData)
+          console.log('[Player] onAdBegin:', adData)
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
             this.simidAdData = adData
             const iframeResources = adData.nonLinearIframeResources[0]
@@ -112,10 +112,10 @@ export default class Player {
           }
         },
         onAdSkippable: (adData: any, adBreakData: any, adSkippablePosition: any, adEndPosition: any, adBreakEndPosition: any) => {
-          console.log('[SmartLib] onAdSkippable:', adData)
+          console.log('[Player] onAdSkippable:', adData)
         },
         onAdEnd: (adData: any, adBreakData: any) => {
-          console.log('[SmartLib] onAdEnd:', adData)
+          console.log('[Player] onAdEnd:', adData)
           if (this.simidAdData && this.simidController) {
             this.simidController.reset()
             this.simidController = undefined
@@ -123,7 +123,7 @@ export default class Player {
           }
         },
         onAdBreakEnd: (adBreakData: any) => {
-          console.log('[SmartLib] onAdBreakEnd:', adBreakData)
+          console.log('[Player] onAdBreakEnd:', adBreakData)
         }
     })
   }
@@ -151,7 +151,9 @@ export default class Player {
     if (!this.simidIframe) {
       return false
     }
-    // Check if requested SIMID dimensions is not outside original player dimensions
+    console.log('[Player] Resize SIMID:', dimensions)
+
+    // Check if requested SIMID dimensions is not outside original player container dimensions
     const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
     const widthFits = dimensions.x + dimensions.width <= playerRect.width
     const heightFits = dimensions.y + dimensions.height <= playerRect.height
@@ -164,10 +166,12 @@ export default class Player {
   }
 
   private resizePlayer(dimensions: DOMRect) {
+    console.log('[Player] Resize player:', dimensions)
     this.setElementDimensions(this.playerElement, dimensions)
   }
 
   private completeAd(skipped: boolean) {
+    console.log('[Player] Complete ad, skipped:', skipped)
     if (skipped && this.simidAdData) {
       this.skipCurrentAd(this.simidAdData)
     }
