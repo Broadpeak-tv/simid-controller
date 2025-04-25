@@ -24,8 +24,6 @@ export const PlayerMessage = {
   AD_STOPPED: 'Player:adStopped',
   FATAL_ERROR: 'Player:fatalError',
   INIT: 'Player:init',
-  // BPK
-  KEY_DOWN: 'Player:keyDown',
   LOG: 'Player:log',
   RESIZE: 'Player:resize',
   START_CREATIVE: 'Player:startCreative',

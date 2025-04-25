@@ -29,7 +29,6 @@ object PlayerMessage {
     const val AD_STOPPED = "Player:adStopped"
     const val FATAL_ERROR = "Player:fatalError"
     const val INIT = "Player:init"
-    const val KEY_DOWN = "Player:keyDown"
     const val LOG = "Player:log"
     const val RESIZE = "Player:resize"
     const val START_CREATIVE = "Player:startCreative"

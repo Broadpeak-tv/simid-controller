@@ -65,16 +65,6 @@ public open class SimidController (
 
     private val mainScope = MainScope()
 
-    private val keyCodeMessageArgsMap = mapOf(
-        KeyEvent.KEYCODE_DPAD_CENTER to PlayerKeyDownMessageArgs("Enter", 0x0D),
-        KeyEvent.KEYCODE_ENTER to PlayerKeyDownMessageArgs("Enter", 0x0D),
-        KeyEvent.KEYCODE_DPAD_LEFT to PlayerKeyDownMessageArgs("ArrowLeft", 0x25),
-        KeyEvent.KEYCODE_DPAD_UP to PlayerKeyDownMessageArgs("ArrowUp", 0x26),
-        KeyEvent.KEYCODE_DPAD_RIGHT to PlayerKeyDownMessageArgs("ArrowRight", 0x27),
-        KeyEvent.KEYCODE_DPAD_DOWN to PlayerKeyDownMessageArgs("ArrowDown", 0x28),
-        // TO COMPLETE...
-    )
-
     init {
         addCreativeMessageListeners()
     }
@@ -155,16 +145,6 @@ public open class SimidController (
     private fun onCreativeGetMediaState(message: Message) {
         activity.runOnUiThread {
             val mediaState: MediaState? = onGetMediaState?.invoke()
-//        val args: CreativeGetMediaStateMessageArgs = {
-//            currentSrc: mediaState ? mediaState.currentSrc : '',
-//            currentTime: mediaState ? mediaState.currentTime : 0,
-//            duration: mediaState ? mediaState.duration : 0,
-//            ended: mediaState ? mediaState.ended : true,
-//            muted: mediaState ? mediaState.muted : false,
-//            paused: mediaState ? mediaState.paused : true,
-//            volume: mediaState ? mediaState.volume : 0,
-//            fullscreen: mediaState ? mediaState.fullscreen : false,
-//        }
             this.resolveMessage(message, mediaState)
         }
     }
@@ -192,19 +172,6 @@ public open class SimidController (
             onResizePlayer?.invoke(playerRect)
             resolveMessage(message)
         }
-
-
-//        if (!isValidDimensions(args.creativeDimensions)) {
-//            Log.w(TAG, "Resize dimensions dot not fit in parent view")
-////            rejectMessage(
-////                message,
-////                CreativeErrorCode.EXPAND_NOT_POSSIBLE,
-////                "Unable to resize a non-linear ad with dimensions bigger than the player. Please modify dimensions to a smaller size."
-////            )
-//        } // else {
-//        resizePlayer(args.mediaDimensions)
-//        resolveMessage(message)
-////        }
     }
 
     private fun onCreativeRequestSkip(message: Message) {
@@ -284,30 +251,6 @@ public open class SimidController (
             webView?.evaluateJavascript("console.log('$message');", null)
         }
     }
-
-    private fun dispatchKeyDownEvent(key: String, keyCode: Int) {
-
-//        activity.runOnUiThread {
-//            val text = "$key - $keyCode"
-//            val toast = Toast.makeText(activity, text, Toast.LENGTH_SHORT) // in Activity
-//            toast.show()
-//        }
-
-        val script =
-            """
-            console.log("keydown:", "$key", "$keyCode")
-            var event = document.createEvent('Event'); 
-	        event.initEvent("keydown", true, true); 
-            event.code = event.key = "$key";
-            event.keyCode = $keyCode;
-            window.dispatchEvent(event);
-            """.trimIndent()
-
-        activity.runOnUiThread {
-            webView?.evaluateJavascript(script, null)
-        }
-    }
-
 
     /**********************************************************************************************
      * MESSAGE LISTENERS
