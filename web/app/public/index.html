@@ -73,11 +73,15 @@
       padding: 20px;
       border-radius: 5px;
       z-index: 2;
+      width: 90%
     }
 
     .input {
       display: flex;
       align-items: center;
+    }
+    #stream-edit-url {
+      width: 100%;
     }
 
     .input * {
@@ -103,17 +107,9 @@
       <div class="inputs">
         <div id="stream" class="input">
           <label for="stream-edit-url">Stream:</label>
-          <input type="text" id="stream-edit-url" size=50 value="">
+          <input type="text" id="stream-edit-url" size=100 value="">
           <button id="stream-button-load">LOAD</button>
           <button id="stream-button-stop">STOP</button>
-        </div>
-
-        <div id="creative" class="input">
-          <label for="creative-edit-url">Creative:</label>
-          <input type="text" id="creative-edit-url" size=50 value="">
-          <label for="creative-edit-duration">Duration:</label>
-          <input type="text" id="creative-edit-duration" size=5 value="10">
-          <button id="creative-button-load">LOAD</button>
         </div>
       </div>
 

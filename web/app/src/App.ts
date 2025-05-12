@@ -11,9 +11,6 @@ export default class App {
   private streamEditUrl: HTMLTextAreaElement
   private streamButtonLoad: HTMLButtonElement
   private streamButtonStop: HTMLButtonElement
-  private creativeButtonLoad: HTMLButtonElement
-  private creativeEditUrl: HTMLTextAreaElement
-  private creativeEditDuration: HTMLTextAreaElement
 
   private player: Player
 
@@ -24,9 +21,6 @@ export default class App {
     this.streamEditUrl = document.getElementById('stream-edit-url') as HTMLTextAreaElement
     this.streamButtonLoad = document.getElementById('stream-button-load') as HTMLButtonElement
     this.streamButtonStop = document.getElementById('stream-button-stop') as HTMLButtonElement
-    this.creativeButtonLoad = document.getElementById('creative-button-load') as HTMLButtonElement
-    this.creativeEditUrl = document.getElementById('creative-edit-url') as HTMLTextAreaElement
-    this.creativeEditDuration = document.getElementById('creative-edit-duration') as HTMLTextAreaElement
 
     this.player = new Player(this.playerContainer, this.playerElement, this.videoElement)
   }
@@ -35,11 +29,8 @@ export default class App {
 
     this.streamButtonLoad.onclick = (e) => this.loadStream()
     this.streamButtonStop.onclick = (e) => this.stopStream()
-    this.creativeButtonLoad.onclick = (e) => this.loadSimid()
-
+    
     this.streamEditUrl.value = this.getFromLocalStorage('stream', 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd')
-    this.creativeEditUrl.value = this.getFromLocalStorage('creative-uri')
-    this.creativeEditDuration.value = this.getFromLocalStorage('creative-duration', '10')
   }
 
   private async loadStream() {
@@ -50,17 +41,6 @@ export default class App {
 
   private async stopStream() {
     await this.player.stop()
-  }
-
-  private loadSimid() {
-    
-    const creativeUri = this.creativeEditUrl.value
-    const duration = parseInt(this.creativeEditDuration.value)
-
-    this.player.loadSimid(creativeUri, '', duration)
-
-    this.saveToLocalStorage('creative-uri', this.creativeEditUrl.value)
-    this.saveToLocalStorage('creative-duration', this.creativeEditDuration.value)
   }
 
   private getFromLocalStorage(field: string, defaultValue = '') : string {
