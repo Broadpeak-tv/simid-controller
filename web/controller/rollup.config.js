@@ -3,15 +3,19 @@ import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
 
+// Output dir and bundle name
 const outDir = 'dist/'
-const name = 'simid-controller'
+const outFilename = 'simid-controller'
+
+// package namespace/global variable
+const name = 'simid'
 
 export default arg => {
   return [
     {
       input: `src/index.ts`,
       output: [{
-        file: outDir + name + '.js',
+        file: outDir + outFilename + '.js',
         format: "umd",
         sourcemap: true,
         exports: "auto",
