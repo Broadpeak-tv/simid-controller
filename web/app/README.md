@@ -17,7 +17,8 @@ See [web/controller/README.md](../controller/README.md)
 ### Run the application
 
 ```sh
-# npm start
+npm ci
+npm start
 ```
 
 The demonstration application will be available at http://localhost:8080

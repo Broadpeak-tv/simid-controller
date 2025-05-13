@@ -50,6 +50,6 @@ simidController.load()
 ## Build the library
 
 ```sh
-# npm clean install
-# npm run build
+npm ci
+npm run build
 ```
