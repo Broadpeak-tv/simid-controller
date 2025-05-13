@@ -9,6 +9,7 @@
     "dist"
   ],
   "scripts": {
+    "clean": "rimraf ./dist",
     "build": "rollup -c rollup.config.mjs",
     "dev": "rollup --watch -c rollup.config.mjs",
     "doc": "typedoc --options typedoc.json --readme README.md"
