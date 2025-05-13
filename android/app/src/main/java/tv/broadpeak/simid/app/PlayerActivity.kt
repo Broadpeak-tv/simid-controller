@@ -1,10 +1,12 @@
 package tv.broadpeak.simid.app
 
+import android.animation.ValueAnimator
 import android.graphics.Rect
 import android.os.Bundle
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.webkit.WebView
 import android.widget.RelativeLayout
 import androidx.activity.enableEdgeToEdge
@@ -53,6 +55,9 @@ class PlayerActivity : AppCompatActivity() {
 
     private var simidWebView: WebView? = null
     private var webViewContainer: ViewGroup? = null
+
+    // Global flag to control animation usage
+    private var useAnimations: Boolean = true
 
     companion object {
         private const val TAG = "Player"
@@ -286,13 +291,79 @@ class PlayerActivity : AppCompatActivity() {
     private fun resizePlayer(dimensions: Rect): Boolean {
         Log.d(TAG, "Resize player: ${dimensions.toShortString()}")
 
+        val playerView = playerView ?: return false
+        
         runOnUiThread {
-            val layoutParams = playerView?.layoutParams as ViewGroup.MarginLayoutParams
-            layoutParams.leftMargin = dimensions.left
-            layoutParams.topMargin = dimensions.top
-            layoutParams.width = dimensions.width()
-            layoutParams.height = dimensions.height()
-            playerView?.layoutParams = layoutParams
+            val currentLayoutParams = playerView.layoutParams as ViewGroup.MarginLayoutParams
+            
+            if (!useAnimations) {
+                // Instant resize without animation
+                (playerView.layoutParams as ViewGroup.MarginLayoutParams).apply {
+                    leftMargin = dimensions.left
+                    topMargin = dimensions.top
+                    width = dimensions.width()
+                    height = dimensions.height()
+                }
+                playerView.requestLayout()
+
+            } else {
+                // Animated resize
+                val currentLeft = currentLayoutParams.leftMargin
+                val currentTop = currentLayoutParams.topMargin
+                val currentWidth = currentLayoutParams.width
+                val currentHeight = currentLayoutParams.height
+
+                val leftAnimator = ValueAnimator.ofInt(currentLeft, dimensions.left)
+                val topAnimator = ValueAnimator.ofInt(currentTop, dimensions.top)
+                val widthAnimator = ValueAnimator.ofInt(currentWidth, dimensions.width())
+                val heightAnimator = ValueAnimator.ofInt(currentHeight, dimensions.height())
+
+                val duration = 300L // Animation duration in milliseconds
+
+                leftAnimator.apply {
+                    addUpdateListener { animation ->
+                        val value = animation.animatedValue as Int
+                        (playerView.layoutParams as ViewGroup.MarginLayoutParams).leftMargin = value
+                        playerView.requestLayout()
+                    }
+                    interpolator = AccelerateDecelerateInterpolator()
+                    this.duration = duration
+                    start()
+                }
+
+                topAnimator.apply {
+                    addUpdateListener { animation ->
+                        val value = animation.animatedValue as Int
+                        (playerView.layoutParams as ViewGroup.MarginLayoutParams).topMargin = value
+                        playerView.requestLayout()
+                    }
+                    interpolator = AccelerateDecelerateInterpolator()
+                    this.duration = duration
+                    start()
+                }
+
+                widthAnimator.apply {
+                    addUpdateListener { animation ->
+                        val value = animation.animatedValue as Int
+                        playerView.layoutParams.width = value
+                        playerView.requestLayout()
+                    }
+                    interpolator = AccelerateDecelerateInterpolator()
+                    this.duration = duration
+                    start()
+                }
+
+                heightAnimator.apply {
+                    addUpdateListener { animation ->
+                        val value = animation.animatedValue as Int
+                        playerView.layoutParams.height = value
+                        playerView.requestLayout()
+                    }
+                    interpolator = AccelerateDecelerateInterpolator()
+                    this.duration = duration
+                    start()
+                }
+            }
         }
 
         return true
