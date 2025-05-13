@@ -9,8 +9,8 @@
     "dist"
   ],
   "scripts": {
-    "build": "rollup -c rollup.config.js",
-    "dev": "rollup --watch -c rollup.config.js",
+    "build": "rollup -c rollup.config.mjs",
+    "dev": "rollup --watch -c rollup.config.mjs",
     "doc": "typedoc --options typedoc.json --readme README.md"
   },
   "dependencies": {
