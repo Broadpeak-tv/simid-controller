@@ -2,6 +2,8 @@ import Player from './Player'
 
 const STORAGE_BASE_KEY = 'simid-demo-app:'
 
+const DEFAULT_STREAM_URL = 'https://d2lwku66j7s1id.cloudfront.net/9bf31c7ff062936a7f941ad65712fad3/out/v1/6e0f649095ca4131b16bd0f877048629/index.mpd?nl-config=demo-samples-live'
+
 export default class App {
 
   private playerContainer: HTMLElement
@@ -30,7 +32,7 @@ export default class App {
     this.streamButtonLoad.onclick = (e) => this.loadStream()
     this.streamButtonStop.onclick = (e) => this.stopStream()
     
-    this.streamEditUrl.value = this.getFromLocalStorage('stream', 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd')
+    this.streamEditUrl.value = this.getFromLocalStorage('stream', DEFAULT_STREAM_URL)
   }
 
   private async loadStream() {
