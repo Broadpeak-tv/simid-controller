@@ -1,12 +1,12 @@
 # SIMID demo application for Web platforms
 
-A sample web application to load SIMID creatives.
+A sample web application to play a video stream and to load SIMID creatives.
 
-This sample appplication is able to play a stream and to load SIMID creatives triggered by the Broadpeak [SmartLib agent](https://delivery-platform.broadpeak.tv/smartlib/).
+This sample appplication triggers display of SIMID creatives from triggers from the Broadpeak [SmartLib agent](https://delivery-platform.broadpeak.tv/smartlib/).
 
-The playback is achieved using open-source project [shaka-player](https://github.com/shaka-project/shaka-player).
+The playback is achieved using the open-source project [shaka-player](https://github.com/shaka-project/shaka-player).
 
-This application is using the SIMID controller from this project [web/controller](../controller), which requires to be built before running the application.
+This application is using the SIMID controller from this project [web/controller](../controller), which needs to be built before running the application.
 
 ## Run the demo
 
@@ -22,3 +22,7 @@ npm start
 ```
 
 The demonstration application will be available at http://localhost:8080
+
+After start, input the URL to a Broadpeak DAI stream in the input field, and click the "LOAD" button.
+
+The application will play the video stream, and at appropriate times (as configured in the Broadpeak DAI solution for that stream) will trigger display of the SIMID creatives.

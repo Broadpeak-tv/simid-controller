@@ -2,9 +2,9 @@
 
 Library/module that provides a base SIMID controller (a.k.a. as SIMID player) as specified by IAB: https://interactiveadvertisingbureau.github.io/SIMID/simid-1.1.0.html
 
-The SIMID controller component can be integrated into any web application in order to load a SIMID creative and to support SIMID protocol to enable communication with the SIMID creative.
+The SIMID controller component can be integrated into any web application in order to load SIMID creatives and to support the SIMID protocol that enables communication with the SIMID creative.
 
-In the main application, when the application wants to load and display a SIMID creative, it has to create a ``simid.SimidController`` class instance that will load the SIMID creative into an iframe, communicate with it through SIMID protocol and trigger the display of the SIMID iframe (visible state, dimensions). 
+In the main application, when the application wants to load and display a SIMID creative, it has to create a ``simid.SimidController`` class instance that will load the SIMID creative into an iframe, communicate with it through the SIMID protocol and trigger the display of the SIMID iframe (visible state, dimensions). 
 
 The following source code illustrates how to instantiate and manage the provided ``simid.SimidController``.
 
