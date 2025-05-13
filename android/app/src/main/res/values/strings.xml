@@ -1,4 +1,4 @@
 <resources>
     <string name="app_name">SIMID Demo Application</string>
-    <string name="button_load">LOAD</string>
+    <string name="button_load">LOAD TEST STREAM</string>
 </resources>
