@@ -2,7 +2,7 @@
 
 A sample web application to play a video stream and to load SIMID creatives.
 
-This sample appplication triggers display of SIMID creatives from triggers from the Broadpeak [SmartLib agent](https://delivery-platform.broadpeak.tv/smartlib/).
+This sample appplication displays SIMID creatives from triggers from the Broadpeak [SmartLib agent](https://delivery-platform.broadpeak.tv/smartlib/).
 
 The playback is achieved using the open-source project [shaka-player](https://github.com/shaka-project/shaka-player).
 
