@@ -2,8 +2,8 @@
 
 This repository provides an SDK with reference implementations for base SIMID controllers, for the following platforms:
 
-- [Web](web/README.md)
-- [Android](android/README.md)
+- [Web](web/controller/README.md)
+- [Android](android/controller/README.md)
 
 SIMID controllers are required in video player applications, to load and play SIMID ad creatives. Its primary role is to communicate with the SIMID creatives through the SIMID protocol.
 
