@@ -245,11 +245,6 @@ data class PlayerFatalErrorMessageArgs(
     val errorMessage: String
 )
 
-data class PlayerKeyDownMessageArgs(
-    val key: String,
-    val code: Int
-)
-
 data class CreativeData(
     val adParameters: String,
     val clickThruUrl: String

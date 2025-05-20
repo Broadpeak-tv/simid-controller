@@ -218,11 +218,6 @@ export type PlayerAdStoppedMessageArgs = {
 
 export type PlayerFatalErrorMessageArgs = ErrorMessageArgs
 
-// export type PlayerKeyDownMessageArgs = {
-//   key: string,
-//   code: number
-// }
-
 export type CreativeData = {
   adParameters: string
   clickThruUrl?: string
