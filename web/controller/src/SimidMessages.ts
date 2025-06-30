@@ -6,27 +6,27 @@ export const ProtocolMessage = {
 }
 
 export const MediaMessage = {
-  DURATION_CHANGE: 'Media:durationchange',
-  ENDED: 'Media:ended',
-  ERROR: 'Media:error',
-  PAUSE: 'Media:pause',
-  PLAY: 'Media:play',
-  PLAYING: 'Media:playing',
-  SEEKED: 'Media:seeked',
-  SEEKING: 'Media:seeking',
-  STALLED: 'Media:stalled',
-  TIME_UPDATE: 'Media:timeupdate',
-  VOLUME_CHANGE: 'Media:volumechange',
+  DURATION_CHANGE: 'SIMID:Media:durationchange',
+  ENDED: 'SIMID:Media:ended',
+  ERROR: 'SIMID:Media:error',
+  PAUSE: 'SIMID:Media:pause',
+  PLAY: 'SIMID:Media:play',
+  PLAYING: 'SIMID:Media:playing',
+  SEEKED: 'SIMID:Media:seeked',
+  SEEKING: 'SIMID:Media:seeking',
+  STALLED: 'SIMID:Media:stalled',
+  TIME_UPDATE: 'SIMID:Media:timeupdate',
+  VOLUME_CHANGE: 'SIMID:Media:volumechange',
 }
 
 export const PlayerMessage = {
-  AD_SKIPPED: 'Player:adSkipped',
-  AD_STOPPED: 'Player:adStopped',
-  FATAL_ERROR: 'Player:fatalError',
-  INIT: 'Player:init',
-  LOG: 'Player:log',
-  RESIZE: 'Player:resize',
-  START_CREATIVE: 'Player:startCreative',
+  AD_SKIPPED: 'SIMID:Player:adSkipped',
+  AD_STOPPED: 'SIMID:Player:adStopped',
+  FATAL_ERROR: 'SIMID:Player:fatalError',
+  INIT: 'SIMID:Player:init',
+  LOG: 'SIMID:Player:log',
+  RESIZE: 'SIMID:Player:resize',
+  START_CREATIVE: 'SIMID:Player:startCreative',
 }
 
 export const VideoEvent = {

@@ -96,7 +96,7 @@ export class SimidComponent {
   protected sendMessage(messageType: string, messageArgs?: any): Promise<void> {
     // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
 
-    const message: Message = this._createMessage(SIMID_NS + messageType, messageArgs)
+    const message: Message = this._createMessage(messageType, messageArgs)
     return this._sendMessage(message)
 	}
 
@@ -257,8 +257,7 @@ export class SimidComponent {
   }
 
   private _invokeMessageListeners(message: Message) {
-    const type = message.type.replace(SIMID_NS, '')
-    this._listeners.get(type)?.forEach((listener) => listener(message))
+    this._listeners.get(message.type)?.forEach((listener) => listener(message))
   }
 }
 // #endregion PRIVATE METHODS
