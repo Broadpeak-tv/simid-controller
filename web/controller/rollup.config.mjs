@@ -16,7 +16,7 @@ export default arg => {
       input: `src/index.ts`,
       output: [{
         file: outDir + outFilename + '.js',
-        format: "umd",
+        format: "esm",
         sourcemap: true,
         exports: "auto",
         name
