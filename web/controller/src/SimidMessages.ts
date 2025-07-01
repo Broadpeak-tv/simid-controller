@@ -45,24 +45,24 @@ export const VideoEvent = {
 
 /** Messages from the creative */
 export const CreativeMessage = {
-  CLICK_THRU: 'Creative:clickThru',
-  EXPAND_NONLINEAR: 'Creative:expandNonlinear',
-  COLLAPSE_NONLINEAR: 'Creative:collapseNonlinear',
-  FATAL_ERROR: 'Creative:fatalError',
-  GET_MEDIA_STATE: 'Creative:getMediaState',
-  LOG: 'Creative:log',
-  READY: 'Creative:Ready',
-  REPORT_TRACKING: 'Creative:reportTracking',
-  REQUEST_FULL_SCREEN: 'Creative:requestFullScreen',
-  REQUEST_SKIP: 'Creative:requestSkip',
-  REQUEST_STOP: 'Creative:requestStop',
-  REQUEST_PAUSE: 'Creative:requestPause',
-  REQUEST_PLAY: 'Creative:requestPlay',
-  REQUEST_RESIZE: 'Creative:requestResize',
-  REQUEST_VOLUME: 'Creative:requestVolume',
-  REQUEST_TRACKING: 'Creative:reportTracking',
-  REQUEST_CHANGE_AD_DURATION: 'Creative:requestChangeAdDuration',
-  REQUEST_VIDEO_LOCATION: 'Creative:requestVideoLocation'
+  CLICK_THRU: 'SIMID:Creative:clickThru',
+  EXPAND_NONLINEAR: 'SIMID:Creative:expandNonlinear',
+  COLLAPSE_NONLINEAR: 'SIMID:Creative:collapseNonlinear',
+  FATAL_ERROR: 'SIMID:Creative:fatalError',
+  GET_MEDIA_STATE: 'SIMID:Creative:getMediaState',
+  LOG: 'SIMID:Creative:log',
+  READY: 'SIMID:Creative:Ready',
+  REPORT_TRACKING: 'SIMID:Creative:reportTracking',
+  REQUEST_FULL_SCREEN: 'SIMID:Creative:requestFullScreen',
+  REQUEST_SKIP: 'SIMID:Creative:requestSkip',
+  REQUEST_STOP: 'SIMID:Creative:requestStop',
+  REQUEST_PAUSE: 'SIMID:Creative:requestPause',
+  REQUEST_PLAY: 'SIMID:Creative:requestPlay',
+  REQUEST_RESIZE: 'SIMID:Creative:requestResize',
+  REQUEST_VOLUME: 'SIMID:Creative:requestVolume',
+  REQUEST_TRACKING: 'SIMID:Creative:reportTracking',
+  REQUEST_CHANGE_AD_DURATION: 'SIMID:Creative:requestChangeAdDuration',
+  REQUEST_VIDEO_LOCATION: 'SIMID:Creative:requestVideoLocation'
 }
 
 /**
