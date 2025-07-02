@@ -107,11 +107,8 @@ abstract class SimidComponent (
         // Incrementing between messages keeps each message id unique.
         val messageId: Int = nextMessageId++
 
-        // Only create session does not need to be in the SIMID name space because it is part of the protocol.
-        val nameSpacedMessage: String = if (type == ProtocolMessage.CREATE_SESSION) type else (SIMID_NS + type)
-
         val message: Message = Message(
-            nameSpacedMessage,
+            type,
             sessionId,
             messageId,
             Calendar.getInstance().time.time,
@@ -171,8 +168,7 @@ abstract class SimidComponent (
     }
 
     private fun invokeMessageListeners(message: Message) {
-        val type = message.type.replace(SIMID_NS, "")
-        messageListeners[type]?.forEach { listener -> listener(message) }
+        messageListeners[message.type]?.forEach { listener -> listener(message) }
     }
 
     //endregion PRIVATE METHODS
