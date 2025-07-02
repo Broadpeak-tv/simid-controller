@@ -207,9 +207,9 @@ export class SimidComponent {
 
     // The message object as defined by the SIMID spec.
     const message: Message = {
+      type: type,
       sessionId: this._sessionId,
       messageId: messageId,
-      type: type,
       timestamp: Date.now(),
       args: args
     }
