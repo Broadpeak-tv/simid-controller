@@ -291,7 +291,8 @@ export class SimidController extends SimidComponent {
       this._startCreative()
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
-      this._completeAd()
+      this._stopAd()
+      // this._completeAd()
     }
   }
 
@@ -367,7 +368,6 @@ export class SimidController extends SimidComponent {
       return
     }
     this._isStopping = true
-    this.resetSession()
     this._stopPollingMediaState()
     // The iframe is only hidden on ad stoppage. The ad might still request tracking pixels before it is cleaned up
     this._onShowSimid?.(false)
@@ -381,6 +381,7 @@ export class SimidController extends SimidComponent {
         code: reason
       } as PlayerAdStoppedMessageArgs)
     
+    this.resetSession()
     this._destroySimidIframe()
     this.reset()
   }
