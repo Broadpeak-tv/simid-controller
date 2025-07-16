@@ -292,7 +292,6 @@ export class SimidController extends SimidComponent {
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
       this._stopAd()
-      // this._completeAd()
     }
   }
 
@@ -350,21 +349,15 @@ export class SimidController extends SimidComponent {
   }
 
   private _stopAd(reason = StopCode.PLAYER_INITATED) {
-    if (!this._simidIframe) {
-      return
-    }
     this._stopSession(false, reason)
   }
 
   private _skipAd() {
-    if (!this._simidIframe) {
-      return
-    }
     this._stopSession(true)
   }
 
   private async _stopSession(skipped = false, reason = StopCode.PLAYER_INITATED) {
-    if (this._isStopping) {
+    if (this._isStopping || !this._simidIframe) {
       return
     }
     this._isStopping = true
@@ -381,9 +374,8 @@ export class SimidController extends SimidComponent {
         code: reason
       } as PlayerAdStoppedMessageArgs)
     
-    this.resetSession()
     this._destroySimidIframe()
-    this.reset()
+    this.resetSession()
   }
 
   private _completeAd(skipped = false) {

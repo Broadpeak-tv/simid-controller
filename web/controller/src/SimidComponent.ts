@@ -42,6 +42,9 @@ export class SimidComponent {
   // The window where the message should be posted to.
   protected _target: Window
 
+  // postMessage handler
+  private _messageHandler: (event: MessageEvent) => void
+
   // Response listeners for sent messages
   protected _responseListeners: Map<number, MessageCallback> 
   // #endregion MEMBERS
@@ -63,9 +66,11 @@ export class SimidComponent {
     // The SIMID controller should use the creative iframe window as target window (see SimidPlayer)
     this._target = window.top
 
-    window.addEventListener('message', (event) => {
+    // Initialize postMessage event listener
+    this._messageHandler = (event: MessageEvent) => {
       setTimeout(() => this.receiveMessage(event), 0)
-    }, false)
+    }
+    window.addEventListener('message', this._messageHandler, false)
   }
   // #endregion CONSTRUCTOR
 
@@ -196,6 +201,8 @@ export class SimidComponent {
     this._nextMessageId = 1
     // TODO: Perhaps we should reject all associated promises.
     this._responseListeners.clear()
+    window.removeEventListener('message', this._messageHandler, false)
+    this._messageHandler = undefined
   }
 
   // #endregion PROTECTED METHODS
