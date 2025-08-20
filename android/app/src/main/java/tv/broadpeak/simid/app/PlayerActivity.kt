@@ -278,10 +278,18 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         runOnUiThread {
-            webViewContainer?.top = dimensions.top
-            webViewContainer?.left = dimensions.left
-            webViewContainer?.layoutParams?.width = dimensions.width()
-            webViewContainer?.layoutParams?.height = dimensions.height()
+            val w = dimensions.width()
+            val h = dimensions.height()
+
+            val lp = (webViewContainer?.layoutParams as? ViewGroup.MarginLayoutParams)
+                ?: ViewGroup.MarginLayoutParams(w, h)
+
+            lp.width = w
+            lp.height = h
+            lp.leftMargin = dimensions.left
+            lp.topMargin  = dimensions.top
+
+            webViewContainer?.layoutParams = lp
             webViewContainer?.requestLayout()
         }
 
