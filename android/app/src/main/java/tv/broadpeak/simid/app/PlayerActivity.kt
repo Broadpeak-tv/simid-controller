@@ -271,8 +271,8 @@ class PlayerActivity : AppCompatActivity() {
 
         // Check if requested SIMID dimensions is not outside original player dimensions
         val playerRect = Rect(playerContainer!!.left, playerContainer!!.top, playerContainer!!.width, playerContainer!!.height)
-        val widthFits = dimensions.top + dimensions.width() <= playerRect.width()
-        val heightFits = dimensions.left + dimensions.height() <= playerRect.height()
+        val widthFits = dimensions.left + dimensions.width() <= playerRect.width()
+        val heightFits = dimensions.top + dimensions.height() <= playerRect.height()
         if (!widthFits || !heightFits) {
             return false;
         }
