@@ -378,6 +378,8 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun skipCurrentAd(adData: AdData) {
-        player!!.seekTo(adData.startPosition + adData.duration)
+        runOnUiThread {
+            player!!.seekTo(adData.startPosition + adData.duration)
+        }
     }
 }
