@@ -190,6 +190,6 @@ export default class Player {
     if (!adData) {
       return
     }
-    this.player.currentTime = (adData.startPosition + adData.duration) / 1000
+    this.videoElement.currentTime = (adData.startPosition + adData.duration) / 1000
   } 
 }
