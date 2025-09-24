@@ -40,6 +40,12 @@ export class SimidController extends SimidComponent {
   // A reference to the iframe holding the SIMID creative
   private _simidIframe: HTMLIFrameElement
   
+  // Auto start the creative once loaded
+  private _autoStart: Boolean
+
+  // Creative initialized state
+  private _initialized: Boolean
+
   // A boolean indicating if current is stopping
   private _isStopping: boolean
 
@@ -94,6 +100,8 @@ export class SimidController extends SimidComponent {
     this._isStopping = false
 
     this._simidIframe = undefined
+    this._autoStart = true
+    this._initialized = false
     this._nonLinearStartTime = undefined
     this._adDuration = adDuration
     this._durationInterval = NaN
@@ -163,11 +171,25 @@ export class SimidController extends SimidComponent {
    * Initialize and load ad. This should be called before an ad plays.
    * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
    */
-  public load() {
+  public load(autoStart = false) {
+    this._autoStart = autoStart
     // [2] - Create iframe element
     this._simidIframe = this._createSimidIframe()
   
     // After the iframe is created the player will wait until the SIMID creative initializes the communication channel (see onCreateSession)
+  }
+
+  /**
+   * Starts the loaded creative
+   */
+  public start() {
+    if (!this._initialized) {
+      console.warn('[Player] Creative must be initialized before starting')
+      // start() my be called before creative has been fully initialized, then start it automatically when ready
+      this._autoStart = true
+      return
+    }
+    this._startCreative()
   }
 
   public reset() {
@@ -288,7 +310,10 @@ export class SimidController extends SimidComponent {
 
     try {
       await this.sendMessage(PlayerMessage.INIT, args)
-      this._startCreative()
+      this._initialized = true
+      if (this._autoStart) {
+        this._startCreative()
+      }
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
       this._stopAd()
