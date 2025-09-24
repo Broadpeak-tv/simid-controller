@@ -53,7 +53,6 @@ class PlayerActivity : AppCompatActivity() {
     private var simidControllers: MutableMap<String, SimidController>  = mutableMapOf()
     private var simidWebViews: MutableMap<String, WebView>  = mutableMapOf()
 
-
     private var bpkSimidController: BpkSimidController? = null
 
     private var webViewContainer: ViewGroup? = null
@@ -95,6 +94,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         player?.stop()
+        SmartLib.getInstance().release();
     }
 
     @OptIn(UnstableApi::class)
@@ -238,7 +238,6 @@ class PlayerActivity : AppCompatActivity() {
     private fun addSimidWebView(adId: String, webView: WebView): Boolean {
         // Do not add WebView in activity (not found a way to add while hiding it totally)
         // Add it in view only when requested to be shown
-        Log.d(TAG, "Add SIMID: $adId")
         simidWebViews[adId] = webView
         return true
     }
@@ -248,8 +247,6 @@ class PlayerActivity : AppCompatActivity() {
         if (simidWebView == null) {
             return
         }
-
-        Log.d(TAG, "Show SIMID: $adId => $show")
 
         runOnUiThread {
             if (show) {
