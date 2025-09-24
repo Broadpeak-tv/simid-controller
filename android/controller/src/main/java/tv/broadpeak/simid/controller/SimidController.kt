@@ -46,7 +46,9 @@ public open class SimidController (
 
     // The WebView used to load the SIMID creative
     private var webView: WebView? = null
-    private var webViewContainer: ViewGroup? = null
+
+    private var _autoStart: Boolean = true
+    private var _initialized: Boolean = false
 
     private var _duration: Float = 0.0F
     private var _nonLinearStartTime: Float = 0.0F
@@ -97,8 +99,23 @@ public open class SimidController (
 
     @SuppressLint("SetJavaScriptEnabled")
 
-    fun load() {
+    fun load(autoStart: Boolean = true) {
+        _autoStart = autoStart
         createWebView()
+    }
+
+    fun start() {
+        if (!_initialized) {
+            Log.v(TAG, "Creative must be initialized before starting")
+            // start() my be called before creative has been fully initialized, then start it automatically when ready
+            _autoStart = true
+            return
+        }
+        startCreative()
+    }
+
+    fun getSimidSessionId(): String {
+        return sessionId
     }
 
     fun reset() {
@@ -291,7 +308,10 @@ public open class SimidController (
         try {
             mainScope.launch {
                 sendMessage(PlayerMessage.INIT, args).await()
-                startCreative()
+                _initialized = true
+                if (_autoStart) {
+                    startCreative()
+                }
             }
         } catch (e: Exception) {
             Log.v(TAG, "Init failed: " + e.message)
