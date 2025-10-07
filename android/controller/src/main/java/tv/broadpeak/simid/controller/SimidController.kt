@@ -106,7 +106,7 @@ public open class SimidController (
 
     fun start() {
         if (!_initialized) {
-            Log.v(TAG, "Creative must be initialized before starting")
+            Log.w(TAG, "Creative must be initialized before starting")
             // start() my be called before creative has been fully initialized, then start it automatically when ready
             _autoStart = true
             return
@@ -167,14 +167,26 @@ public open class SimidController (
     }
 
     private fun onCreativeRequestPause(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, requestPause ignored")
+            return
+        }
         if (onPauseMedia?.invoke() == true) resolveMessage(message) else rejectMessage(message)
     }
 
     private fun onCreativeRequestPlay(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, requestPlay ignored")
+            return
+        }
         if (onPlayMedia?.invoke() == true) resolveMessage(message) else rejectMessage(message)
     }
 
     private fun onCreativeRequestResize(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, requestResize ignored")
+            return
+        }
         val args: CreativeRequestResizeMessageArgs = Gson().fromJson(message.args.toString(), CreativeRequestResizeMessageArgs::class.java)
 
         var dim = args.creativeDimensions
