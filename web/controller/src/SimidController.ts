@@ -237,14 +237,26 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestPause(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, requestPause ignored')
+      return
+    }
     this._onPauseMedia() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
   }
 
   protected onCreativeRequestPlay(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, requestPlay ignored')
+      return
+    }
     this._onPlayMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
   }
 
   protected onCreativeRequestResize(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, requestResize ignored')
+      return
+    }
     const args = message.args as CreativeRequestResizeMessageArgs
 
     // Resize SIMID iframe
