@@ -10,21 +10,19 @@ export default class Player {
   private playerContainer: HTMLElement
   private playerElement: HTMLElement
   private videoElement: HTMLMediaElement
-  private simidIframe: HTMLIFrameElement | undefined
 
   private player: any // ShakaPlayer
 
   private smartlibSession: any // SmartLib.Session
-  private simidAdData: any = undefined
-  private simidController: SimidController | undefined
+  private adDatas: Map<string, any> = new Map<string, any>()
+  private simidControllers: Map<string, SimidController> = new Map<string, SimidController>()
+  private simidIframes: Map<string, HTMLIFrameElement> = new Map<string, HTMLIFrameElement>()
   private bpkSimidController: any /*GenericSimidControllerApi*/
 
   constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
     this.playerElement = playerElement
     this.videoElement = videoElement
-
-    this.simidIframe = undefined
 
     this.bpkSimidController = new GenericSimidControllerApi()
 
@@ -64,23 +62,25 @@ export default class Player {
     await this.player.unload()
   }
 
-  public loadSimid(creativeUri: string, adParameters: string, duration: number) {
+  public loadSimid(adId: string, creativeUri: string, adParameters: string, duration: number) {
 
     // Consider player container dimensions as initial creative dimensions
     const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
 
-    this.simidController = new SimidController(playerRect, creativeUri, adParameters, duration)
+    const simidController = new SimidController(playerRect, creativeUri, adParameters, duration)
 
-    this.simidController.onGetMediaState = () => this.getMediaState()
-    this.simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(iframe)
-    this.simidController.onShowSimid = (show: boolean) => this.showSimidIframe(show)
-    this.simidController.onResizeSimid = (dimensions: DOMRect) => this.resizeSimid(dimensions)
-    this.simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
-    this.simidController.onComplete = (skipped: boolean) => this.completeAd(skipped)
+    simidController.onGetMediaState = () => this.getMediaState()
+    simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
+    simidController.onShowSimid = (show: boolean) => this.showSimidIframe(adId, show)
+    simidController.onResizeSimid = (dimensions: DOMRect) => this.resizeSimid(adId, dimensions)
+    simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
+    simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
 
-    this.simidController.simidControllerApi = this.bpkSimidController
+    simidController.simidControllerApi = this.bpkSimidController
 
-    this.simidController.load()
+    simidController.load(false)
+
+    this.simidControllers.set(adId, simidController)
   }
 
   private async loadPlayer() {
@@ -101,14 +101,18 @@ export default class Player {
         },
         onPrepareAd: (adData: any, adBreakData: any) => {
           console.log('[Player] onPrepareAd:', adData)
+          this.adDatas.set(adData.adId, adData)
+          if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
+            const iframeResources = adData.nonLinearIframeResources[0]
+            const duration = adData.duration ? (adData.duration / 1000) : 0
+            this.loadSimid(adData.adId, iframeResources.url, iframeResources.parameters, duration)
+          }
         },
         onAdBegin: (adData: any, adBreakData: any) => {
           console.log('[Player] onAdBegin:', adData)
-          if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
-            this.simidAdData = adData
-            const iframeResources = adData.nonLinearIframeResources[0]
-            const duration = adData.duration ? (adData.duration / 1000) : 0
-            this.loadSimid(iframeResources.url, iframeResources.parameters, duration)
+          const simidController = this.simidControllers.get(adData.adId)
+          if (simidController) {
+            simidController.start()
           }
         },
         onAdSkippable: (adData: any, adBreakData: any, adSkippablePosition: any, adEndPosition: any, adBreakEndPosition: any) => {
@@ -116,11 +120,12 @@ export default class Player {
         },
         onAdEnd: (adData: any, adBreakData: any) => {
           console.log('[Player] onAdEnd:', adData)
-          if (this.simidAdData && this.simidController) {
-            this.simidController.reset()
-            this.simidController = undefined
-            this.simidAdData = undefined
+          const simidController = this.simidControllers.get(adData.adId)
+          if (simidController) {
+            simidController.reset()
+            this.simidControllers.delete(adData.adId)            
           }
+          this.adDatas.delete(adData.adId)            
         },
         onAdBreakEnd: (adBreakData: any) => {
           console.log('[Player] onAdBreakEnd:', adBreakData)
@@ -134,21 +139,23 @@ export default class Player {
     }
   }
 
-  private addSimidIframe(iframe: HTMLIFrameElement): boolean {
+  private addSimidIframe(adId: string, iframe: HTMLIFrameElement): boolean {
     this.playerContainer.appendChild(iframe)
-    this.simidIframe = iframe
+    this.simidIframes.set(adId, iframe)
     return true
   }
 
-  private showSimidIframe(show: boolean) {
-    if (!this.simidIframe) {
+  private showSimidIframe(adId: string, show: boolean) {
+    const simidIframe = this.simidIframes.get(adId)
+    if (!simidIframe) {
       return
     }
-    this.simidIframe.style.display = show ? 'block' : 'none'
+    simidIframe.style.display = show ? 'block' : 'none'
   }
 
-  private resizeSimid(dimensions: DOMRect): boolean {
-    if (!this.simidIframe) {
+  private resizeSimid(adId: string, dimensions: DOMRect): boolean {
+    const simidIframe = this.simidIframes.get(adId)
+    if (!simidIframe) {
       return false
     }
     console.log('[Player] Resize SIMID:', dimensions)
@@ -161,7 +168,7 @@ export default class Player {
       return false;
     }
 
-    this.setElementDimensions(this.simidIframe, dimensions)
+    this.setElementDimensions(simidIframe, dimensions)
     return true
   }
 
@@ -170,12 +177,12 @@ export default class Player {
     this.setElementDimensions(this.playerElement, dimensions)
   }
 
-  private completeAd(skipped: boolean) {
+  private completeAd(adId: string, skipped: boolean) {
     console.log('[Player] Complete ad, skipped:', skipped)
-    if (skipped && this.simidAdData) {
-      this.skipCurrentAd(this.simidAdData)
+    const adData = this.adDatas.get(adId)
+    if (skipped && adData) {
+      this.skipCurrentAd(adData)
     }
-    this.simidController = undefined
   }
 
   private setElementDimensions(element: HTMLElement, dimensions: DOMRect) {

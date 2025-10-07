@@ -49,11 +49,12 @@ class PlayerActivity : AppCompatActivity() {
 
     private var session: StreamingSession? = null
 
-    private var simidAdData: AdData? = null
-    private var simidController: SimidController? = null
+    private var adDatas: MutableMap<String, AdData>  = mutableMapOf()
+    private var simidControllers: MutableMap<String, SimidController>  = mutableMapOf()
+    private var simidWebViews: MutableMap<String, WebView>  = mutableMapOf()
+
     private var bpkSimidController: BpkSimidController? = null
 
-    private var simidWebView: WebView? = null
     private var webViewContainer: ViewGroup? = null
 
     // Global flag to control animation usage
@@ -93,6 +94,7 @@ class PlayerActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         player?.stop()
+        SmartLib.getInstance().release();
     }
 
     @OptIn(UnstableApi::class)
@@ -141,17 +143,24 @@ class PlayerActivity : AppCompatActivity() {
 
                 override fun onPrepareAd(adData: AdData, adBreakData: AdBreakData) {
                     Log.d(TAG, "onAdPrepare: ${adData.adId}")
+
+                    adDatas[adData.adId] = adData
+                    if (adData.nonLinearIframeResources?.size!! > 0) {
+                        runOnUiThread {
+                            val iframeResource = adData.nonLinearIframeResources[0].url
+                            val adParameters = adData.nonLinearIframeResources[0].parameters
+                            loadSimid(adData.adId, iframeResource, adParameters, (adData.duration.toFloat() / 1000.0F))
+                        }
+                    }
                 }
 
                 override fun onAdBegin(adData: AdData, adBreakData: AdBreakData) {
                     Log.d(TAG, "onAdBegin: ${adData.adId} ${adData.startPosition} ${adData.duration} ${adData.index}/${adBreakData.ads.size}")
 
-                    if (adData.nonLinearIframeResources?.size!! > 0) {
-                        simidAdData = adData
+                    val simidController = simidControllers[adData.adId]
+                    if (simidController != null) {
                         runOnUiThread {
-                            val iframeResource = adData.nonLinearIframeResources[0].url
-                            val adParameters = adData.nonLinearIframeResources[0].parameters
-                            loadSimid(iframeResource, adParameters, (adData.duration.toFloat() / 1000.0F))
+                            simidController.start()
                         }
                     }
                 }
@@ -162,11 +171,12 @@ class PlayerActivity : AppCompatActivity() {
 
                 override fun onAdEnd(adData: AdData, adBreakData: AdBreakData) {
                     Log.d(TAG, "onAdEnd: ${adData.adId}")
-                    if (simidController != null && simidAdData != null) {
-                        simidController!!.reset()
-                        simidController = null
-                        simidAdData = null
+                    val simidController = simidControllers[adData.adId]
+                    if (simidController != null) {
+                        simidController.reset()
+                        simidControllers.remove(adData.adId)
                     }
+                    adDatas.remove(adData.adId)
                 }
 
                 override fun onAdBreakEnd(adBreakData: AdBreakData) {
@@ -183,7 +193,7 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadSimid(creativeUri: String, adParameters: String, duration: Float) {
+    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, duration: Float) {
 
         if (playerContainer == null) {
             return
@@ -194,19 +204,21 @@ class PlayerActivity : AppCompatActivity() {
 
         Log.d(TAG, "Load SIMID: ${playerRect.toShortString()} $creativeUri $duration")
 
-        simidController = SimidController(this, applicationContext, playerRect, creativeUri, adParameters, duration)
+        val simidController = SimidController(this, applicationContext, playerRect, creativeUri, adParameters, duration)
 
-        simidController?.let { controller ->
+        simidController.let { controller ->
             controller.onGetMediaState { getMediaState() }
-            controller.onAddSimid { webView -> addSimidWebView(webView) }
-            controller.onShowSimid { show -> showSimidWebView(show) }
+            controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
+            controller.onShowSimid { show -> showSimidWebView(adId, show) }
             controller.onResizeSimid { dimensions -> resizeSimid(dimensions) }
             controller.onResizePlayer { dimensions -> resizePlayer(dimensions) }
-            controller.onComplete { skipped -> completeAd(skipped) }
+            controller.onComplete { skipped -> completeAd(adId, skipped) }
 
             controller.simidControllerApi(bpkSimidController!!)
 
-            controller.load()
+            controller.load(false)
+
+            simidControllers[adId] = controller
         }
     }
 
@@ -223,21 +235,22 @@ class PlayerActivity : AppCompatActivity() {
         )
     }
 
-    private fun addSimidWebView(webView: WebView): Boolean {
+    private fun addSimidWebView(adId: String, webView: WebView): Boolean {
         // Do not add WebView in activity (not found a way to add while hiding it totally)
         // Add it in view only when requested to be shown
-        simidWebView = webView
+        simidWebViews[adId] = webView
         return true
     }
 
-    private fun showSimidWebView(show: Boolean) {
+    private fun showSimidWebView(adId: String, show: Boolean) {
+        val simidWebView = simidWebViews[adId]
         if (simidWebView == null) {
             return
         }
 
         runOnUiThread {
             if (show) {
-                simidWebView?.visibility = View.VISIBLE
+                simidWebView.visibility = View.VISIBLE
 
                 webViewContainer = RelativeLayout(applicationContext)
                 webViewContainer?.apply {
@@ -252,9 +265,9 @@ class PlayerActivity : AppCompatActivity() {
                 playerContainer?.addView(webViewContainer)
 
             } else if (webViewContainer != null) {
-                simidWebView?.loadUrl("about:blank")
-                simidWebView?.clearHistory()
-                simidWebView?.clearCache(true)
+                simidWebView.loadUrl("about:blank")
+                simidWebView.clearHistory()
+                simidWebView.clearCache(true)
                 webViewContainer?.removeView((simidWebView))
                 playerContainer?.removeView(webViewContainer)
                 webViewContainer = null
@@ -263,10 +276,6 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun resizeSimid(dimensions: Rect): Boolean {
-        if (simidWebView == null) {
-            return false
-        }
-
         Log.d(TAG, "Resize SIMID: ${dimensions.toShortString()}")
 
         // Check if requested SIMID dimensions is not outside original player dimensions
@@ -377,12 +386,12 @@ class PlayerActivity : AppCompatActivity() {
         return true
     }
 
-    private fun completeAd(skipped: Boolean) {
-        Log.d(TAG, "Complete ad, skipped: $skipped")
-        if (skipped && simidAdData != null) {
-            skipCurrentAd(simidAdData!!)
+    private fun completeAd(adId: String, skipped: Boolean) {
+        Log.d(TAG, "Complete ad $adId, skipped: $skipped")
+        val adData = adDatas[adId]
+        if (skipped && adData != null) {
+            skipCurrentAd(adData)
         }
-        simidController = null
     }
 
     private fun skipCurrentAd(adData: AdData) {
