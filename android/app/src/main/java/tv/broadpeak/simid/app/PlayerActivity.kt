@@ -216,6 +216,7 @@ class PlayerActivity : AppCompatActivity() {
 
             controller.simidControllerApi(bpkSimidController!!)
 
+            Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
             controller.load(false)
 
             simidControllers[adId] = controller

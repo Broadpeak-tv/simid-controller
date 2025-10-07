@@ -167,6 +167,10 @@ export class SimidController extends SimidComponent {
     this._onComplete = cb
   }
 
+  public getVersion(): string {
+    return '0.2.0'
+  }
+
   /**
    * Initialize and load ad. This should be called before an ad plays.
    * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
@@ -297,7 +301,7 @@ export class SimidController extends SimidComponent {
       fullscreenAllowed: true,
       variableDurationAllowed: true,
       skippableState: this._adSkippable ? SkippableState.AD_HANDLES : SkippableState.NOT_SKIPPABLE,
-      version: this._version,
+      version: this._protocolVersion,
       siteUrl: document.location.host,
       appId: '', // This is not relevant on desktop
       useragent: '', // This should be filled in for sdks and players

@@ -98,6 +98,9 @@ public open class SimidController (
     //endregion Callbacks
 
     @SuppressLint("SetJavaScriptEnabled")
+    fun getVersion(): String {
+        return "0.2.0"
+    }
 
     fun load(autoStart: Boolean = true) {
         _autoStart = autoStart
@@ -299,7 +302,7 @@ public open class SimidController (
             true,
             if (adSkippable) SkippableState.AD_HANDLES else SkippableState.NOT_SKIPPABLE,
             null,
-            version,
+            protocolVersion,
             null, // This is not relevant on desktop
             null, // This should be filled in for sdks and players
             null, // This should be filled in on mobile

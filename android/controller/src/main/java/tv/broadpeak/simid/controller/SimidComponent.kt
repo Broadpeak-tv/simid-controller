@@ -15,7 +15,7 @@ abstract class SimidComponent (
     }
 
     // The SIMID protocol supported version
-    protected val version: String = "1.1"
+    protected val protocolVersion: String = "1.1"
 
     // The session ID
     protected var sessionId: String = ""

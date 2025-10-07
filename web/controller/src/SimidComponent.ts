@@ -25,7 +25,7 @@ export class SimidComponent {
 
   // #region MEMBERS
   // The SIMID protocol supported version
-  protected _version: string
+  protected _protocolVersion: string
 
   // The protocol actor type ('Player' or 'Creative')
   protected _type: string
@@ -55,7 +55,7 @@ export class SimidComponent {
    * @param type The protocol actor type ('Player' or 'Creative')
    */
   constructor(type: string) {
-    this._version = SIMID_VERSION
+    this._protocolVersion = SIMID_VERSION
     this._type = type
     this._listeners = new Map<String, MessageCallback[]>()
     this._sessionId = ''
