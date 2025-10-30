@@ -67,7 +67,7 @@ export default class Player {
     // Consider player container dimensions as initial creative dimensions
     const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
 
-    console.log(`[Player] Load SIMID: $creativeUri $duration`)
+    console.log(`[Player] Load SIMID - uri:${creativeUri} duration:${duration}`)
     const simidController = new SimidController(playerRect, creativeUri, adParameters, duration)
 
     simidController.onGetMediaState = () => this.getMediaState()
