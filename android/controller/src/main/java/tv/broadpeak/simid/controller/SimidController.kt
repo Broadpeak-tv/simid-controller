@@ -126,7 +126,7 @@ public open class SimidController (
     }
 
     override fun postMessage(message: String) {
-        Log.v(TAG, "[SIMID] Send message: $message")
+        Log.v(TAG, "[SIMID][Player][S]: $message")
 
         val script =
             """

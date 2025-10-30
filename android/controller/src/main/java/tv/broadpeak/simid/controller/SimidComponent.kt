@@ -11,7 +11,7 @@ abstract class SimidComponent (
     protected val type: String
 ) {
     companion object {
-        private const val TAG = "SimidComponent"
+        private const val TAG = "SimidController"
     }
 
     // The SIMID protocol supported version
@@ -44,7 +44,7 @@ abstract class SimidComponent (
     protected abstract fun postMessage(message: String)
 
     protected open fun receiveMessage(messageStr: String) {
-        Log.v(SimidComponent.TAG, "[SIMID][$type] Receive Message: $messageStr")
+        Log.v(TAG, "[SIMID][$type][R]: $messageStr")
 
         val message: Message = Gson().fromJson(messageStr, Message::class.java);
 
