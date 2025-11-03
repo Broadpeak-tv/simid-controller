@@ -310,10 +310,10 @@ class PlayerActivity : AppCompatActivity() {
         Log.d(TAG, "Resize player: ${dimensions.toShortString()}")
 
         val playerView = playerView ?: return false
-        
+
         runOnUiThread {
             val currentLayoutParams = playerView.layoutParams as ViewGroup.MarginLayoutParams
-            
+
             if (!useAnimations) {
                 // Instant resize without animation
                 (playerView.layoutParams as ViewGroup.MarginLayoutParams).apply {
@@ -331,55 +331,64 @@ class PlayerActivity : AppCompatActivity() {
                 val currentWidth = currentLayoutParams.width
                 val currentHeight = currentLayoutParams.height
 
-                val leftAnimator = ValueAnimator.ofInt(currentLeft, dimensions.left)
-                val topAnimator = ValueAnimator.ofInt(currentTop, dimensions.top)
-                val widthAnimator = ValueAnimator.ofInt(currentWidth, dimensions.width())
-                val heightAnimator = ValueAnimator.ofInt(currentHeight, dimensions.height())
-
                 val duration = 300L // Animation duration in milliseconds
 
-                leftAnimator.apply {
-                    addUpdateListener { animation ->
-                        val value = animation.animatedValue as Int
-                        (playerView.layoutParams as ViewGroup.MarginLayoutParams).leftMargin = value
-                        playerView.requestLayout()
+                if (playerView.left != dimensions.left) {
+                    val leftAnimator = ValueAnimator.ofInt(currentLeft, dimensions.left)
+                    leftAnimator.apply {
+                        addUpdateListener { animation ->
+                            val value = animation.animatedValue as Int
+                            (playerView.layoutParams as ViewGroup.MarginLayoutParams).leftMargin =
+                                value
+                            playerView.requestLayout()
+                        }
+                        interpolator = AccelerateDecelerateInterpolator()
+                        this.duration = duration
+                        start()
                     }
-                    interpolator = AccelerateDecelerateInterpolator()
-                    this.duration = duration
-                    start()
                 }
 
-                topAnimator.apply {
-                    addUpdateListener { animation ->
-                        val value = animation.animatedValue as Int
-                        (playerView.layoutParams as ViewGroup.MarginLayoutParams).topMargin = value
-                        playerView.requestLayout()
+                if (playerView.top != dimensions.top) {
+                    val topAnimator = ValueAnimator.ofInt(currentTop, dimensions.top)
+                    topAnimator.apply {
+                        addUpdateListener { animation ->
+                            val value = animation.animatedValue as Int
+                            (playerView.layoutParams as ViewGroup.MarginLayoutParams).topMargin =
+                                value
+                            playerView.requestLayout()
+                        }
+                        interpolator = AccelerateDecelerateInterpolator()
+                        this.duration = duration
+                        start()
                     }
-                    interpolator = AccelerateDecelerateInterpolator()
-                    this.duration = duration
-                    start()
                 }
 
-                widthAnimator.apply {
-                    addUpdateListener { animation ->
-                        val value = animation.animatedValue as Int
-                        playerView.layoutParams.width = value
-                        playerView.requestLayout()
+                if (playerView.width != dimensions.width()) {
+                    val widthAnimator = ValueAnimator.ofInt(currentWidth, dimensions.width())
+                    widthAnimator.apply {
+                        addUpdateListener { animation ->
+                            val value = animation.animatedValue as Int
+                            playerView.layoutParams.width = value
+                            playerView.requestLayout()
+                        }
+                        interpolator = AccelerateDecelerateInterpolator()
+                        this.duration = duration
+                        start()
                     }
-                    interpolator = AccelerateDecelerateInterpolator()
-                    this.duration = duration
-                    start()
                 }
 
-                heightAnimator.apply {
-                    addUpdateListener { animation ->
-                        val value = animation.animatedValue as Int
-                        playerView.layoutParams.height = value
-                        playerView.requestLayout()
+                if (playerView.height != dimensions.height()) {
+                    val heightAnimator = ValueAnimator.ofInt(currentHeight, dimensions.height())
+                    heightAnimator.apply {
+                        addUpdateListener { animation ->
+                            val value = animation.animatedValue as Int
+                            playerView.layoutParams.height = value
+                            playerView.requestLayout()
+                        }
+                        interpolator = AccelerateDecelerateInterpolator()
+                        this.duration = duration
+                        start()
                     }
-                    interpolator = AccelerateDecelerateInterpolator()
-                    this.duration = duration
-                    start()
                 }
             }
         }
