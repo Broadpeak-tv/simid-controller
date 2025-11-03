@@ -409,11 +409,13 @@ export class SimidController extends SimidComponent {
     this._completeAd(skipped)
 
     // Wait for the SIMID creative to acknowledge stop and then clean up the iframe.
-    skipped ? 
-      await this.sendMessage(PlayerMessage.AD_SKIPPED) :
-      await this.sendMessage(PlayerMessage.AD_STOPPED, {
-        code: reason
-      } as PlayerAdStoppedMessageArgs)
+    if (this._initialized) {
+      skipped ? 
+        await this.sendMessage(PlayerMessage.AD_SKIPPED) :
+        await this.sendMessage(PlayerMessage.AD_STOPPED, {
+          code: reason
+        } as PlayerAdStoppedMessageArgs)
+    }
     
     this._destroySimidIframe()
     this.resetSession()
