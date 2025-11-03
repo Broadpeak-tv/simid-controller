@@ -99,7 +99,7 @@ public open class SimidController (
 
     @SuppressLint("SetJavaScriptEnabled")
     fun getVersion(): String {
-        return "0.2.0"
+        return "0.2.1"
     }
 
     fun load(autoStart: Boolean = true) {

@@ -168,7 +168,7 @@ export class SimidController extends SimidComponent {
   }
 
   public getVersion(): string {
-    return '0.2.0'
+    return '0.2.1'
   }
 
   /**
