@@ -23,7 +23,6 @@ import org.apache.commons.text.StringEscapeUtils
 
 //import tv.broadpeak.smartlib.ad.simid.GenericSimidControllerApi
 
-const val MEDIA_STATE_POLL_INTERVAL_MS = 250L
 
 /**
  * Set up the SIMID controller starts listening for messages from the creative.
@@ -52,6 +51,7 @@ public open class SimidController (
     companion object {
         private const val TAG = "SimidController"
         private const val SIMID_COMPONENT_TYPE = "Player"
+        public const val MEDIA_STATE_POLL_INTERVAL_MS = 250L
     }
 
     // The WebView used to load the SIMID creative
