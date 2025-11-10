@@ -35,6 +35,10 @@ export default class App {
     this.streamEditUrl.value = this.getFromLocalStorage('stream', DEFAULT_STREAM_URL)
   }
 
+  public async reset() {
+    await this.stopStream()
+  }
+
   private async loadStream() {
     const url = this.streamEditUrl.value
     await this.player.load(url)

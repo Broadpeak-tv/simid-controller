@@ -123,5 +123,9 @@
   document.addEventListener('DOMContentLoaded', function () {
     setTimeout(() => initApp(), 500);
   });
+
+  window.addEventListener('beforeunload', function () {
+    stopApp();
+  });
 </script>
 </html>
