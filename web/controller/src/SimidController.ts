@@ -85,6 +85,7 @@ export class SimidController extends SimidComponent {
    * @param adParameters the creative ad parameters
    * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
    * @param adSkippable true if the linear ad is skippable (false by default)
+   * @param mediaStatePollingInterval the interval in ms to retrieve the media state and send media timeupdate message to the creative (250ms by default)
    */
   constructor(
     playerDimensions: DOMRect, 
