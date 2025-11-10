@@ -218,7 +218,7 @@ data class VolumeChangeMessageArgs(
 // Media message args
 
 data class MediaDurationChangeMessageArgs(
-    val duration: Int
+    val duration: Float
 )
 
 data class MediaErrorMessageArgs(
@@ -227,7 +227,7 @@ data class MediaErrorMessageArgs(
 )
 
 data class MediaTimeUpdateMessageArgs(
-    val currentTime: Int
+    val currentTime: Float
 )
 
 data class MediaVolumeChangeMessageArgs(
@@ -267,7 +267,7 @@ data class EnvironmentData(
     val volume: Float?,
     val navigationSupport: String?,
     val closeButtonSupport: String?,
-    val nonlinearDuration: Double?
+    val nonlinearDuration: Float?
 )
 
 data class PlayerInitMessageArgs(
@@ -315,11 +315,11 @@ data class CreativeReportTrackingMessageArgs(
 )
 
 data class CreativeRequestChangeAdDurationMessageArgs(
-    val duration: Int
+    val duration: Float
 )
 
 data class CreativeRequestChangeVolumeMessageArgs(
-    val volume: Int,
+    val volume: Float,
     val muted: Boolean
 )
 
