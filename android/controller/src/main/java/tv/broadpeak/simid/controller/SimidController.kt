@@ -23,16 +23,25 @@ import org.apache.commons.text.StringEscapeUtils
 
 //import tv.broadpeak.smartlib.ad.simid.GenericSimidControllerApi
 
-const val MEDIA_STATE_POLL_INTERVAL_MS = 500L
 
+/**
+ * Set up the SIMID controller starts listening for messages from the creative.
+ * @param playerDimensions the main player dimensions
+ * @param creativeUri The creative URI
+ * @param adParameters the creative ad parameters
+ * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
+ * @param adSkippable true if the linear ad is skippable (false by default)
+ * @param mediaStatePollingInterval the interval in ms to retrieve the media state and send media timeupdate message to the creative (250ms by default)
+ */
 public open class SimidController (
     private val activity: Activity,
     private val context: Context,
-    private val mainPlayerDimensions: Rect,
+    private val playerDimensions: Rect,
     private val creativeUri: String,
     private val adParameters: String = "",
     private val adDuration: Float = 0.0F,
-    private val adSkippable: Boolean = false
+    private val adSkippable: Boolean = false,
+    private val mediaStatePollingInterval: Long = MEDIA_STATE_POLL_INTERVAL_MS
 ) : SimidComponent(SIMID_COMPONENT_TYPE) /*: GenericSimidControllerApi()*/ {
 
 //    override fun getSimidControllerName(): String {
@@ -42,6 +51,7 @@ public open class SimidController (
     companion object {
         private const val TAG = "SimidController"
         private const val SIMID_COMPONENT_TYPE = "Player"
+        public const val MEDIA_STATE_POLL_INTERVAL_MS = 250L
     }
 
     // The WebView used to load the SIMID creative
@@ -292,7 +302,7 @@ public open class SimidController (
         // [4] - send Player:init message
 
         // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
-        val videoDimensions = Dimensions(mainPlayerDimensions.top, mainPlayerDimensions.left, mainPlayerDimensions.width(), mainPlayerDimensions.height())
+        val videoDimensions = Dimensions(playerDimensions.top, playerDimensions.left, playerDimensions.width(), playerDimensions.height())
 
         val environmentData = EnvironmentData(
             videoDimensions,
@@ -397,7 +407,7 @@ public open class SimidController (
 
     private fun completeAd(skipped: Boolean = false) {
         // Resize the main player to its original dimensions
-        onResizePlayer?.invoke(mainPlayerDimensions)
+        onResizePlayer?.invoke(playerDimensions)
 
         // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
         onComplete?.invoke(skipped)
@@ -424,7 +434,7 @@ public open class SimidController (
                     }
                 }
             }
-        }, MEDIA_STATE_POLL_INTERVAL_MS, MEDIA_STATE_POLL_INTERVAL_MS)
+        }, mediaStatePollingInterval, mediaStatePollingInterval)
     }
 
     private fun stopPollingMediaState() {
@@ -433,6 +443,9 @@ public open class SimidController (
     }
 
     private fun mediaTimeUpdated(currentTime: Float) {
+
+        this.sendMessage(MediaMessage.TIME_UPDATE, MediaTimeUpdateMessageArgs(currentTime))
+
         // For non-linear ads, stop the ad once requested duration is over
         if (adDuration > 0 &&
             _nonLinearStartTime > 0 &&

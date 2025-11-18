@@ -93,6 +93,8 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        simidControllers.forEach { (key, controller) ->  controller.reset() }
+        simidControllers.clear()
         player?.stop()
         SmartLib.getInstance().release();
     }

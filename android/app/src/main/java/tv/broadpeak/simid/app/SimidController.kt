@@ -12,8 +12,9 @@ class SimidController(
     private val creativeUri: String,
     private val adParameters: String = "",
     private val adDuration: Float = 0.0F,
-    private val adSkippable: Boolean = false
-) : tv.broadpeak.simid.controller.SimidController(activity, context, mainPlayerDimensions, creativeUri, adParameters, adDuration, adSkippable) {
+    private val adSkippable: Boolean = false,
+    private val mediaStatePollingInterval: Long = MEDIA_STATE_POLL_INTERVAL_MS
+) : tv.broadpeak.simid.controller.SimidController(activity, context, mainPlayerDimensions, creativeUri, adParameters, adDuration, adSkippable, mediaStatePollingInterval) {
 
     private var simidControllerApi: GenericSimidControllerApi? = null
 

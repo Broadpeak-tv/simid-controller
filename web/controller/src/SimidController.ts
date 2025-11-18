@@ -16,10 +16,12 @@ import {
   StopCode,
   CreativeRequestResizeMessageArgs,
   CreativeErrorCode,
+  MediaMessage,
+  MediaTimeUpdateMessageArgs,
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
 
-const MEDIA_STATE_POLL_INTERVAL_MS = 500
+const MEDIA_STATE_POLL_INTERVAL_MS = 250
 
 /** 
  * All the logic for a simple SIMID player/controller
@@ -69,6 +71,7 @@ export class SimidController extends SimidComponent {
   private _onComplete: ((boolean) => void) | undefined
 
   private _timerMediaState: number | undefined
+  private _mediaStatePollingInterval: number
 
   // The unique ID for the interval used to compares the requested change duration and the current ad time.
   private _durationInterval: number
@@ -82,13 +85,15 @@ export class SimidController extends SimidComponent {
    * @param adParameters the creative ad parameters
    * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
    * @param adSkippable true if the linear ad is skippable (false by default)
+   * @param mediaStatePollingInterval the interval in ms to retrieve the media state and send media timeupdate message to the creative (250ms by default)
    */
   constructor(
     playerDimensions: DOMRect, 
     creativeUri: string,
     adParameters = '',
     adDuration = 0,
-    adSkippable = false) {
+    adSkippable = false,
+    mediaStatePollingInterval = MEDIA_STATE_POLL_INTERVAL_MS) {
     
     super('Player')
 
@@ -105,7 +110,9 @@ export class SimidController extends SimidComponent {
     this._nonLinearStartTime = undefined
     this._adDuration = adDuration
     this._durationInterval = NaN
- 
+
+    this._mediaStatePollingInterval = mediaStatePollingInterval
+
     this.addCreativeMessageListeners()
   }
 
@@ -184,7 +191,7 @@ export class SimidController extends SimidComponent {
   }
 
   /**
-   * Starts the loaded creative
+   * Start the loaded creative
    */
   public start() {
     if (!this._initialized) {
@@ -196,9 +203,13 @@ export class SimidController extends SimidComponent {
     this._startCreative()
   }
 
+  /**
+   * Stop and reset the SIMID controller
+   */
   public reset() {
     this._stopAd()
   }
+
   // #endregion PUBLIC METHODS
 
   protected addCreativeMessageListeners() {
@@ -447,7 +458,7 @@ export class SimidController extends SimidComponent {
       if (mediaState) {
         this._mediaTimeUpdated(mediaState.currentTime)
       }
-    }, MEDIA_STATE_POLL_INTERVAL_MS)
+    }, this._mediaStatePollingInterval)
   }
 
   private _stopPollingMediaState() {
@@ -459,6 +470,9 @@ export class SimidController extends SimidComponent {
   }
 
   private _mediaTimeUpdated(currentTime: number) {
+
+    this.sendMessage(MediaMessage.TIME_UPDATE, { currentTime } as MediaTimeUpdateMessageArgs)
+
     // For non-linear ads, stop the ad once requested duration is over
     if (this._adDuration > 0 &&
       this._nonLinearStartTime &&
