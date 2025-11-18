@@ -1,6 +1,6 @@
 {
   "name": "@broadpeak-tv/simid-demo-app",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Broadpeak SIMID demo app",
   "scripts": {
     "start": "webpack serve",

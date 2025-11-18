@@ -14,7 +14,7 @@ android {
         consumerProguardFiles("consumer-rules.pro")
     }
 
-    version = "0.2.1"
+    version = "0.3.0"
 
     buildTypes {
         release {
