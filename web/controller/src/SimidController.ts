@@ -410,6 +410,7 @@ export class SimidController extends SimidComponent {
 
   private async _stopSession(skipped = false, reason = StopCode.PLAYER_INITATED) {
     if (this._isStopping || !this._simidIframe) {
+      this.resetSession()
       return
     }
     this._isStopping = true
