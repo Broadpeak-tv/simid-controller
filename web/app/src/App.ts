@@ -31,8 +31,11 @@ export default class App {
 
     this.streamButtonLoad.onclick = (e) => this.loadStream()
     this.streamButtonStop.onclick = (e) => this.stopStream()
-    
-    this.streamEditUrl.value = this.getFromLocalStorage('stream', DEFAULT_STREAM_URL)
+
+    const urlParam = (new URL(window.location.href)).searchParams.get('url')
+    const url = urlParam || this.getFromLocalStorage('stream', DEFAULT_STREAM_URL)
+
+    this.streamEditUrl.value = url
   }
 
   public async reset() {
