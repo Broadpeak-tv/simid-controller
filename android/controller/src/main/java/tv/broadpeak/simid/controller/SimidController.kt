@@ -21,9 +21,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.launch
 import org.apache.commons.text.StringEscapeUtils
 
-//import tv.broadpeak.smartlib.ad.simid.GenericSimidControllerApi
-
-
 /**
  * Set up the SIMID controller starts listening for messages from the creative.
  * @param playerDimensions the main player dimensions
@@ -51,6 +48,7 @@ public open class SimidController (
     companion object {
         private const val TAG = "SimidController"
         private const val SIMID_COMPONENT_TYPE = "Player"
+        public const val VERSION = BuildConfig.VERSION
         public const val MEDIA_STATE_POLL_INTERVAL_MS = 250L
     }
 
@@ -109,7 +107,7 @@ public open class SimidController (
 
     @SuppressLint("SetJavaScriptEnabled")
     fun getVersion(): String {
-        return "0.3.0"
+        return VERSION
     }
 
     fun load(autoStart: Boolean = true) {
