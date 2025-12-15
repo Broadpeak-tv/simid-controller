@@ -195,7 +195,6 @@ export class SimidController extends SimidComponent {
    */
   public start() {
     if (!this._initialized) {
-      console.warn('[Player] Creative must be initialized before starting')
       // start() my be called before creative has been fully initialized, then start it automatically when ready
       this._autoStart = true
       return

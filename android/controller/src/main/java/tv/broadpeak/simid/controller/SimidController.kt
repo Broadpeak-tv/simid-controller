@@ -119,7 +119,6 @@ public open class SimidController (
 
     fun start() {
         if (!_initialized) {
-            Log.w(TAG, "Creative must be initialized before starting")
             // start() my be called before creative has been fully initialized, then start it automatically when ready
             _autoStart = true
             return
