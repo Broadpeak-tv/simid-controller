@@ -13,7 +13,7 @@ export default class Player {
 
   private player: any // ShakaPlayer
 
-  private smartlibSession: any // SmartLib.Session
+  private smartlibSession?: any // SmartLib.Session
   private adDatas: Map<string, any> = new Map<string, any>()
   private simidControllers: Map<string, SimidController> = new Map<string, SimidController>()
   private simidIframes: Map<string, HTMLIFrameElement> = new Map<string, HTMLIFrameElement>()
@@ -58,7 +58,7 @@ export default class Player {
   }
   
   public async stop() {
-    this.smartlibSession.stopStreamingSession()
+    this.smartlibSession?.stopStreamingSession()
     await this.player.unload()
   }
 
