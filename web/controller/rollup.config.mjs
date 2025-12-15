@@ -1,7 +1,11 @@
 import commonjs from '@rollup/plugin-commonjs'
-import typescript from '@rollup/plugin-typescript'
 import dts from 'rollup-plugin-dts'
+import json from '@rollup/plugin-json'
 import { nodeResolve } from '@rollup/plugin-node-resolve'
+import replace from '@rollup/plugin-replace'
+import typescript from '@rollup/plugin-typescript'
+
+import pkg from './package.json' assert { type: 'json' }
 
 // Output dir and bundle name
 const outDir = 'dist/'
@@ -29,6 +33,13 @@ export default arg => {
           include: 'node_modules/**'
         }),
         nodeResolve(),
+        json(),
+        replace({
+          preventAssignment: true,
+          values: {
+            __VERSION__: JSON.stringify(pkg.version)
+          },
+        })
       ],
       watch: {
         include: 'src/**'
