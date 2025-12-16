@@ -1,9 +1,12 @@
 import { MediaState } from '@broadpeak-tv/simid-controller'
 import SimidController from './SimidController'
+import { SmartLib } from '@broadpeak/smartlib'
+import '@broadpeak/smartlib-ad'
+import '@broadpeak/smartlib-shaka'
+import '@broadpeak/smartlib-analytics'
+import { GenericSimidControllerApi } from '@broadpeak/smartlib-simid'
 
 declare const shaka: any
-declare const SmartLib: any
-declare const GenericSimidControllerApi: any
 
 export default class Player {
 
@@ -13,18 +16,16 @@ export default class Player {
 
   private player: any // ShakaPlayer
 
-  private smartlibSession?: any // SmartLib.Session
+  private smartlibSession?: any /* StreamingSession */
   private adDatas: Map<string, any> = new Map<string, any>()
   private simidControllers: Map<string, SimidController> = new Map<string, SimidController>()
   private simidIframes: Map<string, HTMLIFrameElement> = new Map<string, HTMLIFrameElement>()
-  private bpkSimidController: any /*GenericSimidControllerApi*/
+  private bpkSimidController: any /* GenericSimidControllerApi */
 
   constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
     this.playerElement = playerElement
     this.videoElement = videoElement
-
-    this.bpkSimidController = new GenericSimidControllerApi()
 
     this.loadPlayer()
   }
@@ -38,6 +39,8 @@ export default class Player {
     SmartLib.getInstance().init('', '', domain)
     this.smartlibSession = SmartLib.getInstance().createStreamingSession()
     this.setAdEventsListeners(this.smartlibSession)
+
+    this.bpkSimidController = new GenericSimidControllerApi()
 
     // Attach player to smartlib session
     this.smartlibSession.attachPlayer(this.player)
@@ -58,6 +61,7 @@ export default class Player {
   }
   
   public async stop() {
+    this.simidControllers.forEach(controller => controller.reset())
     this.smartlibSession?.stopStreamingSession()
     await this.player.unload()
   }
