@@ -23,7 +23,6 @@ import { SimidComponent } from "./SimidComponent"
 
 const MEDIA_STATE_POLL_INTERVAL_MS = 250
 
-const VERSION = '0.3.0'
 declare const __VERSION__: string;
 
 /** 
