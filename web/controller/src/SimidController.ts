@@ -23,6 +23,9 @@ import { SimidComponent } from "./SimidComponent"
 
 const MEDIA_STATE_POLL_INTERVAL_MS = 250
 
+const VERSION = '0.3.0'
+declare const __VERSION__: string;
+
 /** 
  * All the logic for a simple SIMID player/controller
  */
@@ -116,6 +119,10 @@ export class SimidController extends SimidComponent {
     this.addCreativeMessageListeners()
   }
 
+  public static get version(): string {
+    return __VERSION__
+  }
+
   // #region PUBLIC METHODS 
 
   /**
@@ -175,7 +182,7 @@ export class SimidController extends SimidComponent {
   }
 
   public getVersion(): string {
-    return '0.3.0'
+    return __VERSION__
   }
 
   /**

@@ -10,11 +10,11 @@ android {
     defaultConfig {
         minSdk = 21
 
+        buildConfigField("String", "VERSION", "\"${rootProject.version}\"")
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
-
-    version = "0.3.0"
 
     buildTypes {
         release {
@@ -25,10 +25,16 @@ android {
             )
         }
     }
+
+    buildFeatures {
+        buildConfig = true
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+
     kotlinOptions {
         jvmTarget = "11"
     }

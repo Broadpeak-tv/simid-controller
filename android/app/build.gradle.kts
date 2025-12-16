@@ -12,9 +12,9 @@ android {
         applicationId = "tv.broadpeak.simid.app"
         minSdk = 21
         targetSdk = 35
-        versionCode = 20
-        versionName = "0.3.0"
 
+        versionName = rootProject.version.toString()
+        versionCode = rootProject.extra["versionCode"] as Int
     }
 
     buildTypes {
