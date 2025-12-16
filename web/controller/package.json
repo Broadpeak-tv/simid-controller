@@ -1,6 +1,6 @@
 {
   "name": "@broadpeak-tv/simid-controller",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "SIMID controller",
   "author": "Broadpeak",
   "types": "dist/index.d.ts",
