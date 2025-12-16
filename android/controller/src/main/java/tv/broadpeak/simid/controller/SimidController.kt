@@ -117,7 +117,6 @@ public open class SimidController (
 
     fun start() {
         if (!_initialized) {
-            Log.w(TAG, "Creative must be initialized before starting")
             // start() my be called before creative has been fully initialized, then start it automatically when ready
             _autoStart = true
             return
@@ -378,7 +377,8 @@ public open class SimidController (
      * Remove and destroy the SIMID creative iframe and resumes video playback.
      */
     private fun stopSession(skipped: Boolean = false, reason: Int = StopCode.PLAYER_INITATED) {
-        if (_isStopping) {
+        if (_isStopping || webView == null) {
+            resetSession()
             return
         }
         _isStopping = true

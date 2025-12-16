@@ -25,4 +25,8 @@ The demonstration application will be available at http://localhost:8080
 
 After start, input the URL to a Broadpeak DAI stream in the input field, and click the "LOAD" button.
 
+The input stream URL can also be provided as a query parameter: ``http://localhost:8080?url=<stream_url>``
+
+The loaded stream URL is stored in local storage and re-used when reloading the application.
+
 The application will play the video stream, and at appropriate times (as configured in the Broadpeak DAI solution for that stream) will trigger display of the SIMID creatives.

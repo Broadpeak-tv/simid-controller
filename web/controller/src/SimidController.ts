@@ -202,7 +202,6 @@ export class SimidController extends SimidComponent {
    */
   public start() {
     if (!this._initialized) {
-      console.warn('[Player] Creative must be initialized before starting')
       // start() my be called before creative has been fully initialized, then start it automatically when ready
       this._autoStart = true
       return
@@ -417,6 +416,7 @@ export class SimidController extends SimidComponent {
 
   private async _stopSession(skipped = false, reason = StopCode.PLAYER_INITATED) {
     if (this._isStopping || !this._simidIframe) {
+      this.resetSession()
       return
     }
     this._isStopping = true
