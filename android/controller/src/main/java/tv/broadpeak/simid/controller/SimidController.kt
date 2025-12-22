@@ -84,6 +84,14 @@ public open class SimidController (
         this.onGetMediaState = cb
     }
 
+    fun onPlayMedia(cb: () -> Boolean) {
+        this.onPlayMedia = cb
+    }
+
+    fun onPauseMedia(cb: () -> Boolean) {
+        this.onPauseMedia = cb
+    }
+
     fun onAddSimid(cb: (WebView) -> Unit) {
         this.onAddSimid = cb
     }
