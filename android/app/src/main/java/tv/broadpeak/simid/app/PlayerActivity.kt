@@ -214,6 +214,8 @@ class PlayerActivity : AppCompatActivity() {
             controller.onShowSimid { show -> showSimidWebView(adId, show) }
             controller.onResizeSimid { dimensions -> resizeSimid(dimensions) }
             controller.onResizePlayer { dimensions -> resizePlayer(dimensions) }
+            controller.onPauseMedia { pauseMedia() }
+            controller.onPlayMedia { playMedia() }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
 
             controller.simidControllerApi(bpkSimidController!!)
@@ -396,6 +398,16 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         return true
+    }
+
+    private fun pauseMedia() {
+        Log.d(TAG, "Pause media")
+        player?.pause()
+    }
+
+    private fun playMedia() {
+        Log.d(TAG, "Play media")
+        player?.play()
     }
 
     private fun completeAd(adId: String, skipped: Boolean) {
