@@ -79,6 +79,8 @@ export default class Player {
     simidController.onShowSimid = (show: boolean) => this.showSimidIframe(adId, show)
     simidController.onResizeSimid = (dimensions: DOMRect) => this.resizeSimid(adId, dimensions)
     simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
+    simidController.onPauseMedia = () => this.pauseMedia()
+    simidController.onPlayMedia = () => this.playMedia()
     simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
 
     simidController.simidControllerApi = this.bpkSimidController
@@ -181,6 +183,18 @@ export default class Player {
   private resizePlayer(dimensions: DOMRect) {
     console.log('[Player] Resize player:', dimensions)
     this.setElementDimensions(this.playerElement, dimensions)
+  }
+
+  private pauseMedia(): boolean {
+    console.log('[Player] Pause media')
+    this.videoElement.pause()
+    return true
+  }
+
+  private playMedia(): boolean {
+    console.log('[Player] Play media')
+    this.videoElement.play()
+    return true
   }
 
   private completeAd(adId: string, skipped: boolean) {

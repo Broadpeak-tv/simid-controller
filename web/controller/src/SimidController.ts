@@ -261,7 +261,7 @@ export class SimidController extends SimidComponent {
       console.warn('[Player] Session not initialized, requestPause ignored')
       return
     }
-    this._onPauseMedia() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
+    this._onPauseMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
   }
 
   protected onCreativeRequestPlay(message: Message) {
