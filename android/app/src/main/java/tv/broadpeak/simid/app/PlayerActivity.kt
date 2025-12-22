@@ -400,14 +400,16 @@ class PlayerActivity : AppCompatActivity() {
         return true
     }
 
-    private fun pauseMedia() {
+    private fun pauseMedia(): Boolean {
         Log.d(TAG, "Pause media")
         player?.pause()
+        return true
     }
 
-    private fun playMedia() {
+    private fun playMedia(): Boolean {
         Log.d(TAG, "Play media")
         player?.play()
+        return true
     }
 
     private fun completeAd(adId: String, skipped: Boolean) {
