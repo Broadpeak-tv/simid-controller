@@ -39,7 +39,7 @@ simidController.onResizePlayer = (dimensions: DOMRect) => {
 }
 
 simidController.onComplete = (skipped: boolean) => {
-  // Called by the SIMID controller when the SIMID non-linear ad is completed  with indication if ad has been skipped
+  // Called by the SIMID controller when the SIMID nonlinear ad is completed  with indication if ad has been skipped
 }
 
 // 3 - Loads the SIMID creative

@@ -444,7 +444,7 @@ public open class SimidController (
 
         this.sendMessage(MediaMessage.TIME_UPDATE, MediaTimeUpdateMessageArgs(currentTime))
 
-        // For non-linear ads, stop the ad once requested duration is over
+        // For nonlinear ads, stop the ad once requested duration is over
         if (adDuration > 0 &&
             _nonLinearStartTime > 0 &&
             currentTime - _nonLinearStartTime > adDuration) {

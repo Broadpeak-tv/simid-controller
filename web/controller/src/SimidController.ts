@@ -281,7 +281,7 @@ export class SimidController extends SimidComponent {
 
     // Resize SIMID iframe
     if (!this._onResizeSimid(args.creativeDimensions as DOMRect)) {
-      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to resize a non-linear ad with dimensions bigger than the player')
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to resize a nonlinear ad with dimensions bigger than the player')
     } else {
       // Then if successfull, resize the main player
       this._onResizePlayer(args.mediaDimensions as DOMRect)
@@ -479,7 +479,7 @@ export class SimidController extends SimidComponent {
 
     this.sendMessage(MediaMessage.TIME_UPDATE, { currentTime } as MediaTimeUpdateMessageArgs)
 
-    // For non-linear ads, stop the ad once requested duration is over
+    // For nonlinear ads, stop the ad once requested duration is over
     if (this._adDuration > 0 &&
       this._nonLinearStartTime &&
       currentTime - this._nonLinearStartTime > this._adDuration) {
