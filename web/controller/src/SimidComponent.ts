@@ -109,11 +109,12 @@ export class SimidComponent {
     if (!event || !event.data) {
       return
     }
-    this.log(`[SIMID][${this._type}][R] ` + JSON.stringify(event.data))
     let message: Message | null
     try {
       message = JSON.parse(event.data)
+      this.log(`[SIMID][${this._type}][R] ${JSON.stringify(message)}`)
     } catch (e) {
+      this.log(`[SIMID][${this._type}][R] Failed to parse incoming message: ${JSON.stringify(event.data)}`)
       return
     }
     if (!message) {
@@ -156,7 +157,7 @@ export class SimidComponent {
   }
 
   protected postMessage(message: Message) {
-    this.log(`[SIMID][${this._type}][S] ` + JSON.stringify(message))
+    this.log(`[SIMID][${this._type}][S] ${JSON.stringify(message)}`)
     this._target.postMessage(JSON.stringify(message), '*')
   }
 
