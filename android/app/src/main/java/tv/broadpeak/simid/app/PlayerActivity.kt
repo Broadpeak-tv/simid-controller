@@ -402,13 +402,17 @@ class PlayerActivity : AppCompatActivity() {
 
     private fun pauseMedia(): Boolean {
         Log.d(TAG, "Pause media")
-        player?.pause()
+        runOnUiThread {
+            player?.pause()
+        }
         return true
     }
 
     private fun playMedia(): Boolean {
         Log.d(TAG, "Play media")
-        player?.play()
+        runOnUiThread {
+            player?.play()
+        }
         return true
     }
 
