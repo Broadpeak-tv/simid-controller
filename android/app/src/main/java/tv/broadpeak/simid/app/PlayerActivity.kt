@@ -330,15 +330,10 @@ class PlayerActivity : AppCompatActivity() {
 
             } else {
                 // Animated resize
-                val currentLeft = currentLayoutParams.leftMargin
-                val currentTop = currentLayoutParams.topMargin
-                val currentWidth = currentLayoutParams.width
-                val currentHeight = currentLayoutParams.height
-
                 val duration = 300L // Animation duration in milliseconds
 
                 if (playerView.left != dimensions.left) {
-                    val leftAnimator = ValueAnimator.ofInt(currentLeft, dimensions.left)
+                    val leftAnimator = ValueAnimator.ofInt(playerView.left, dimensions.left)
                     leftAnimator.apply {
                         addUpdateListener { animation ->
                             val value = animation.animatedValue as Int
@@ -353,7 +348,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
 
                 if (playerView.top != dimensions.top) {
-                    val topAnimator = ValueAnimator.ofInt(currentTop, dimensions.top)
+                    val topAnimator = ValueAnimator.ofInt(playerView.top, dimensions.top)
                     topAnimator.apply {
                         addUpdateListener { animation ->
                             val value = animation.animatedValue as Int
@@ -368,7 +363,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
 
                 if (playerView.width != dimensions.width()) {
-                    val widthAnimator = ValueAnimator.ofInt(currentWidth, dimensions.width())
+                    val widthAnimator = ValueAnimator.ofInt(playerView.width, dimensions.width())
                     widthAnimator.apply {
                         addUpdateListener { animation ->
                             val value = animation.animatedValue as Int
@@ -382,7 +377,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
 
                 if (playerView.height != dimensions.height()) {
-                    val heightAnimator = ValueAnimator.ofInt(currentHeight, dimensions.height())
+                    val heightAnimator = ValueAnimator.ofInt(playerView.height, dimensions.height())
                     heightAnimator.apply {
                         addUpdateListener { animation ->
                             val value = animation.animatedValue as Int
