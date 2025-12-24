@@ -137,7 +137,6 @@ public open class SimidController (
 
         val script =
             """
-            console.log('[Android] postMessage', '$message')
             window.originalPostMessage('$message', '*');
             """.trimIndent()
 
@@ -268,7 +267,6 @@ public open class SimidController (
                             console.log("[Android] override postMessage")
                             window.originalPostMessage = window.postMessage;
                             window.postMessage = function(message) {
-                                console.log("[Creative] postMessage:", message)
                                 // Send the message to the Android interface
                                 Android.postMessage(message);
                             };

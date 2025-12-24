@@ -108,11 +108,11 @@ abstract class SimidComponent (
         val messageId: Int = nextMessageId++
 
         val message: Message = Message(
-            type,
-            sessionId,
-            messageId,
-            Calendar.getInstance().time.time,
-            args
+            type = type,
+            sessionId = sessionId,
+            messageId = messageId,
+            timestamp = Calendar.getInstance().time.time,
+            args = args
         )
 
         return message
@@ -143,7 +143,17 @@ abstract class SimidComponent (
     }
 
     private fun postMessage(message: Message) {
-        val messageStr = Gson().toJson(message)
+
+        // Convert to a LinkedHashMap to keep fields ordering when serializing (for debug purpose)
+        val messageMap = linkedMapOf<String, Any?>(
+            "type" to message.type,
+            "sessionId" to message.sessionId,
+            "messageId" to message.messageId,
+            "timestamp" to message.timestamp,
+            "args" to message.args
+        )
+
+        val messageStr = Gson().toJson(messageMap)
         postMessage(messageStr)
     }
 
