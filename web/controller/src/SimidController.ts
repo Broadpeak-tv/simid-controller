@@ -361,7 +361,8 @@ export class SimidController extends SimidComponent {
       useragent: '', // This should be filled in for sdks and players
       deviceId: '', // This should be filled in on mobile
       muted: mediaState ? mediaState.muted : false,
-      volume: mediaState ? mediaState.volume : 1
+      volume: mediaState ? mediaState.volume : 1,
+      nonlinearDuration: this._adDuration,
     }
 
     const creativeData: CreativeData = {
