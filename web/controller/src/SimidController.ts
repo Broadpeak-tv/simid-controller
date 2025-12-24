@@ -21,7 +21,7 @@ import {
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
 
-const MEDIA_STATE_POLL_INTERVAL_MS = 250
+const MEDIA_TIMEUPDATE_INTERVAL_MS = 250
 
 declare const __VERSION__: string;
 
@@ -73,7 +73,7 @@ export class SimidController extends SimidComponent {
   private _onComplete: ((boolean) => void) | undefined
 
   private _timerMediaState: number | undefined
-  private _mediaStatePollingInterval: number
+  private _mediaTimeupdateInterval: number
 
   // The unique ID for the interval used to compares the requested change duration and the current ad time.
   private _durationInterval: number
@@ -87,15 +87,16 @@ export class SimidController extends SimidComponent {
    * @param adParameters the creative ad parameters
    * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
    * @param adSkippable true if the linear ad is skippable (false by default)
-   * @param mediaStatePollingInterval the interval in ms to retrieve the media state and send media timeupdate message to the creative (250ms by default)
+   * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
    */
   constructor(
     playerDimensions: DOMRect, 
+    creativeDimensions: DOMRect, 
     creativeUri: string,
     adParameters = '',
     adDuration = 0,
     adSkippable = false,
-    mediaStatePollingInterval = MEDIA_STATE_POLL_INTERVAL_MS) {
+    mediaTimeupdateInterval = MEDIA_TIMEUPDATE_INTERVAL_MS) {
     
     super('Player')
 
@@ -113,7 +114,7 @@ export class SimidController extends SimidComponent {
     this._adDuration = adDuration
     this._durationInterval = NaN
 
-    this._mediaStatePollingInterval = mediaStatePollingInterval
+    this._mediaTimeupdateInterval = mediaTimeupdateInterval
 
     this.addCreativeMessageListeners()
   }
@@ -399,7 +400,7 @@ export class SimidController extends SimidComponent {
     try {
       await this.sendMessage(PlayerMessage.START_CREATIVE)
       this._onShowSimid?.(true)
-      this._startPollingMediaState()
+      this._startMediaTimeupdateInterval()
     } catch (e) {
       console.error('[PLAYER] Failed to start creative', e)
     }
@@ -419,7 +420,7 @@ export class SimidController extends SimidComponent {
       return
     }
     this._isStopping = true
-    this._stopPollingMediaState()
+    this._stopMediaTimeupdateInterval()
     // The iframe is only hidden on ad stoppage. The ad might still request tracking pixels before it is cleaned up
     this._onShowSimid?.(false)
 
@@ -452,8 +453,12 @@ export class SimidController extends SimidComponent {
   // #endregion CREATIVE AD MANAGEMENT
 
   // #region MAIN VIDEO STATE
-  private _startPollingMediaState() {
-    this._stopPollingMediaState()
+  private _startMediaTimeupdateInterval() {
+    this._stopMediaTimeupdateInterval()
+
+    if (this._mediaTimeupdateInterval === -1) {
+      return
+    }
 
     if (this._adDuration <= 0) {
       return
@@ -464,10 +469,10 @@ export class SimidController extends SimidComponent {
       if (mediaState) {
         this._mediaTimeUpdated(mediaState.currentTime)
       }
-    }, this._mediaStatePollingInterval)
+    }, this._mediaTimeupdateInterval)
   }
 
-  private _stopPollingMediaState() {
+  private _stopMediaTimeupdateInterval() {
     if (this._timerMediaState === undefined) {
       return
     }
