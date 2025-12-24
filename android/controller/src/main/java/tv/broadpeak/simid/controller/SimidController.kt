@@ -7,9 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Rect
 import android.util.Log
-import android.view.KeyEvent
 import android.view.View
-import android.view.ViewGroup
 import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -39,11 +37,7 @@ public open class SimidController (
     private val adDuration: Float = 0.0F,
     private val adSkippable: Boolean = false,
     private val mediaTimeupdateInterval: Long = MEDIA_TIMEUPDATE_INTERVAL_MS
-) : SimidComponent(SIMID_COMPONENT_TYPE) /*: GenericSimidControllerApi()*/ {
-
-//    override fun getSimidControllerName(): String {
-//        return "Bpk SIMID Controller"
-//    }
+) : SimidComponent(SIMID_COMPONENT_TYPE) {
 
     companion object {
         private const val TAG = "SimidController"
@@ -58,9 +52,7 @@ public open class SimidController (
     private var _autoStart: Boolean = true
     private var _initialized: Boolean = false
 
-    private var _duration: Float = 0.0F
     private var _nonLinearStartTime: Float = 0.0F
-    private var _startPosition: Long = 0L
     private var _isStopping: Boolean = false
     private var _timerMediaTimeupdate: Timer? = null
 
@@ -145,7 +137,6 @@ public open class SimidController (
 
         val script =
             """
-            console.log('[Android] postMessage', '$message')
             window.originalPostMessage('$message', '*');
             """.trimIndent()
 
@@ -248,6 +239,7 @@ public open class SimidController (
                         RelativeLayout.LayoutParams.MATCH_PARENT
                     )
                     setPadding(0, 0, 0, 0)
+                    visibility = View.GONE
                     isFocusable = true
                     isFocusableInTouchMode = true
                     webViewClient = WebViewClient()
@@ -275,7 +267,6 @@ public open class SimidController (
                             console.log("[Android] override postMessage")
                             window.originalPostMessage = window.postMessage;
                             window.postMessage = function(message) {
-                                console.log("[Creative] postMessage:", message)
                                 // Send the message to the Android interface
                                 Android.postMessage(message);
                             };
@@ -405,10 +396,16 @@ public open class SimidController (
                     sendMessage(PlayerMessage.AD_STOPPED, args).await()
                 }
             }
-            // Delete webview since issue with clearing webview content (loadUrl("about:blank"))
-            webView = null
+            clearWebView()
             resetSession()
         }
+    }
+
+    private fun clearWebView() {
+        webView?.loadUrl("about:blank")
+        webView?.clearHistory()
+        webView?.clearCache(true)
+        webView = null
     }
 
     private fun completeAd(skipped: Boolean = false) {
