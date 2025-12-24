@@ -156,6 +156,8 @@ public open class SimidController (
         this.addMessageListener(CreativeMessage.REQUEST_RESIZE, ::onCreativeRequestResize)
         this.addMessageListener(CreativeMessage.REQUEST_SKIP, ::onCreativeRequestSkip)
         this.addMessageListener(CreativeMessage.REQUEST_STOP, ::onCreativeRequestStop)
+        this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, ::onCreativeExpandNonlinear)
+        this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, ::onCreativeCollapseNonlinear)
     }
 
     //region CREATIVE MESSAGE HANDLERS
@@ -212,6 +214,34 @@ public open class SimidController (
             onResizePlayer?.invoke(playerRect)
             resolveMessage(message)
         }
+    }
+
+    private fun onCreativeExpandNonlinear(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, expandNonlinear ignored")
+            return
+        }
+        // Under normal circumstances, the player pauses the media.
+        // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+        // and places the expanded creative at video zero coordinates.
+        onPauseMedia?.invoke()
+        if (onResizeSimid?.invoke(playerDimensions) == true)
+            resolveMessage(message) else
+                rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Unable to expand nonlinear ad")
+    }
+
+    private fun onCreativeCollapseNonlinear(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, collapseNonlinear ignored")
+            return
+        }
+        // Under normal circumstances, the player pauses the media.
+        // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+        // and places the expanded creative at video zero coordinates.
+        onPlayMedia?.invoke()
+        if (onResizeSimid?.invoke(creativeDimensions) == true)
+            resolveMessage(message) else
+            rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Unable to collapse nonlinear ad")
     }
 
     private fun onCreativeRequestSkip(message: Message) {
@@ -458,6 +488,10 @@ public open class SimidController (
             _nonLinearStartTime = 0.0F
             stopAd(StopCode.NON_LINEAR_DURATION_COMPLETE)
         }
+    }
+
+    private fun dimensions(rect: Rect): Dimensions {
+        return Dimensions(rect.top, rect.left, rect.width(), rect.height())
     }
     //endregion MAIN VIDEO STATE
 }
