@@ -422,12 +422,10 @@ public open class SimidController (
         // Wait for the SIMID creative to acknowledge stop and then clean up the iframe.
         mainScope.launch {
             if (_initialized) {
-                if (skipped) {
-                    sendMessage(PlayerMessage.AD_SKIPPED).await()
-                } else {
-                    val args = PlayerAdStoppedMessageArgs(reason)
-                    sendMessage(PlayerMessage.AD_STOPPED, args).await()
-                }
+                (when (skipped) {
+                    true -> sendMessage(PlayerMessage.AD_SKIPPED)
+                    false -> sendMessage(PlayerMessage.AD_STOPPED, PlayerAdStoppedMessageArgs(reason))
+                }).await()
             }
             clearWebView()
             resetSession()
