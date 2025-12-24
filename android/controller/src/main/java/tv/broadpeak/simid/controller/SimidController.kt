@@ -248,6 +248,7 @@ public open class SimidController (
                         RelativeLayout.LayoutParams.MATCH_PARENT
                     )
                     setPadding(0, 0, 0, 0)
+                    visibility = View.GONE
                     isFocusable = true
                     isFocusableInTouchMode = true
                     webViewClient = WebViewClient()
@@ -405,10 +406,16 @@ public open class SimidController (
                     sendMessage(PlayerMessage.AD_STOPPED, args).await()
                 }
             }
-            // Delete webview since issue with clearing webview content (loadUrl("about:blank"))
-            webView = null
+            clearWebView()
             resetSession()
         }
+    }
+
+    private fun clearWebView() {
+        webView?.loadUrl("about:blank")
+        webView?.clearHistory()
+        webView?.clearCache(true)
+        webView = null
     }
 
     private fun completeAd(skipped: Boolean = false) {

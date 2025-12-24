@@ -8,7 +8,6 @@ import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.webkit.WebView
-import android.widget.RelativeLayout
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.OptIn
 import androidx.appcompat.app.AppCompatActivity
@@ -55,13 +54,13 @@ class PlayerActivity : AppCompatActivity() {
 
     private var bpkSimidController: BpkSimidController? = null
 
-    private var webViewContainer: ViewGroup? = null
-
     // Global flag to control animation usage
     private var useAnimations: Boolean = true
 
     companion object {
         private const val TAG = "Player"
+
+        private const val ANIMATION_DURATION_MS = 300L
     }
 
     @OptIn(UnstableApi::class)
@@ -177,6 +176,7 @@ class PlayerActivity : AppCompatActivity() {
                     if (simidController != null) {
                         simidController.reset()
                         simidControllers.remove(adData.adId)
+                        removeWebView(adData.adId)
                     }
                     adDatas.remove(adData.adId)
                 }
@@ -209,11 +209,11 @@ class PlayerActivity : AppCompatActivity() {
         val simidController = SimidController(this, applicationContext, playerRect, creativeUri, adParameters, duration)
 
         simidController.let { controller ->
-            controller.onGetMediaState { getMediaState() }
             controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
             controller.onShowSimid { show -> showSimidWebView(adId, show) }
-            controller.onResizeSimid { dimensions -> resizeSimid(dimensions) }
+            controller.onResizeSimid { dimensions -> resizeSimid(adId, dimensions) }
             controller.onResizePlayer { dimensions -> resizePlayer(dimensions) }
+            controller.onGetMediaState { getMediaState() }
             controller.onPauseMedia { pauseMedia() }
             controller.onPlayMedia { playMedia() }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
@@ -241,47 +241,33 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun addSimidWebView(adId: String, webView: WebView): Boolean {
-        // Do not add WebView in activity (not found a way to add while hiding it totally)
-        // Add it in view only when requested to be shown
         simidWebViews[adId] = webView
+        playerContainer?.addView(webView)
         return true
     }
 
-    private fun showSimidWebView(adId: String, show: Boolean) {
-        val simidWebView = simidWebViews[adId]
-        if (simidWebView == null) {
-            return
-        }
-
-        runOnUiThread {
-            if (show) {
-                simidWebView.visibility = View.VISIBLE
-
-                webViewContainer = RelativeLayout(applicationContext)
-                webViewContainer?.apply {
-                    layoutParams = RelativeLayout.LayoutParams(
-                        RelativeLayout.LayoutParams.MATCH_PARENT,
-                        RelativeLayout.LayoutParams.MATCH_PARENT
-                    )
-                    setPadding(0, 0, 0, 0)
-                }
-
-                webViewContainer?.addView(simidWebView)
-                playerContainer?.addView(webViewContainer)
-
-            } else if (webViewContainer != null) {
-                simidWebView.loadUrl("about:blank")
-                simidWebView.clearHistory()
-                simidWebView.clearCache(true)
-                webViewContainer?.removeView((simidWebView))
-                playerContainer?.removeView(webViewContainer)
-                webViewContainer = null
+    private fun removeWebView(adId: String) {
+        val webView = simidWebViews[adId]
+        webView?.let {
+            runOnUiThread {
+                playerContainer?.removeView(webView)
             }
         }
     }
 
-    private fun resizeSimid(dimensions: Rect): Boolean {
+    private fun showSimidWebView(adId: String, show: Boolean) {
+        val webView = simidWebViews[adId]
+        webView?.let {
+            runOnUiThread {
+                webView.visibility = if (show) View.VISIBLE else View.GONE
+            }
+        }
+    }
+
+    private fun resizeSimid(adId: String, dimensions: Rect): Boolean {
         Log.d(TAG, "Resize SIMID: ${dimensions.toShortString()}")
+
+        val webView = simidWebViews[adId] ?: return false
 
         // Check if requested SIMID dimensions is not outside original player dimensions
         val playerRect = Rect(playerContainer!!.left, playerContainer!!.top, playerContainer!!.width, playerContainer!!.height)
@@ -291,108 +277,48 @@ class PlayerActivity : AppCompatActivity() {
             return false;
         }
 
-        runOnUiThread {
-            val w = dimensions.width()
-            val h = dimensions.height()
-
-            val lp = (webViewContainer?.layoutParams as? ViewGroup.MarginLayoutParams)
-                ?: ViewGroup.MarginLayoutParams(w, h)
-
-            lp.width = w
-            lp.height = h
-            lp.leftMargin = dimensions.left
-            lp.topMargin  = dimensions.top
-
-            webViewContainer?.layoutParams = lp
-            webViewContainer?.requestLayout()
-        }
-
+        resizeView(webView, dimensions, false)
         return true
     }
 
     private fun resizePlayer(dimensions: Rect): Boolean {
         Log.d(TAG, "Resize player: ${dimensions.toShortString()}")
-
         val playerView = playerView ?: return false
+        resizeView(playerView, dimensions, useAnimations)
+        return true
+    }
 
+    private fun resizeView(view: View, dimensions: Rect, animate: Boolean) {
         runOnUiThread {
-            val currentLayoutParams = playerView.layoutParams as ViewGroup.MarginLayoutParams
-
-            if (!useAnimations) {
+            if (!animate) {
                 // Instant resize without animation
-                (playerView.layoutParams as ViewGroup.MarginLayoutParams).apply {
+                (view.layoutParams as ViewGroup.MarginLayoutParams).apply {
                     leftMargin = dimensions.left
                     topMargin = dimensions.top
                     width = dimensions.width()
                     height = dimensions.height()
                 }
-                playerView.requestLayout()
-
+                view.requestLayout()
             } else {
                 // Animated resize
-                val duration = 300L // Animation duration in milliseconds
+                val from = Rect(view.left, view.top, view.width, view.height)
 
-                if (playerView.left != dimensions.left) {
-                    val leftAnimator = ValueAnimator.ofInt(playerView.left, dimensions.left)
-                    leftAnimator.apply {
-                        addUpdateListener { animation ->
-                            val value = animation.animatedValue as Int
-                            (playerView.layoutParams as ViewGroup.MarginLayoutParams).leftMargin =
-                                value
-                            playerView.requestLayout()
+                ValueAnimator.ofFloat(0f, 1f).apply {
+                    this.duration = ANIMATION_DURATION_MS
+                    this.interpolator = AccelerateDecelerateInterpolator()
+                    addUpdateListener { va ->
+                        val f = va.animatedFraction
+                        (view.layoutParams as ViewGroup.MarginLayoutParams).apply {
+                            leftMargin = (from.left + (dimensions.left - from.left) * f).toInt()
+                            topMargin = (from.top + (dimensions.top - from.top) * f).toInt()
+                            width = (from.width() + (dimensions.width() - from.width()) * f).toInt()
+                            height = (from.height() + (dimensions.height() - from.height()) * f).toInt()
                         }
-                        interpolator = AccelerateDecelerateInterpolator()
-                        this.duration = duration
-                        start()
+                        view.requestLayout()
                     }
-                }
-
-                if (playerView.top != dimensions.top) {
-                    val topAnimator = ValueAnimator.ofInt(playerView.top, dimensions.top)
-                    topAnimator.apply {
-                        addUpdateListener { animation ->
-                            val value = animation.animatedValue as Int
-                            (playerView.layoutParams as ViewGroup.MarginLayoutParams).topMargin =
-                                value
-                            playerView.requestLayout()
-                        }
-                        interpolator = AccelerateDecelerateInterpolator()
-                        this.duration = duration
-                        start()
-                    }
-                }
-
-                if (playerView.width != dimensions.width()) {
-                    val widthAnimator = ValueAnimator.ofInt(playerView.width, dimensions.width())
-                    widthAnimator.apply {
-                        addUpdateListener { animation ->
-                            val value = animation.animatedValue as Int
-                            playerView.layoutParams.width = value
-                            playerView.requestLayout()
-                        }
-                        interpolator = AccelerateDecelerateInterpolator()
-                        this.duration = duration
-                        start()
-                    }
-                }
-
-                if (playerView.height != dimensions.height()) {
-                    val heightAnimator = ValueAnimator.ofInt(playerView.height, dimensions.height())
-                    heightAnimator.apply {
-                        addUpdateListener { animation ->
-                            val value = animation.animatedValue as Int
-                            playerView.layoutParams.height = value
-                            playerView.requestLayout()
-                        }
-                        interpolator = AccelerateDecelerateInterpolator()
-                        this.duration = duration
-                        start()
-                    }
-                }
+                }.start()
             }
         }
-
-        return true
     }
 
     private fun pauseMedia(): Boolean {
