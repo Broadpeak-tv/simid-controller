@@ -22,6 +22,7 @@ import org.apache.commons.text.StringEscapeUtils
 /**
  * Set up the SIMID controller starts listening for messages from the creative.
  * @param playerDimensions the main player dimensions
+ * @param creativeDimensions the initial creative dimensions the application/player will set
  * @param creativeUri The creative URI
  * @param adParameters the creative ad parameters
  * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
@@ -32,6 +33,7 @@ public open class SimidController (
     private val activity: Activity,
     private val context: Context,
     private val playerDimensions: Rect,
+    private var creativeDimensions: Rect,
     private val creativeUri: String,
     private val adParameters: String = "",
     private val adDuration: Float = 0.0F,
@@ -154,6 +156,8 @@ public open class SimidController (
         this.addMessageListener(CreativeMessage.REQUEST_RESIZE, ::onCreativeRequestResize)
         this.addMessageListener(CreativeMessage.REQUEST_SKIP, ::onCreativeRequestSkip)
         this.addMessageListener(CreativeMessage.REQUEST_STOP, ::onCreativeRequestStop)
+        this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, ::onCreativeExpandNonlinear)
+        this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, ::onCreativeCollapseNonlinear)
     }
 
     //region CREATIVE MESSAGE HANDLERS
@@ -192,8 +196,8 @@ public open class SimidController (
     }
 
     private fun onCreativeRequestResize(message: Message) {
-        if (!_initialized) {
-            Log.w(TAG, "Session not initialized, requestResize ignored")
+        if (onResizeSimid == null || onResizePlayer == null) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Resize not supported by the player")
             return
         }
         val args: CreativeRequestResizeMessageArgs = Gson().fromJson(message.args.toString(), CreativeRequestResizeMessageArgs::class.java)
@@ -202,14 +206,46 @@ public open class SimidController (
         val creativeRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
         // Resize SIMID iframe
         if (onResizeSimid?.invoke(creativeRect) == false) {
-            rejectMessage(message)
-        } else {
-            // Then if successfull, resize the main player
-            dim = args.mediaDimensions
-            val playerRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
-            onResizePlayer?.invoke(playerRect)
-            resolveMessage(message)
+            rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "The player is unable to complete the Creative resizing")
+            return
         }
+        // Store creative dimensions (reused when collapsed)
+        this.creativeDimensions = creativeRect
+
+        // If creative successfully resized then resize the main player
+        dim = args.mediaDimensions
+        val playerRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
+        onResizePlayer?.invoke(playerRect)
+
+        resolveMessage(message)
+    }
+
+    private fun onCreativeExpandNonlinear(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, expandNonlinear ignored")
+            return
+        }
+        // Under normal circumstances, the player pauses the media.
+        // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+        // and places the expanded creative at video zero coordinates.
+        onPauseMedia?.invoke()
+        if (onResizeSimid?.invoke(playerDimensions) == true)
+            resolveMessage(message) else
+                rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Unable to expand nonlinear ad")
+    }
+
+    private fun onCreativeCollapseNonlinear(message: Message) {
+        if (!_initialized) {
+            Log.w(TAG, "Session not initialized, collapseNonlinear ignored")
+            return
+        }
+        // Under normal circumstances, the player pauses the media.
+        // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+        // and places the expanded creative at video zero coordinates.
+        onPlayMedia?.invoke()
+        if (onResizeSimid?.invoke(creativeDimensions) == true)
+            resolveMessage(message) else
+            rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Unable to collapse nonlinear ad")
     }
 
     private fun onCreativeRequestSkip(message: Message) {
@@ -297,12 +333,9 @@ public open class SimidController (
     private fun sendInitMessage() {
         // [4] - send Player:init message
 
-        // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
-        val videoDimensions = Dimensions(playerDimensions.top, playerDimensions.left, playerDimensions.width(), playerDimensions.height())
-
         val environmentData = EnvironmentData(
-            videoDimensions,
-            videoDimensions,
+            dimensions(playerDimensions),
+            dimensions(creativeDimensions),
             false,
             true,
             true,
@@ -459,6 +492,10 @@ public open class SimidController (
             _nonLinearStartTime = 0.0F
             stopAd(StopCode.NON_LINEAR_DURATION_COMPLETE)
         }
+    }
+
+    private fun dimensions(rect: Rect): Dimensions {
+        return Dimensions(rect.top, rect.left, rect.width(), rect.height())
     }
     //endregion MAIN VIDEO STATE
 }

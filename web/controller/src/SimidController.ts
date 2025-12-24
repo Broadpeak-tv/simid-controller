@@ -35,6 +35,9 @@ export class SimidController extends SimidComponent {
   // The initial main player container element dimensions
   private _mainPlayerDimensions: Dimensions | undefined
 
+  // The initial creative element dimensions
+  private _creativeDimensions: Dimensions | undefined
+
   // The creative URI
   private _creativeUri: string
 
@@ -83,6 +86,7 @@ export class SimidController extends SimidComponent {
   /**
    * Set up the SIMID controller starts listening for messages from the creative.
    * @param playerDimensions the main player dimensions
+   * @param creativeDimensions the initial creative dimensions the application/player will set
    * @param creativeUri The creative URI
    * @param adParameters the creative ad parameters
    * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
@@ -101,6 +105,7 @@ export class SimidController extends SimidComponent {
     super('Player')
 
     this._mainPlayerDimensions = playerDimensions as Dimensions
+    this._creativeDimensions = creativeDimensions as Dimensions
 
     this._creativeUri = creativeUri
     this._adParameters = adParameters
@@ -227,6 +232,8 @@ export class SimidController extends SimidComponent {
     this.addMessageListener(CreativeMessage.REQUEST_RESIZE, (message: Message) => this.onCreativeRequestResize(message))
     this.addMessageListener(CreativeMessage.REQUEST_SKIP, (message: Message) => this.onCreativeRequestSkip(message))
     this.addMessageListener(CreativeMessage.REQUEST_STOP, (message: Message) => this.onCreativeRequestStop(message))
+    this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, (message: Message) => this.onCreativeExpandNonlinear(message))
+    this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, (message: Message) => this.onCreativeCollapseNonlinear(message))
   }
 
   // #region PROTECTED METHODS
@@ -257,6 +264,34 @@ export class SimidController extends SimidComponent {
     this.resolveMessage(message, args)
   }
 
+  protected onCreativeExpandNonlinear(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, expandNonlinear ignored')
+      return
+    }
+    // Under normal circumstances, the player pauses the media.
+    // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+    // and places the expanded creative at video zero coordinates.
+    this._onPauseMedia?.()
+    this._onResizeSimid(this._mainPlayerDimensions as DOMRect) ? 
+      this.resolveMessage(message) : 
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to expand nonlinear ad')
+  }
+
+  protected onCreativeCollapseNonlinear(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, collapseNonlinear ignored')
+      return
+    }
+    // Under normal circumstances, the player pauses the media.
+    // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+    // and places the expanded creative at video zero coordinates.
+    this._onPlayMedia?.()
+    this._onResizeSimid(this._creativeDimensions as DOMRect) ? 
+      this.resolveMessage(message) : 
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to collapse nonlinear ad')
+  }
+
   protected onCreativeRequestPause(message: Message) {
     if (!this._initialized) {
       console.warn('[Player] Session not initialized, requestPause ignored')
@@ -274,18 +309,23 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestResize(message: Message) {
-    if (!this._initialized) {
-      console.warn('[Player] Session not initialized, requestResize ignored')
+    if (!this._onResizeSimid || !this._onResizePlayer) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Resize not supported by the player')
       return
     }
+
     const args = message.args as CreativeRequestResizeMessageArgs
 
     // Resize SIMID iframe
-    if (!this._onResizeSimid(args.creativeDimensions as DOMRect)) {
-      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to resize a nonlinear ad with dimensions bigger than the player')
+    if (!this._onResizeSimid?.(args.creativeDimensions as DOMRect)) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'The player is unable to complete the Creative resizing')
     } else {
-      // Then if successfull, resize the main player
-      this._onResizePlayer(args.mediaDimensions as DOMRect)
+      // Store creative dimensions (reused when collapsed)
+      this._creativeDimensions = args.creativeDimensions
+
+      // If creative successfully resized then resize the main player
+      this._onResizePlayer?.(args.mediaDimensions as DOMRect)      
+
       this.resolveMessage(message)
     }
   }
@@ -306,14 +346,11 @@ export class SimidController extends SimidComponent {
   private async _sendInitMessage() {
     // [4] - send Player:init message
 
-    // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
-    const videoDimensions = this._mainPlayerDimensions
-
     const mediaState = this._onGetMediaState?.()
 
     const environmentData: EnvironmentData = {
-      videoDimensions: videoDimensions,
-      creativeDimensions: videoDimensions,
+      videoDimensions: this._mainPlayerDimensions,
+      creativeDimensions: this._creativeDimensions,
       fullscreen: false,
       fullscreenAllowed: true,
       variableDurationAllowed: true,

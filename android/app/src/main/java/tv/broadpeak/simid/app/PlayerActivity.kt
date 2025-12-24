@@ -206,7 +206,7 @@ class PlayerActivity : AppCompatActivity() {
 
         Log.d(TAG, "Load SIMID: ${playerRect.toShortString()} $creativeUri $duration")
 
-        val simidController = SimidController(this, applicationContext, playerRect, creativeUri, adParameters, duration)
+        val simidController = SimidController(this, applicationContext, playerRect, playerRect, creativeUri, adParameters, duration)
 
         simidController.let { controller ->
             controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
