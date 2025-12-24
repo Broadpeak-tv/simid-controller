@@ -72,7 +72,7 @@ export default class Player {
     const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
 
     console.log(`[Player] Load SIMID - uri:${creativeUri} duration:${duration}`)
-    const simidController = new SimidController(playerRect, creativeUri, adParameters, duration)
+    const simidController = new SimidController(playerRect, playerRect, creativeUri, adParameters, duration)
 
     simidController.onGetMediaState = () => this.getMediaState()
     simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
