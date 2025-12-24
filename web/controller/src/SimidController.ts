@@ -232,6 +232,8 @@ export class SimidController extends SimidComponent {
     this.addMessageListener(CreativeMessage.REQUEST_RESIZE, (message: Message) => this.onCreativeRequestResize(message))
     this.addMessageListener(CreativeMessage.REQUEST_SKIP, (message: Message) => this.onCreativeRequestSkip(message))
     this.addMessageListener(CreativeMessage.REQUEST_STOP, (message: Message) => this.onCreativeRequestStop(message))
+    this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, (message: Message) => this.onCreativeExpandNonlinear(message))
+    this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, (message: Message) => this.onCreativeCollapseNonlinear(message))
   }
 
   // #region PROTECTED METHODS
@@ -260,6 +262,34 @@ export class SimidController extends SimidComponent {
       fullscreen: mediaState ? mediaState.fullscreen : false,      
     }
     this.resolveMessage(message, args)
+  }
+
+  protected onCreativeExpandNonlinear(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, expandNonlinear ignored')
+      return
+    }
+    // Under normal circumstances, the player pauses the media.
+    // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+    // and places the expanded creative at video zero coordinates.
+    this._onPauseMedia?.()
+    this._onResizeSimid(this._mainPlayerDimensions as DOMRect) ? 
+      this.resolveMessage(message) : 
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to expand nonlinear ad')
+  }
+
+  protected onCreativeCollapseNonlinear(message: Message) {
+    if (!this._initialized) {
+      console.warn('[Player] Session not initialized, collapseNonlinear ignored')
+      return
+    }
+    // Under normal circumstances, the player pauses the media.
+    // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+    // and places the expanded creative at video zero coordinates.
+    this._onPlayMedia?.()
+    this._onResizeSimid(this._creativeDimensions as DOMRect) ? 
+      this.resolveMessage(message) : 
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to collapse nonlinear ad')
   }
 
   protected onCreativeRequestPause(message: Message) {
