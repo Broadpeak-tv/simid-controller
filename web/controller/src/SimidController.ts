@@ -309,10 +309,11 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestResize(message: Message) {
-    if (!this._initialized) {
-      console.warn('[Player] Session not initialized, requestResize ignored')
+    if (!this._onResizeSimid || !this._onResizePlayer) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Resize not supported by the player')
       return
     }
+
     const args = message.args as CreativeRequestResizeMessageArgs
 
     // Resize SIMID iframe
