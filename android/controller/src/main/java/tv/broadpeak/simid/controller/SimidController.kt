@@ -22,6 +22,7 @@ import org.apache.commons.text.StringEscapeUtils
 /**
  * Set up the SIMID controller starts listening for messages from the creative.
  * @param playerDimensions the main player dimensions
+ * @param creativeDimensions the initial creative dimensions the application/player will set
  * @param creativeUri The creative URI
  * @param adParameters the creative ad parameters
  * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
@@ -32,6 +33,7 @@ public open class SimidController (
     private val activity: Activity,
     private val context: Context,
     private val playerDimensions: Rect,
+    private var creativeDimensions: Rect,
     private val creativeUri: String,
     private val adParameters: String = "",
     private val adDuration: Float = 0.0F,
@@ -297,12 +299,9 @@ public open class SimidController (
     private fun sendInitMessage() {
         // [4] - send Player:init message
 
-        // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
-        val videoDimensions = Dimensions(playerDimensions.top, playerDimensions.left, playerDimensions.width(), playerDimensions.height())
-
         val environmentData = EnvironmentData(
-            videoDimensions,
-            videoDimensions,
+            dimensions(playerDimensions),
+            dimensions(creativeDimensions),
             false,
             true,
             true,
