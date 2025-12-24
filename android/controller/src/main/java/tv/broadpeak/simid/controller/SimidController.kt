@@ -196,8 +196,8 @@ public open class SimidController (
     }
 
     private fun onCreativeRequestResize(message: Message) {
-        if (!_initialized) {
-            Log.w(TAG, "Session not initialized, requestResize ignored")
+        if (onResizeSimid == null || onResizePlayer == null) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Resize not supported by the player")
             return
         }
         val args: CreativeRequestResizeMessageArgs = Gson().fromJson(message.args.toString(), CreativeRequestResizeMessageArgs::class.java)
@@ -206,14 +206,18 @@ public open class SimidController (
         val creativeRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
         // Resize SIMID iframe
         if (onResizeSimid?.invoke(creativeRect) == false) {
-            rejectMessage(message)
-        } else {
-            // Then if successfull, resize the main player
-            dim = args.mediaDimensions
-            val playerRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
-            onResizePlayer?.invoke(playerRect)
-            resolveMessage(message)
+            rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "The player is unable to complete the Creative resizing")
+            return
         }
+        // Store creative dimensions (reused when collapsed)
+        this.creativeDimensions = creativeRect
+
+        // If creative successfully resized then resize the main player
+        dim = args.mediaDimensions
+        val playerRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
+        onResizePlayer?.invoke(playerRect)
+
+        resolveMessage(message)
     }
 
     private fun onCreativeExpandNonlinear(message: Message) {
