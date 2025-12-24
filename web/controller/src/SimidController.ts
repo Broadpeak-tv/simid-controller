@@ -320,8 +320,12 @@ export class SimidController extends SimidComponent {
     if (!this._onResizeSimid(args.creativeDimensions as DOMRect)) {
       this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to resize a nonlinear ad with dimensions bigger than the player')
     } else {
-      // Then if successfull, resize the main player
-      this._onResizePlayer(args.mediaDimensions as DOMRect)
+      // Store creative dimensions (reused when collapsed)
+      this._creativeDimensions = args.creativeDimensions
+
+      // If creative successfully resized then resize the main player
+      this._onResizePlayer(args.mediaDimensions as DOMRect)      
+
       this.resolveMessage(message)
     }
   }
