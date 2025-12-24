@@ -350,7 +350,7 @@ public open class SimidController (
             1.0F, // player.volume,
             null, // NavigationSupport.NOT_SUPPORTED,
             null, // CloseButtonSupport.AD_HANDLES,
-            null // _duration / 1000.0,
+            adDuration
         )
 
         // Escape characters to avoid JSON parsing failure in Creative
