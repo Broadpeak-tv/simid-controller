@@ -35,6 +35,9 @@ export class SimidController extends SimidComponent {
   // The initial main player container element dimensions
   private _mainPlayerDimensions: Dimensions | undefined
 
+  // The initial creative element dimensions
+  private _creativeDimensions: Dimensions | undefined
+
   // The creative URI
   private _creativeUri: string
 
@@ -83,6 +86,7 @@ export class SimidController extends SimidComponent {
   /**
    * Set up the SIMID controller starts listening for messages from the creative.
    * @param playerDimensions the main player dimensions
+   * @param creativeDimensions the initial creative dimensions the application/player will set
    * @param creativeUri The creative URI
    * @param adParameters the creative ad parameters
    * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
@@ -101,6 +105,7 @@ export class SimidController extends SimidComponent {
     super('Player')
 
     this._mainPlayerDimensions = playerDimensions as Dimensions
+    this._creativeDimensions = creativeDimensions as Dimensions
 
     this._creativeUri = creativeUri
     this._adParameters = adParameters
@@ -306,14 +311,11 @@ export class SimidController extends SimidComponent {
   private async _sendInitMessage() {
     // [4] - send Player:init message
 
-    // Since the creative starts as hidden it will take on the main player/video element dimensions, so tell the ad about those dimensions
-    const videoDimensions = this._mainPlayerDimensions
-
     const mediaState = this._onGetMediaState?.()
 
     const environmentData: EnvironmentData = {
-      videoDimensions: videoDimensions,
-      creativeDimensions: videoDimensions,
+      videoDimensions: this._mainPlayerDimensions,
+      creativeDimensions: this._creativeDimensions,
       fullscreen: false,
       fullscreenAllowed: true,
       variableDurationAllowed: true,
