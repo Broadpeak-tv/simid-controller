@@ -28,7 +28,7 @@ import org.apache.commons.text.StringEscapeUtils
  * @param adParameters the creative ad parameters
  * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
  * @param adSkippable true if the linear ad is skippable (false by default)
- * @param mediaStatePollingInterval the interval in ms to retrieve the media state and send media timeupdate message to the creative (250ms by default)
+ * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
  */
 public open class SimidController (
     private val activity: Activity,
@@ -38,7 +38,7 @@ public open class SimidController (
     private val adParameters: String = "",
     private val adDuration: Float = 0.0F,
     private val adSkippable: Boolean = false,
-    private val mediaStatePollingInterval: Long = MEDIA_STATE_POLL_INTERVAL_MS
+    private val mediaTimeupdateInterval: Long = MEDIA_TIMEUPDATE_INTERVAL_MS
 ) : SimidComponent(SIMID_COMPONENT_TYPE) /*: GenericSimidControllerApi()*/ {
 
 //    override fun getSimidControllerName(): String {
@@ -49,7 +49,7 @@ public open class SimidController (
         private const val TAG = "SimidController"
         private const val SIMID_COMPONENT_TYPE = "Player"
         public const val VERSION = BuildConfig.VERSION
-        public const val MEDIA_STATE_POLL_INTERVAL_MS = 250L
+        public const val MEDIA_TIMEUPDATE_INTERVAL_MS = 250L
     }
 
     // The WebView used to load the SIMID creative
@@ -62,7 +62,7 @@ public open class SimidController (
     private var _nonLinearStartTime: Float = 0.0F
     private var _startPosition: Long = 0L
     private var _isStopping: Boolean = false
-    private var _timerMediaState: Timer? = null
+    private var _timerMediaTimeupdate: Timer? = null
 
     private var onGetMediaState: (() -> MediaState)? = null
     private var onPlayMedia: (() -> Boolean)? = null
@@ -359,7 +359,7 @@ public open class SimidController (
             mainScope.launch {
                 sendMessage(PlayerMessage.START_CREATIVE).await()
                 onShowSimid?.invoke(true)
-                startPollingMediaState()
+                startMediaTimeupdateInterval()
             }
         } catch (e: Exception) {
             Log.v(TAG, "Failed to start creative: " + e.message)
@@ -390,7 +390,7 @@ public open class SimidController (
             return
         }
         _isStopping = true
-        stopPollingMediaState()
+        stopMediaTimeupdateInterval()
         onShowSimid?.invoke(false)
 
         completeAd(skipped)
@@ -423,15 +423,18 @@ public open class SimidController (
     }
 
     //region MAIN VIDEO STATE
-    private fun startPollingMediaState() {
-        stopPollingMediaState()
+    private fun startMediaTimeupdateInterval() {
+        stopMediaTimeupdateInterval()
 
+        if (mediaTimeupdateInterval == -1L) {
+            return
+        }
         if (adDuration <= 0) {
             return
         }
 
-        _timerMediaState = Timer()
-        _timerMediaState?.schedule(object : TimerTask() {
+        _timerMediaTimeupdate = Timer()
+        _timerMediaTimeupdate?.schedule(object : TimerTask() {
             override fun run() {
                 activity.runOnUiThread {
                     val mediaState = onGetMediaState?.invoke()
@@ -440,12 +443,12 @@ public open class SimidController (
                     }
                 }
             }
-        }, mediaStatePollingInterval, mediaStatePollingInterval)
+        }, mediaTimeupdateInterval, mediaTimeupdateInterval)
     }
 
-    private fun stopPollingMediaState() {
-        _timerMediaState?.cancel()
-        _timerMediaState = null
+    private fun stopMediaTimeupdateInterval() {
+        _timerMediaTimeupdate?.cancel()
+        _timerMediaTimeupdate = null
     }
 
     private fun mediaTimeUpdated(currentTime: Float) {
