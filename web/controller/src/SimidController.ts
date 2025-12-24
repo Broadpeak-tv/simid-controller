@@ -317,14 +317,14 @@ export class SimidController extends SimidComponent {
     const args = message.args as CreativeRequestResizeMessageArgs
 
     // Resize SIMID iframe
-    if (!this._onResizeSimid(args.creativeDimensions as DOMRect)) {
-      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Unable to resize a nonlinear ad with dimensions bigger than the player')
+    if (!this._onResizeSimid?.(args.creativeDimensions as DOMRect)) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'The player is unable to complete the Creative resizing')
     } else {
       // Store creative dimensions (reused when collapsed)
       this._creativeDimensions = args.creativeDimensions
 
       // If creative successfully resized then resize the main player
-      this._onResizePlayer(args.mediaDimensions as DOMRect)      
+      this._onResizePlayer?.(args.mediaDimensions as DOMRect)      
 
       this.resolveMessage(message)
     }
