@@ -14,6 +14,8 @@ export default class App {
   private streamButtonLoad: HTMLButtonElement
   private streamButtonStop: HTMLButtonElement
 
+  private resizeTimer: number = -1
+
   private player: Player
 
   constructor() {
@@ -25,6 +27,8 @@ export default class App {
     this.streamButtonStop = document.getElementById('stream-button-stop') as HTMLButtonElement
 
     this.player = new Player(this.playerContainer, this.playerElement, this.videoElement)
+
+    this.setResizeObserver()
   }
 
   public async init() {
@@ -67,5 +71,15 @@ export default class App {
     } catch (e) {
       console.error(e)
     }
+  }
+
+  private setResizeObserver() {
+    window.addEventListener('resize', () => {
+      clearTimeout(this.resizeTimer)
+      this.resizeTimer = window.setTimeout(() => {
+        console.log('Window resized:', window.innerWidth, window.innerHeight)
+        this.player?.handleResize()
+      }, 200)
+    })
   }
 }
