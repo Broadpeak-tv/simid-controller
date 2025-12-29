@@ -65,7 +65,7 @@
       background: rgba(0, 0, 0, 0.5);
       padding: 20px;
       border-radius: 5px;
-      z-index: 2;
+      z-index: 999;
       width: 90%
     }
 
@@ -96,18 +96,18 @@
 <body>
   <div id="main">
 
-    <div id="player">
-      <div class="inputs">
-        <div id="stream" class="input">
-          <label for="stream-edit-url">Stream:</label>
-          <input type="text" id="stream-edit-url" size=100 value="">
-          <button id="stream-button-load">LOAD</button>
-          <button id="stream-button-stop">STOP</button>
-        </div>
+    <div class="inputs">
+      <div id="stream" class="input">
+        <label for="stream-edit-url">Stream:</label>
+        <input type="text" id="stream-edit-url" size=100 value="">
+        <button id="stream-button-load">LOAD</button>
+        <button id="stream-button-stop">STOP</button>
+        <!-- <button id="button-draw">Draw</button> -->
       </div>
+    </div>
 
+    <div id="player">
       <video id="video" controls autoplay muted></video>
-
     </div>
 
   </div>
