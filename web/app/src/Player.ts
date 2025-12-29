@@ -91,6 +91,11 @@ export default class Player {
     this.simidControllers.set(adId, simidController)
   }
 
+  public handleResize() {
+    const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
+    this.simidControllers.forEach(controller => controller.notifyResize(playerRect, playerRect, false))
+  }
+
   private async loadPlayer() {
     shaka.polyfill.installAll()
     this.player = new shaka.Player()
