@@ -223,5 +223,5 @@ export default class Player {
       return
     }
     this.videoElement.currentTime = (adData.startPosition + adData.duration) / 1000
-  } 
+  }
 }

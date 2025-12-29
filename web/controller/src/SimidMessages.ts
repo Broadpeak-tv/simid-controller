@@ -238,7 +238,7 @@ enum NavigationSupport {
 enum CloseButtonSupport {
   AD_HANDLES = 'adHandles',
   PLAYER_HANDLES = 'playerHandles',
-} 
+}
 
 export type EnvironmentData = {
   videoDimensions: Dimensions

@@ -506,7 +506,7 @@ export class SimidController extends SimidComponent {
 
     // Resume main video playback
     this._onPlayMedia?.()
-  }  
+  }
       
   // #endregion CREATIVE AD MANAGEMENT
 

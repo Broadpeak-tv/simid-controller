@@ -151,7 +151,7 @@ export class SimidComponent {
       default:
         if (message.type.startsWith(SIMID_NS)) {
           this._invokeMessageListeners(message)
-        }    
+        }
         break
       }
   }
