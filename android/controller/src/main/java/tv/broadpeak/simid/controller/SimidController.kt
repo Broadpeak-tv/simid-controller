@@ -112,11 +112,19 @@ public open class SimidController (
         return VERSION
     }
 
+    /**
+     * Initialize and load ad. This should be called before an ad plays.
+     * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
+     * @param autoStart true to start the creative once initialized
+     */
     fun load(autoStart: Boolean = true) {
         _autoStart = autoStart
         createWebView()
     }
 
+    /**
+     * Start the loaded creative
+     */
     fun start() {
         if (!_initialized) {
             // start() my be called before creative has been fully initialized, then start it automatically when ready
@@ -126,10 +134,9 @@ public open class SimidController (
         startCreative()
     }
 
-    fun getSimidSessionId(): String {
-        return sessionId
-    }
-
+    /**
+     * Stop and reset the SIMID controller
+     */
     fun reset() {
         stopAd()
     }
