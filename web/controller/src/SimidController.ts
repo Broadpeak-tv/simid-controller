@@ -18,6 +18,7 @@ import {
   CreativeErrorCode,
   MediaMessage,
   MediaTimeUpdateMessageArgs,
+  PlayerResizeMessageArgs,
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
 
@@ -193,6 +194,7 @@ export class SimidController extends SimidComponent {
   /**
    * Initialize and load ad. This should be called before an ad plays.
    * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
+   * @param autoStart true to start the creative once initialized
    */
   public load(autoStart = false) {
     this._autoStart = autoStart
@@ -219,6 +221,24 @@ export class SimidController extends SimidComponent {
    */
   public reset() {
     this._stopAd()
+  }
+
+  /**
+   * Notify the SIMID controller any changes any of ad components’ size
+   * @param playerDimensions the new player dimensions
+   * @param creativeDimensions the new creative dimensions
+   * @param fullscreen true if in fullscreen mode 
+   */
+  public notifyResize(playerDimensions: DOMRect, creativeDimensions: DOMRect, fullscreen: boolean) {
+    if (!this._initialized) {
+      return
+    }
+    const args: PlayerResizeMessageArgs = {
+      videoDimensions: playerDimensions,
+      creativeDimensions,
+      fullscreen
+    }
+    this.sendMessage(PlayerMessage.RESIZE, args)
   }
 
   // #endregion PUBLIC METHODS
