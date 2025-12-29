@@ -134,6 +134,20 @@ public open class SimidController (
         stopAd()
     }
 
+    /**
+     * Notify the SIMID controller any changes any of ad components’ size
+     * @param playerDimensions the new player dimensions
+     * @param creativeDimensions the new creative dimensions
+     * @param fullscreen true if in fullscreen mode
+     */
+    fun notifyResize(playerDimensions: Rect, creativeDimensions: Rect, fullscreen: Boolean) {
+        if (!this._initialized) {
+            return
+        }
+        val args = PlayerResizeMessageArgs(dimensions(playerDimensions), dimensions(creativeDimensions), fullscreen)
+        this.sendMessage(PlayerMessage.RESIZE, args)
+    }
+
     override fun postMessage(message: String) {
         Log.v(TAG, "[SIMID][Player][S]: $message")
 
