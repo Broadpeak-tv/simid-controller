@@ -1,8 +1,9 @@
 import Player from './Player'
 
-// const DEFAULT_STREAM_URL = 'https://d2lwku66j7s1id.cloudfront.net/9bf31c7ff062936a7f941ad65712fad3/out/v1/6e0f649095ca4131b16bd0f877048629/index.mpd?nl-config=demo-samples-live'
-const DEFAULT_STREAM_URL = 'https://dcv5s0ei7csoc.cloudfront.net/2ab56412b1163ee103b9ed7065a20563/AVOD/Meridian_1920x1080_30fps_SDR/conditioned/stream.mpd?midfreq=40&coll=cooldrink&adid=crea&max_ads=1&nldur=20&vdur=600&vod=true'
-// const DEFAULT_STREAM_URL = 'https://dcv5s0ei7csoc.cloudfront.net/2ab56412b1163ee103b9ed7065a20563/AVOD/Meridian_1920x1080_30fps_SDR/conditioned/stream.mpd?midfreq=40&coll=cooldrink&adid=crea&max_ads=1&nldur=20&vdur=600&vod=true'
+const DEFAULT_STREAM_URL = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+const DEFAULT_CREATIVE_URL = 'https://interactiveadvertisingbureau.github.io/SIMID/examples/creatives/banner_nonlinear.html'
+const DEFAULT_CREATIVE_AD_PARAMS = '{"bannerText":"Click here to draw!","webUrl":"https://quickdraw.withgoogle.com/"}'
+const DEFAULT_CREATIVE_DURATION = 10
 
 export default class App {
 
@@ -52,6 +53,9 @@ export default class App {
     const url = urlParam || DEFAULT_STREAM_URL
 
     this.streamEditUrl.value = url
+    this.creativeEditUrl.value = DEFAULT_CREATIVE_URL
+    this.creativeEditAdParams.value = DEFAULT_CREATIVE_AD_PARAMS
+    this.creativeEditDuration.value = DEFAULT_CREATIVE_DURATION.toString()
 
     setTimeout(() => this.loadStream(), 2000)
   }
