@@ -6,7 +6,13 @@ import android.view.View
 import androidx.activity.ComponentActivity
 import androidx.tv.material3.ExperimentalTvMaterial3Api
 
-const val DEFAULT_STREAM_URL = "https://d2lwku66j7s1id.cloudfront.net/9bf31c7ff062936a7f941ad65712fad3/out/v1/6e0f649095ca4131b16bd0f877048629/index.mpd?nl-config=demo-samples-live"
+const val DEFAULT_STREAM_URL = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+
+const val DEFAULT_CREATIVE_URL = "https://interactiveadvertisingbureau.github.io/SIMID/examples/creatives/banner_nonlinear.html"
+const val DEFAULT_CREATIVE_AD_PARAMS = "{\"bannerText\":\"Click here to draw!\",\"webUrl\":\"https://quickdraw.withgoogle.com/\"}"
+const val DEFAULT_CREATIVE_DURATION = 10
+
+const val DEFAULT_STREAM_BPKIO_URL = "https://dcv5s0ei7csoc.cloudfront.net/2ab56412b1163ee103b9ed7065a20563/AVOD/Meridian_1920x1080_30fps_SDR/conditioned/stream.mpd?midfreq=40&coll=cooldrink&adid=crea&max_ads=1&nldur=20&vdur=600&vod=true"
 
 class MainActivity : ComponentActivity() {
 
@@ -15,13 +21,26 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        findViewById<View>(R.id.buttonLoad).setOnClickListener {
+        findViewById<View>(R.id.buttonLoadDefault).setOnClickListener {
             startActivity(
                 Intent(
                     this,
                     PlayerActivity::class.java
                 )
                     .putExtra("url", DEFAULT_STREAM_URL)
+                    .putExtra("creativeUrl", DEFAULT_CREATIVE_URL)
+                    .putExtra("creativeAdParams", DEFAULT_CREATIVE_AD_PARAMS)
+                    .putExtra("creativeDuration", DEFAULT_CREATIVE_DURATION)
+            )
+        }
+
+        findViewById<View>(R.id.buttonLoadBpkio).setOnClickListener {
+            startActivity(
+                Intent(
+                    this,
+                    PlayerActivity::class.java
+                )
+                    .putExtra("url", DEFAULT_STREAM_BPKIO_URL)
             )
         }
     }

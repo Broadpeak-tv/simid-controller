@@ -23,6 +23,7 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.ui.PlayerView
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
+import androidx.media3.ui.PlayerNotificationManager
 import tv.broadpeak.simid.controller.MediaState
 import tv.broadpeak.smartlib.SmartLib
 import tv.broadpeak.smartlib.ad.AdBreakData
@@ -88,6 +89,15 @@ class PlayerActivity : AppCompatActivity() {
 
         initSmartLib(inputUrl)
         loadStream(inputUrl)
+
+        val creativeUrl = b.getString("creativeUrl")
+        if (creativeUrl == null) {
+            findViewById<View>(R.id.buttonStartCreative).visibility = View.GONE
+        } else {
+            findViewById<View>(R.id.buttonStartCreative).setOnClickListener {
+                startCreative()
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -102,7 +112,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun loadStream(url: String) {
         val result = session!!.getURL(url)
 
-        val streamUrl = if (result != null) result.url else url
+        val streamUrl = if (result != null && !result.isError) result.url else url
 
         player?.let { sPlayer ->
 
@@ -122,6 +132,14 @@ class PlayerActivity : AppCompatActivity() {
             sPlayer.prepare()
             sPlayer.playWhenReady = true
         }
+    }
+
+    private fun startCreative() {
+        val b = intent.extras
+        val creativeUrl = b?.getString("creativeUrl") ?: return
+        val creativeAdParams = b.getString("creativeAdParams") ?: ""
+        val creativeDuration = b.getInt("creativeDuration")
+        loadSimid("input-creative", creativeUrl, creativeAdParams, creativeDuration.toFloat(), true)
     }
 
     private fun initSmartLib(url: String) {
@@ -195,7 +213,7 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, duration: Float) {
+    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, duration: Float, autoStart: Boolean = false) {
 
         if (playerContainer == null) {
             return
@@ -221,7 +239,7 @@ class PlayerActivity : AppCompatActivity() {
             controller.simidControllerApi(bpkSimidController!!)
 
             Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
-            controller.load(false)
+            controller.load(autoStart)
 
             simidControllers[adId] = controller
         }
