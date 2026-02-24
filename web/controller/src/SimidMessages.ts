@@ -306,7 +306,9 @@ export type CreativeRequestNavigationMessageArgs = {
 }
 
 export type CreativeRequestResizeMessageArgs = {
-  mediaDimensions: Dimensions
+  mediaDimensions?: Dimensions
+  // SIMID v1.0 compatibility
+  videoDimensions?: Dimensions
   creativeDimensions: Dimensions
 }
 // #endregion CREATIVE MESSAGES ARGS

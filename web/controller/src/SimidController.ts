@@ -233,6 +233,8 @@ export class SimidController extends SimidComponent {
     if (!this._initialized) {
       return
     }
+    this._mainPlayerDimensions = playerDimensions
+    this._creativeDimensions = creativeDimensions
     const args: PlayerResizeMessageArgs = {
       videoDimensions: playerDimensions,
       creativeDimensions,
@@ -336,15 +338,24 @@ export class SimidController extends SimidComponent {
 
     const args = message.args as CreativeRequestResizeMessageArgs
 
+    const creativeDimensions = args.creativeDimensions
+    // Add compatibility with SIMID v1.0
+    const mediaDimensions = args.mediaDimensions || args.videoDimensions
+
+    if (!creativeDimensions || !mediaDimensions) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Missing input dimensions to resize')
+      return
+    }
+
     // Resize SIMID iframe
-    if (!this._onResizeSimid?.(args.creativeDimensions as DOMRect)) {
+    if (!this._onResizeSimid?.(creativeDimensions as DOMRect)) {
       this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'The player is unable to complete the Creative resizing')
     } else {
       // Store creative dimensions (reused when collapsed)
-      this._creativeDimensions = args.creativeDimensions
+      this._creativeDimensions = creativeDimensions
 
       // If creative successfully resized then resize the main player
-      this._onResizePlayer?.(args.mediaDimensions as DOMRect)      
+      this._onResizePlayer?.(mediaDimensions as DOMRect)
 
       this.resolveMessage(message)
     }
