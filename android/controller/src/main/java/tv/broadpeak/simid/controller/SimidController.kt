@@ -32,7 +32,7 @@ import org.apache.commons.text.StringEscapeUtils
 public open class SimidController (
     private val activity: Activity,
     private val context: Context,
-    private val playerDimensions: Rect,
+    private var playerDimensions: Rect,
     private var creativeDimensions: Rect,
     private val creativeUri: String,
     private val adParameters: String = "",
@@ -151,6 +151,8 @@ public open class SimidController (
         if (!this._initialized) {
             return
         }
+        this.playerDimensions = playerDimensions
+        this.creativeDimensions = creativeDimensions
         val args = PlayerResizeMessageArgs(dimensions(playerDimensions), dimensions(creativeDimensions), fullscreen)
         this.sendMessage(PlayerMessage.RESIZE, args)
     }
@@ -223,7 +225,16 @@ public open class SimidController (
         }
         val args: CreativeRequestResizeMessageArgs = Gson().fromJson(message.args.toString(), CreativeRequestResizeMessageArgs::class.java)
 
-        var dim = args.creativeDimensions
+        val creativeDimensions = args.creativeDimensions
+        // Add compatibility with SIMID v1.0
+        val mediaDimensions = args.mediaDimensions ?: args.videoDimensions
+
+        if (mediaDimensions == null) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Missing input dimensions to resize")
+            return
+        }
+
+        var dim = creativeDimensions
         val creativeRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
         // Resize SIMID iframe
         if (onResizeSimid?.invoke(creativeRect) == false) {
@@ -234,7 +245,7 @@ public open class SimidController (
         this.creativeDimensions = creativeRect
 
         // If creative successfully resized then resize the main player
-        dim = args.mediaDimensions
+        dim = mediaDimensions
         val playerRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
         onResizePlayer?.invoke(playerRect)
 

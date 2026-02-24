@@ -328,6 +328,8 @@ data class CreativeRequestNavigationMessageArgs(
 )
 
 data class CreativeRequestResizeMessageArgs(
-    val mediaDimensions: Dimensions,
+    val mediaDimensions: Dimensions?,
+    // SIMID v1.0 compatibility
+    val videoDimensions: Dimensions?,
     val creativeDimensions: Dimensions
 )
