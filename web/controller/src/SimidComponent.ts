@@ -106,7 +106,7 @@ export class SimidComponent {
 	}
 
   protected receiveMessage(event: MessageEvent) {
-    if (!event || !event.data) {
+    if (!event || !event.data || !(typeof event.data === 'string')) {
       return
     }
     let message: Message | null
