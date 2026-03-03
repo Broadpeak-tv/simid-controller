@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>SmartLib Shaka JS - Pause ads</title>
+
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/shaka-player@4.7.8/dist/controls.css"/>
+
+    <!--<script src="../../demo/app/shaka/lib/mux.min.js"></script>-->
+    <!-- <script src="../../../externals/pal.js"></script>-->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.0/socket.io.js"></script>
+
+    <script src="base.smartlib.browser.js?test=1"></script>
+    <script src="analytics.smartlib.browser.js?test=1"></script>
+    <script src="ad.smartlib.browser.js?test=1"></script>
+    <script src="shaka.smartlib.browser.js?test=1"></script>
+    <script src="simid.smartlib.browser.js?test=1"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/shaka-player/4.7.8/shaka-player.ui.js"></script>
+
+    <script>
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function updateOobaList() {
+            const select = document.getElementById('oobaSelect');
+
+            // Clear existing options
+            while (select.firstChild) {
+                select.removeChild(select.firstChild);
+            }
+
+            window.ooba.forEach(ad => {
+                const option = document.createElement('option');
+                option.value = ad.id;
+                option.textContent = ad.id;
+                select.appendChild(option);
+            });
+        }
+
+        function getSelectedOobaId() {
+            const select = document.getElementById('oobaSelect');
+            return select.value;
+        }
+
+        document.addEventListener('shaka-ui-loaded', async () => {
+            document.getElementById('video').volume = 0;
+
+            SmartLib.getInstance().init('', '', '');
+
+            window.shakaPlayer = document.getElementById('video').ui.getControls().getPlayer();
+
+            window.session = SmartLib.getInstance().createStreamingSession();
+
+            session.attachPlayer(shakaPlayer);
+            session.activateAdvertising();
+
+            await sleep(100);
+
+            
+            session.setAdEventsListener({
+                onPrepareAdBreak: adBreakData => {
+                    console.log('>>> AD BREAK PREPARE EVENT', adBreakData);
+                },
+                onAdBreakBegin: adBreakData => {
+                    console.log('>>> AD BREAK BEGIN EVENT', adBreakData);
+                },
+                onPrepareAd: (adData, adBreakData) => {
+                    console.log('> AD PREPARE EVENT', adData, adBreakData);
+                },
+                onAdBegin: (adData, adBreakData) => {
+                    console.log('> AD BEGIN EVENT', adData, adBreakData);
+                },
+                onAdSkippable: (adData, adBreakData, adSkippablePosition, adEndPosition, adBreakEndPosition) => {
+                    console.log('> AD SKIPPABLE EVENT', adSkippablePosition, adEndPosition, adBreakEndPosition);
+                },
+                onAdEnd: (adData, adBreakData) => {
+                    console.log('> AD END EVENT');
+                },
+                onAdBreakEnd: (adBreakData) => {
+                    console.log('>>> AD BREAK END EVENT');
+                }
+            });
+
+            session.setAdDataListener({
+                onAdData(adData) {
+                    console.log('>>>>> IBADATA <<<<<');
+                    console.log(adData);
+                },
+                onOutOfBandAdData(adData) {
+                    console.log('>>>>> OOBADATA <<<<<');
+                    console.log(adData);
+                    window.ooba = adData;
+                    updateOobaList();
+                }
+            });
+
+            // out-of-band ads
+            const result = await session.getURL('https://dcv5s0ei7csoc.cloudfront.net/2ab56412b1163ee103b9ed7065a20563/AVOD/Meridian_1920x1080_30fps_SDR/conditioned/stream.mpd?midfreq=40&coll=cooldrink&adid=crea&max_ads=1&nldur=20&vdur=600&vod=true&ooba-coll=pause-1');
+            // in-band ads every 60s
+            // const result = await session.getURL('https://d2lwku66j7s1id.cloudfront.net/7de32147a4f1055b9a02c846c3eb9a74/master.m3u8?nlo-coll=cooldrink&nlo-freq=60&nlo-dur=20&bpkio_fqdn=streamrmcbfm.broadpeak.io');
+
+            shakaPlayer.load(result.getURL())
+                .then(() => {
+                    console.log('playback started');
+                })
+                .catch(e => {
+                    console.log(e);
+
+                    const bpkErrorCode = session.playerAdapter.getErrorCode(e);
+                    session.playerAdapter.setPlayerErrorCode(e.code);
+                    session.stopStreamingSession(bpkErrorCode);
+                })
+        });
+
+        function stop() {
+            session.stopStreamingSession();
+            shakaPlayer.unload();
+        }
+
+        function beginOoba() {
+            const adId = getSelectedOobaId();
+            if (!adId) {
+                console.warn('No out-of-band ad id available to begin.');
+                return;
+            }
+            session.beginOutOfBandAdBreak(adId);
+        }
+
+        function endOoba() {
+            const adId = getSelectedOobaId();
+            session.endOutOfBandAdBreak(adId);
+            window.ooba.splice(window.ooba.findIndex(ad => ad.id === adId), 1);
+            updateOobaList();
+        }
+
+        function requestOoba() {
+            session.requestOutOfBandAds('pause', null);
+        }
+
+        function sendTracker() {
+            const oobaId = getSelectedOobaId();
+            const currentOoba = ooba?.find(ooba => ooba.id === oobaId);
+
+            if (currentOoba) {
+                session.sendTracker('creativeView', currentOoba.ads[0].adId);
+            }
+        }
+
+    </script>
+</head>
+<body>
+    <div data-shaka-player-container style="/*visibility: hidden*/"
+        data-shaka-player-cast-receiver-id="7B25EC44">
+        <video autoplay data-shaka-player id="video" style="width:100%;height:100%"></video>
+    </div>
+    <div>
+        <label for="oobaSelect">Select ad break id:</label>
+        <select id="oobaSelect">
+            <option value="">Waiting for out-of-band ads...</option>
+        </select>
+    </div>
+    <button onclick="stop()">STOP</button>
+    <button onclick="requestOoba()">Request OOBA</button>
+    <button onclick="beginOoba()">Begin ad break</button>
+    <button onclick="endOoba()">End ad break</button>
+    <button onclick="sendTracker()">Send tracker</button>
+</body>
+</html>

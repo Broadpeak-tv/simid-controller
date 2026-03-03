@@ -1,12 +1,9 @@
 import { MediaState } from '@broadpeak-tv/simid-controller'
 import SimidController from './SimidController'
-import { SmartLib } from '@broadpeak/smartlib'
-import '@broadpeak/smartlib-ad'
-import '@broadpeak/smartlib-shaka'
-import '@broadpeak/smartlib-analytics'
-import { GenericSimidControllerApi } from '@broadpeak/smartlib-simid'
 
 declare const shaka: any
+declare const SmartLib: any
+declare const GenericSimidControllerApi: any
 
 export default class Player {
 
