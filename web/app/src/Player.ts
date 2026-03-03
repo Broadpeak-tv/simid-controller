@@ -22,6 +22,9 @@ export default class Player {
   private simidIframes: Map<string, HTMLIFrameElement> = new Map<string, HTMLIFrameElement>()
   private bpkSimidController: any /* GenericSimidControllerApi */
 
+  private activePauseAdBreak?: any /* AdBreakData */
+  private activePauseAdId?: string 
+
   constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
     this.playerElement = playerElement
@@ -38,6 +41,7 @@ export default class Player {
 
     // Create SmartLib session
     this.smartlibSession = SmartLib.getInstance().createStreamingSession()
+    this.setAdDataListeners(this.smartlibSession)    
     this.setAdEventsListeners(this.smartlibSession)
 
     this.bpkSimidController = new GenericSimidControllerApi()
@@ -102,6 +106,23 @@ export default class Player {
     shaka.polyfill.installAll()
     this.player = new shaka.Player()
     await this.player.attach(this.videoElement)
+    
+    // React to pause events to show pause ads
+    this.videoElement.addEventListener('pause', () => this.onVideoPaused())
+    // React to resume events to hide pause ads (if not triggered from within the creative)
+    this.videoElement.addEventListener('play', () => this.onVideoPlay())
+  }
+
+  private setAdDataListeners(session: any/*: SmartLib.Session*/) {
+    session.setAdDataListener({
+      onAdData: (adData: any) => {
+        console.log('[Player] onAdData:', adData)
+      },
+
+      onOutOfBandAdData: (adData: any) => {
+        console.log('[Player] onOutOfBandAdData:', adData)
+      }
+    })
   }
 
   private setAdEventsListeners(session: any/*: SmartLib.Session*/) {
@@ -113,6 +134,13 @@ export default class Player {
         },
         onAdBreakBegin: (adBreakData: any) => {
           console.log('[Player] onAdBreakBegin:', adBreakData)
+
+          // Keep track of the active pause ad break
+          if (adBreakData.ooba && adBreakData.ooba.name === 'pause') {
+            console.log('[Player] Pause ad break detected')
+            this.activePauseAdBreak = adBreakData
+            this.activePauseAdId = adBreakData.ads[0]?.adId
+          }
         },
         onPrepareAd: (adData: any, adBreakData: any) => {
           console.log('[Player] onPrepareAd:', adData)
@@ -165,6 +193,10 @@ export default class Player {
     if (!simidIframe) {
       return
     }
+    // ensure the pause ad is on top of any other nonlinear ad
+    if (this.activePauseAdId) {
+      simidIframe.style.zIndex = '20'
+    }
     simidIframe.style.display = show ? 'block' : 'none'
   }
 
@@ -201,6 +233,9 @@ export default class Player {
 
   private playMedia(): boolean {
     console.log('[Player] Play media')
+
+    this.endPauseAd()
+    
     this.videoElement.play()
     return true
   }
@@ -240,5 +275,33 @@ export default class Player {
       return
     }
     this.videoElement.currentTime = (adData.startPosition + adData.duration) / 1000
+  }
+
+  private onVideoPaused(): void {
+    // ignore pause event during seek (when user is seeking the video)
+    if (this.videoElement.seeking) {
+      return 
+    }
+
+    console.log('[Player] Video paused')
+    if (this.smartlibSession) {
+      console.log('[Player] Request pause ads')
+      this.smartlibSession.requestOutOfBandAds('pause', 0, true, {})       
+    }
+  }
+
+  private onVideoPlay(): void {
+    console.log('[Player] Video play event')
+    this.endPauseAd()
+  }
+
+  private endPauseAd(): void {
+    console.log('[Player] Hide pause ad')
+    if (this.activePauseAdBreak) {
+      console.log('[Player] Pause ad break found, removing it')
+      this.smartlibSession?.endOutOfBandAdBreak(this.activePauseAdBreak.id)     
+      this.activePauseAdBreak = undefined
+      this.activePauseAdId = undefined
+    }
   }
 }
