@@ -262,6 +262,10 @@ class PlayerActivity : AppCompatActivity() {
                 webView.visibility = if (show) View.VISIBLE else View.GONE
             }
         }
+        if (show) {
+            session?.sendTracker('impression', adId)
+            session?.sendTracker('creativeView', adId)
+        }
     }
 
     private fun resizeSimid(adId: String, dimensions: Rect): Boolean {
