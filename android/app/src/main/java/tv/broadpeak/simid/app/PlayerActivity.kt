@@ -263,8 +263,8 @@ class PlayerActivity : AppCompatActivity() {
             }
         }
         if (show) {
-            session?.sendTracker('impression', adId)
-            session?.sendTracker('creativeView', adId)
+            session?.sendTracker("impression", adId)
+            session?.sendTracker("creativeView", adId)
         }
     }
 
