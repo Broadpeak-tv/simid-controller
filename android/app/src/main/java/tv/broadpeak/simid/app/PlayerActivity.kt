@@ -278,6 +278,10 @@ class PlayerActivity : AppCompatActivity() {
         webView?.let {
             runOnUiThread {
                 webView.visibility = if (show) View.VISIBLE else View.GONE
+                if (show) {
+                    session?.sendTracker("impression", adId)
+                    session?.sendTracker("creativeView", adId)
+                }
             }
         }
     }
