@@ -66,13 +66,13 @@ export default class Player {
     await this.player.unload()
   }
 
-  public loadSimid(adId: string, creativeUri: string, adParameters: string, duration: number) {
+  public loadSimid(adId: string, creativeUri: string, adParameters: string, duration: number, autoStart = false) {
 
     // Consider player container dimensions as initial creative dimensions
-    const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
+    const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
 
     console.log(`[Player] Load SIMID - uri:${creativeUri} duration:${duration}`)
-    const simidController = new SimidController(playerRect, playerRect, creativeUri, adParameters, duration)
+    const simidController = new SimidController(playerRect, playerRect, creativeUri, adParameters, duration, false)
 
     simidController.onGetMediaState = () => this.getMediaState()
     simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
@@ -86,13 +86,14 @@ export default class Player {
     simidController.simidControllerApi = this.bpkSimidController
 
     console.log(`[Player] Load SIMID controller v${simidController.getVersion()}`)
-    simidController.load(false)
+    simidController.load(autoStart)
 
     this.simidControllers.set(adId, simidController)
   }
 
   public handleResize() {
-    const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
+    const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
+    console.log('[Player] Notify resize SIMID:', playerRect)
     this.simidControllers.forEach(controller => controller.notifyResize(playerRect, playerRect, false))
   }
 
@@ -174,9 +175,10 @@ export default class Player {
     console.log('[Player] Resize SIMID:', dimensions)
 
     // Check if requested SIMID dimensions is not outside original player container dimensions
-    const playerRect: DOMRect = this.playerContainer.getBoundingClientRect()
-    const widthFits = dimensions.x + dimensions.width <= playerRect.width
-    const heightFits = dimensions.y + dimensions.height <= playerRect.height
+    const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
+
+    const widthFits = dimensions.x + dimensions.width <= Math.ceil(playerRect.width)
+    const heightFits = dimensions.y + dimensions.height <= Math.ceil(playerRect.height)
     if (!widthFits || !heightFits) {
       return false;
     }
@@ -210,12 +212,21 @@ export default class Player {
     }
   }
 
+  private getElementDimensions(element: HTMLElement): DOMRect {
+    const containerRect = this.playerContainer.getBoundingClientRect()
+    const elementRect = element.getBoundingClientRect()
+    elementRect.x -= containerRect.x
+    elementRect.y -= containerRect.y
+    return elementRect
+  }
+
   private setElementDimensions(element: HTMLElement, dimensions: DOMRect) {
     console.log(`[Player] Resize ${element.id} x:${dimensions.x} y:${dimensions.y} w:${dimensions.width} h:${dimensions.height}`)
-    element.style.height = `${dimensions.height}`
-    element.style.width = `${dimensions.width}`
-    element.style.left = `${dimensions.x}`
-    element.style.top = `${dimensions.y}`
+    const containerRect = this.playerContainer.getBoundingClientRect()
+    element.style.height =  (dimensions.height * 100 / containerRect.height).toFixed(2) + '%'
+    element.style.width = (dimensions.width * 100 / containerRect.width).toFixed(2) + '%'
+    element.style.left = (dimensions.x * 100 / containerRect.width).toFixed(2) + '%'
+    element.style.top = (dimensions.y * 100 / containerRect.height).toFixed(2) + '%'
   }
 
   private skipCurrentAd(adData: any) {
