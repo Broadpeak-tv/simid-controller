@@ -7,32 +7,26 @@ import typescript from '@rollup/plugin-typescript'
 
 import pkg from './package.json' with { type: 'json' }
 
-// Output dir and bundle name
-const outDir = 'dist/'
-const outFilename = 'simid-controller'
-
-// package namespace/global variable
-const name = 'simid'
-
 export default arg => {
   return [
     {
       input: `src/index.ts`,
+      external: ['tslib'],
       output: [{
-        file: outDir + outFilename + '.js',
-        format: "esm",
+        dir: 'dist',
+        format: 'esm',
         sourcemap: true,
-        exports: "auto",
-        name
+        preserveModules: true
       }],
       plugins: [
-        // Compile TypeScript files
-        typescript(),
-        // Allow bundling cjs modules (unlike webpack, rollup doesn't understand cjs)
+        typescript({
+          sourceMap: true,
+          inlineSources: true
+        }),
+        nodeResolve(),
         commonjs({
           include: 'node_modules/**'
         }),
-        nodeResolve(),
         json(),
         replace({
           preventAssignment: true,
@@ -46,7 +40,6 @@ export default arg => {
       }
     },
     {
-      // path to your declaration files root
       input: './dist/types/index.d.ts',
       output: [
         {
