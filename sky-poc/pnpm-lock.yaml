@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    shaka-player:
+      specifier: ^5.0.6
+      version: 5.0.6
     vite-plus:
       specifier: latest
       version: 0.1.12
@@ -27,6 +30,9 @@ importers:
       pinia:
         specifier: ^3.0.4
         version: 3.0.4(typescript@5.9.3)(vue@3.5.30(typescript@5.9.3))
+      shaka-player:
+        specifier: 'catalog:'
+        version: 5.0.6
       simid-controller:
         specifier: workspace:^
         version: link:../../packages/simid-controller
@@ -1668,6 +1674,9 @@ packages:
     resolution: {integrity: sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA==}
     engines: {node: '>=10'}
     hasBin: true
+
+  shaka-player@5.0.6:
+    resolution: {integrity: sha512-WE322LJpmFBuvebhjEhE++RrXH1xIX2oQOzO3EuByExfkp9podSEhRV+KcB19SOS1rMpQ85q4v+sURsETkCwtA==}
 
   shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
@@ -3434,6 +3443,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.7.4: {}
+
+  shaka-player@5.0.6: {}
 
   shebang-command@2.0.0:
     dependencies:
