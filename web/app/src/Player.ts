@@ -103,6 +103,15 @@ export default class Player {
   private setAdEventsListeners(session: any/*: SmartLib.Session*/) {
     // this.session.attachSimidController(new BpkSimidControllerApi(window))
     session.activateAdvertising()
+    session.setAdDataListener({
+      onAdData: (adList: any) => {
+        let startTimes = []
+        for (const adBreakData of adList) {
+          startTimes.push(adBreakData.startPosition)
+        }
+        console.log('[Player] onAdData - start times (s):', startTimes)
+      }      
+    })
     session.setAdEventsListener({
         onPrepareAdBreak: (adBreakData: any) => {
             console.log('[Player] onPrepareAdBreak:', adBreakData)
