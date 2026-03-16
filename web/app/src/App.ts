@@ -1,6 +1,6 @@
 import Player from './Player'
 
-const DEFAULT_STREAM_URL = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+const DEFAULT_STREAM_URL = 'https://dcv5s0ei7csoc.cloudfront.net/ab8df9f7733db561c626a58ea0149fbf/hls/Partner_-_Sky_Ad_Tech_-_Demo/401/152/Chicago_Fire_10001_Mayday_for_Marketing_XfinityComcast_101421_5_new.m3u8'
 
 export default class App {
 
