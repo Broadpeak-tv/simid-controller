@@ -7,7 +7,7 @@ import typescript from '@rollup/plugin-typescript'
 
 import pkg from './package.json' with { type: 'json' }
 
-export default arg => {
+export default () => {
   return [
     {
       input: `src/index.ts`,
