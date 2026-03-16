@@ -4,8 +4,10 @@ packages:
   - tools/*
 
 catalog:
+  "@nuxt/ui": ^4.5.1
   "@types/node": ^24
   shaka-player: ^5.0.6
+  tailwindcss: ^4.2.1
   typescript: ^5
   vite: npm:@voidzero-dev/vite-plus-core@latest
   vite-plus: latest

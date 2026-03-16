@@ -12,9 +12,11 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@nuxt/ui": "catalog:",
     "pinia": "^3.0.4",
     "shaka-player": "catalog:",
     "simid-controller": "workspace:^",
+    "tailwindcss": "catalog:",
     "vue": "^3.5.29",
     "vue-router": "^5.0.3"
   },
