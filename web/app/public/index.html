@@ -61,26 +61,30 @@
         </span>
       </div>
       <div>
-        <button id="stream-button-load" class="bg-blue-500 p-2 text-white h-fit rounded-sm">LOAD</button>
-        <button id="stream-button-stop" class="bg-blue-500 p-2 text-white h-fit rounded-sm">STOP</button>
+        <button id="stream-button-load" class="bg-blue-500 px-2 py-1 text-white h-fit rounded-sm">LOAD</button>
+        <button id="stream-button-stop" class="bg-blue-500 px-2 py-1 text-white h-fit rounded-sm">STOP</button>
       </div>
     </div>
   </div>
   <div class="grid grid-cols-2 gap-2 place-items-center w-full my-auto">
     <div id="main-1" class="w-240 h-135 flex flex-col gap-2 relative">
       <div id="player-1" class="w-full transition-all absolute left-0 top-0 z-99">
-        <video id="video-1" class="w-full" controls autoplay muted></video>
+        <video id="video-1" class="w-full" controls muted></video>
       </div>
     </div>
     <div id="main-2" class="w-240 h-135 flex flex-col gap-2 relative">
       <div id="player-2" class="w-full transition-all absolute left-0 top-0 z-99">
-        <video id="video-2" class="w-full" controls autoplay muted></video>
+        <video id="video-2" class="w-full" controls muted></video>
       </div>
     </div>
   </div>
-
-</main>
-
+  <div class="border border-neutral-300 flex w-fit mb-4 rounded-md p-4 gap-4">
+    <span class="flex flex-col gap-1">
+      <label class="text-neutral-500 text-sm" for="content-seek">Time to Seek (s)</label>
+      <input type="number" id="content-seek" class="border border-neutral-300 p-1 rounded-sm" />
+    </span>
+    <button id="seek-button" class="bg-blue-500 px-2 py-1 mt-auto text-white h-fit rounded-sm">Seek</button>
+  </div>
 </body>
 <script>
   document.addEventListener('DOMContentLoaded', function () {

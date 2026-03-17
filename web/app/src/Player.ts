@@ -54,6 +54,10 @@ export default class Player {
       this.videoElement.play()
     })
   }
+
+  public seek(time: number) {
+    this.videoElement.fastSeek(time)
+  }
   
   public async stop() {
     this.simidControllers.forEach(controller => controller.reset())

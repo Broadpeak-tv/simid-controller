@@ -24,11 +24,15 @@ export default class App {
   private contentSelect: HTMLSelectElement
   private loadStreamButton: HTMLButtonElement
   private stopStreamButton: HTMLButtonElement
+  private seekInput: HTMLInputElement
+  private seekButton: HTMLButtonElement
 
   constructor() {
     this.contentSelect = document.getElementById('stream-content') as HTMLSelectElement
     this.loadStreamButton = document.getElementById('stream-button-load') as HTMLButtonElement
     this.stopStreamButton = document.getElementById('stream-button-stop') as HTMLButtonElement
+    this.seekButton = document.getElementById('seek-button') as HTMLButtonElement
+    this.seekInput = document.getElementById('content-seek') as HTMLInputElement
 
     this.streams = [
       this.createStream('player-1', 'main-1', 'player-1', 'video-1', 'audience-select-1'),
@@ -41,6 +45,7 @@ export default class App {
   public async init() {
     this.loadStreamButton.onclick = () => this.loadStreams()
     this.stopStreamButton.onclick = () => this.stopStreams()
+    this.seekButton.onclick = () => this.seekStreams()
   }
 
   public async reset() {
@@ -77,6 +82,12 @@ export default class App {
   private async resizeStreams() {
     for (const stream of this.streams) {
       stream.player.handleResize()
+    }
+  }
+
+  private async seekStreams() {
+    for (const stream of this.streams) {
+      stream.player.seek(Number(this.seekInput.value))
     }
   }
 
