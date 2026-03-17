@@ -2,58 +2,80 @@ import Player from './Player'
 
 const DEFAULT_STREAM_URL = 'https://dcv5s0ei7csoc.cloudfront.net/ab8df9f7733db561c626a58ea0149fbf/hls/Partner_-_Sky_Ad_Tech_-_Demo/401/152/Chicago_Fire_10001_Mayday_for_Marketing_XfinityComcast_101421_5_new.m3u8'
 
+type Stream = {
+  player: Player
+  playerContainer: HTMLElement
+  playerElement: HTMLElement
+  videoElement: HTMLMediaElement
+  streamEditUrl: HTMLInputElement
+  streamButtonLoad: HTMLButtonElement
+  streamButtonStop: HTMLButtonElement
+}
 export default class App {
-
-  private playerContainer: HTMLElement
-  private playerElement: HTMLElement
-  private videoElement: HTMLMediaElement
-
-  private streamEditUrl: HTMLTextAreaElement
-  private streamButtonLoad: HTMLButtonElement
-  private streamButtonStop: HTMLButtonElement
-
-
-
   private resizeTimer: number = -1
 
-  private player: Player
+  private streams: Stream[]
 
   constructor() {
-    this.playerContainer = document.getElementById('player-container') as HTMLElement
-    this.playerElement = document.getElementById('player') as HTMLElement
-    this.videoElement = document.getElementById('video') as HTMLMediaElement
-    this.streamEditUrl = document.getElementById('stream-edit-url') as HTMLTextAreaElement
-    this.streamButtonLoad = document.getElementById('stream-button-load') as HTMLButtonElement
-    this.streamButtonStop = document.getElementById('stream-button-stop') as HTMLButtonElement
-
-    this.player = new Player(this.playerContainer, this.playerElement, this.videoElement)
+    this.streams = [
+      this.createStream('main-1', 'player-1', 'video-1', 'stream-edit-url-1', 'stream-button-load-1', 'stream-button-stop-1'),
+      this.createStream('main-2', 'player-2', 'video-2', 'stream-edit-url-2', 'stream-button-load-2', 'stream-button-stop-2')
+    ];
 
     this.setResizeObserver()
   }
 
   public async init() {
+    for (const stream of this.streams) {
+      stream.streamButtonLoad.onclick = () => this.loadStream(stream)
+      stream.streamButtonStop.onclick = () => this.stopStream(stream)
 
-    this.streamButtonLoad.onclick = (e) => this.loadStream()
-    this.streamButtonStop.onclick = (e) => this.stopStream()
+      const urlParam = (new URL(window.location.href)).searchParams.get('url')
+      const url = urlParam || DEFAULT_STREAM_URL
 
-    const urlParam = (new URL(window.location.href)).searchParams.get('url')
-    const url = urlParam || DEFAULT_STREAM_URL
-
-    this.streamEditUrl.value = url
-    setTimeout(() => this.loadStream(), 2000)
+      stream.streamEditUrl.value = url
+    }
   }
 
   public async reset() {
-    await this.stopStream()
+    await this.stopStreams()
   }
 
-  private async loadStream() {
-    const url = this.streamEditUrl.value
-    await this.player.load(url)
+  private createStream(containerId: string, playerElementId: string, videoElementId: string, streamEditUrlId: string, streamButtonLoadId: string, streamButtonStopId: string) {
+    const container = document.getElementById(containerId) as HTMLElement
+    const playerElement = document.getElementById(playerElementId) as HTMLElement
+    const videoElement = document.getElementById(videoElementId) as HTMLMediaElement
+
+    return {
+      playerContainer: container,
+      playerElement: playerElement,
+      videoElement: videoElement,
+      streamEditUrl: document.getElementById(streamEditUrlId) as HTMLInputElement,
+      streamButtonLoad: document.getElementById(streamButtonLoadId) as HTMLButtonElement,
+      streamButtonStop: document.getElementById(streamButtonStopId) as HTMLButtonElement,
+      player: new Player(container, playerElement, videoElement)
+    }
   }
 
-  private async stopStream() {
-    await this.player.stop()
+  private async stopStreams() {
+    for(const stream of this.streams) {
+      await this.stopStream(stream)
+    }
+  }
+
+  private async resizeStreams() {
+    for(const stream of this.streams) {
+      stream.player.handleResize()
+    }
+  }
+
+  private async loadStream(stream: Stream) {
+    const url = stream.streamEditUrl.value
+    await stream.player.load(url)
+  }
+
+  private async stopStream(stream: Stream) {
+    return stream.player.stop()
   }
 
   private setResizeObserver() {
@@ -61,7 +83,7 @@ export default class App {
       clearTimeout(this.resizeTimer)
       this.resizeTimer = window.setTimeout(() => {
         console.log('Window resized:', window.innerWidth, window.innerHeight)
-        this.player?.handleResize()
+        this.resizeStreams()
       }, 200)
     })
   }

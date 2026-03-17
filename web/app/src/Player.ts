@@ -49,9 +49,7 @@ export default class Player {
 
     await this.player.load(result.url || url)
     this.videoElement.play()
-    // .then(_ => console.log("OK"))
-    .catch(error => {
-      // console.error(error)
+    .catch(() => {
       this.videoElement.muted = true
       this.videoElement.play()
     })
@@ -101,7 +99,6 @@ export default class Player {
   }
 
   private setAdEventsListeners(session: any/*: SmartLib.Session*/) {
-    // this.session.attachSimidController(new BpkSimidControllerApi(window))
     session.activateAdvertising()
     session.setAdDataListener({
       onAdData: (adList: any) => {
@@ -119,7 +116,7 @@ export default class Player {
         onAdBreakBegin: (adBreakData: any) => {
           console.log('[Player] onAdBreakBegin:', adBreakData)
         },
-        onPrepareAd: (adData: any, adBreakData: any) => {
+        onPrepareAd: (adData: any) => {
           console.log('[Player] onPrepareAd:', adData)
           this.adDatas.set(adData.adId, adData)
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
@@ -128,17 +125,17 @@ export default class Player {
             this.loadSimid(adData.adId, iframeResources.url, iframeResources.parameters, duration)
           }
         },
-        onAdBegin: (adData: any, adBreakData: any) => {
+        onAdBegin: (adData: any) => {
           console.log('[Player] onAdBegin:', adData)
           const simidController = this.simidControllers.get(adData.adId)
           if (simidController) {
             simidController.start()
           }
         },
-        onAdSkippable: (adData: any, adBreakData: any, adSkippablePosition: any, adEndPosition: any, adBreakEndPosition: any) => {
+        onAdSkippable: (adData: any) => {
           console.log('[Player] onAdSkippable:', adData)
         },
-        onAdEnd: (adData: any, adBreakData: any) => {
+        onAdEnd: (adData: any) => {
           console.log('[Player] onAdEnd:', adData)
           const simidController = this.simidControllers.get(adData.adId)
           if (simidController) {
@@ -180,6 +177,7 @@ export default class Player {
 
   private resizeSimid(adId: string, dimensions: DOMRect): boolean {
     const simidIframe = this.simidIframes.get(adId)
+    
     if (!simidIframe) {
       return false
     }
