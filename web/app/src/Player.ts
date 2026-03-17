@@ -200,9 +200,9 @@ export default class Player {
     return true
   }
 
-  private resizePlayer(dimensions: DOMRect) {
-    console.log('[Player] Resize player:', dimensions)
-    this.setElementDimensions(this.playerElement, dimensions)
+  private resizePlayer(mediaDimensions: DOMRect) {
+    console.log('[Player] Resize player:', mediaDimensions)
+    this.setElementDimensions(this.playerElement, mediaDimensions)
   }
 
   private pauseMedia(): boolean {
