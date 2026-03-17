@@ -27,31 +27,53 @@
   </style>
 </head>
 
-<body class="grid grid-cols-2 h-screen w-screen gap-2">
-  <div class="flex flex-col gap-2">
-    <div class="inputs-1 z-99">
-      <div id="stream-1" class="input flex gap-2 items-centre">
-        <input type="text" id="stream-edit-url-1" size=100 value="" class="border border-neutral-300 p-2 rounded-sm">
-        <button id="stream-button-load-1" class="bg-blue-500 p-2 text-white h-fit rounded-sm">LOAD</button>
-        <button id="stream-button-stop-1" class="bg-blue-500 p-2 text-white h-fit rounded-sm">STOP</button>
+<body class="h-screen w-screen p-4 flex flex-col items-center">
+  <div class="border border-neutral-300 flex flex-col w-fit mb-4 rounded-md p-4">
+    <h1 class="text-lg">Configure Streams</h1>
+    <hr class="border-neutral-300 my-2">
+    <div class="flex flex-col gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-neutral-500 text-sm" for="stream-content">Stream Content</label>
+        <select class="border border-neutral-300 p-1 rounded-sm" name="content" id="stream-content">
+          <option value="">--Please choose some content--</option>
+          <option value="ice-hockey">Ice Hockey</option>
+          <option value="chicago-fire">Chicago Fire</option>
+        </select>
       </div>
-    </div>
-    <div id="main-1" class="w-full h-full p-4 flex flex-col gap-2 relative">
-      <div id="player-1" class="w-[90%] transition-all absolute left-0 top-0 z-99">
-        <video id="video-1" class="w-full" controls autoplay muted></video>
+      <div class="flex gap-4">
+        <span class="flex flex-col gap-1">
+          <label class="text-neutral-500 text-sm" for="audience-select-1">Stream 1 Audience</label>
+          <select class="border border-neutral-300 p-1 rounded-sm" name="audience-1" id="audience-select-1">
+            <option value="">--Please choose an audience--</option>
+            <option value="L_Ban_POC_HIGH">High</option>
+            <option value="L_Ban_POC_MID">Mid</option>
+            <option value="L_Ban_POC_LOW">Low</option>
+          </select>
+        </span>
+        <span class="flex flex-col gap-1">
+          <label class="text-neutral-500 text-sm" for="audience-select-2">Stream 2 Audience</label>
+          <select class="border border-neutral-300 p-1 rounded-sm" name="audience-2" id="audience-select-2">
+            <option value="">--Please choose an audience--</option>
+            <option value="L_Ban_POC_HIGH">High</option>
+            <option value="L_Ban_POC_MID">Mid</option>
+            <option value="L_Ban_POC_LOW">Low</option>
+          </select>
+        </span>
+      </div>
+      <div>
+        <button id="stream-button-load" class="bg-blue-500 p-2 text-white h-fit rounded-sm">LOAD</button>
+        <button id="stream-button-stop" class="bg-blue-500 p-2 text-white h-fit rounded-sm">STOP</button>
       </div>
     </div>
   </div>
-  <div class="flex flex-col gap-2">
-    <div class="inputs-2 z-99">
-      <div id="stream-2" class="input flex gap-2 items-centre">
-        <input type="text" id="stream-edit-url-2" size=100 value="" class="border border-neutral-300 p-2 rounded-sm">
-        <button id="stream-button-load-2" class="bg-blue-500 p-2 text-white h-fit rounded-sm">LOAD</button>
-        <button id="stream-button-stop-2" class="bg-blue-500 p-2 text-white h-fit rounded-sm">STOP</button>
+  <div class="grid grid-cols-2 gap-2 place-items-center w-full my-auto">
+    <div id="main-1" class="w-240 h-135 flex flex-col gap-2 relative">
+      <div id="player-1" class="w-full transition-all absolute left-0 top-0 z-99">
+        <video id="video-1" class="w-full" controls autoplay muted></video>
       </div>
     </div>
-    <div id="main-2" class="w-full h-full p-4 flex flex-col gap-2 relative">
-      <div id="player-2" class="w-[90%] transition-all absolute left-0 top-0 z-99">
+    <div id="main-2" class="w-240 h-135 flex flex-col gap-2 relative">
+      <div id="player-2" class="w-full transition-all absolute left-0 top-0 z-99">
         <video id="video-2" class="w-full" controls autoplay muted></video>
       </div>
     </div>
