@@ -258,6 +258,19 @@ export class SimidController extends SimidComponent {
     this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, (message: Message) => this.onCreativeCollapseNonlinear(message))
   }
 
+  /**
+   * Override receiveMessage to filter out messages from other iframes.
+   * This ensures that when multiple SimidControllers exist on the same page,
+   * each controller only processes messages from its own creative iframe.
+   */
+  protected receiveMessage(event: MessageEvent): void {
+    // Filter out messages that don't come from this controller's iframe
+    if (this._simidIframe && event.source !== this._simidIframe.contentWindow) {
+      return
+    }
+    super.receiveMessage(event)
+  }
+  
   // #region PROTECTED METHODS
   // #region CREATIVE MESSAGE HANDLERS
   protected onCreateSession(message: Message) {
