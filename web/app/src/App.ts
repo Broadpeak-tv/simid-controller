@@ -1,7 +1,5 @@
 import Player from './Player'
 
-const DEFAULT_STREAM_URL = 'https://dcv5s0ei7csoc.cloudfront.net/ab8df9f7733db561c626a58ea0149fbf/hls/Partner_-_Sky_Ad_Tech_-_Demo/401/152/Chicago_Fire_10001_Mayday_for_Marketing_XfinityComcast_101421_5_new.m3u8'
-
 type Stream = {
   id: string
   player: Player
@@ -24,19 +22,17 @@ export default class App {
   private contentSelect: HTMLSelectElement
   private loadStreamButton: HTMLButtonElement
   private stopStreamButton: HTMLButtonElement
-  private seekSelect: HTMLSelectElement
-  private seekButton: HTMLButtonElement
   private playButton: HTMLButtonElement
   private pauseButton: HTMLButtonElement
+  private adButtonContainer: HTMLDivElement
 
   constructor() {
     this.contentSelect = document.getElementById('stream-content') as HTMLSelectElement
     this.loadStreamButton = document.getElementById('stream-button-load') as HTMLButtonElement
     this.stopStreamButton = document.getElementById('stream-button-stop') as HTMLButtonElement
-    this.seekButton = document.getElementById('seek-button') as HTMLButtonElement
-    this.seekSelect = document.getElementById('ad-seek-select') as HTMLSelectElement
     this.playButton = document.getElementById('play-button') as HTMLButtonElement
     this.pauseButton = document.getElementById('pause-button') as HTMLButtonElement
+    this.adButtonContainer = document.getElementById('ad-button-container') as HTMLDivElement
 
     this.streams = [
       this.createStream('player-1', 'main-1', 'player-1', 'video-1', 'audience-select-1'),
@@ -49,7 +45,6 @@ export default class App {
   public async init() {
     this.loadStreamButton.onclick = () => this.loadStreams()
     this.stopStreamButton.onclick = () => this.stopStreams()
-    this.seekButton.onclick = () => this.seekStreams()
     this.playButton.onclick = () => this.playStreams()
     this.pauseButton.onclick = () => this.pauseStreams()
   }
@@ -82,8 +77,10 @@ export default class App {
 
     for (const adBreak of adBreaks) {
       const time = adBreak - 5000 // Seek to 5 seconds before the ad break
-      const element = new Option(this.getAdBreakText(time), String(this.getAdBreakInSeconds(time)))
-      this.seekSelect.appendChild(element)
+      const element = document.createElement('button')
+      element.onclick = () => this.seekStreams(this.getAdBreakInSeconds(time))
+      element.textContent = this.getAdBreakText(time)
+      this.adButtonContainer.appendChild(element)
     }
   }
 
@@ -120,7 +117,7 @@ export default class App {
       await this.stopStream(stream)
     }
 
-    this.seekSelect.replaceChildren(new Option('--Please choose an ad--', ''))
+    this.adButtonContainer.replaceChildren()
   }
 
   private async resizeStreams() {
@@ -129,10 +126,11 @@ export default class App {
     }
   }
 
-  private async seekStreams() {
+  private seekStreams(time: number) {
     for (const stream of this.streams) {
-      stream.player.seek(Number(this.seekSelect.value))
+      stream.player.seek(time)
     }
+    return null
   }
 
   private async loadStream(stream: Stream): Promise<number[]> {
