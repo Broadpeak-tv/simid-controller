@@ -22,7 +22,7 @@
     }
 
     select {
-      @apply border border-neutral-300 p-1 rounded-sm
+      @apply border border-neutral-300 px-2 py-1.75 rounded-sm
     }
 
     label, .label {
@@ -30,7 +30,15 @@
     }
 
     button {
-      @apply bg-blue-500 px-2 py-1 text-white h-fit rounded-sm;
+      @apply rounded-md px-3 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-400 transition-colors;
+    }
+
+    .player {
+      @apply w-full transition-all absolute left-0 top-0;
+    }
+
+    .player-container {
+      @apply w-160 h-90 flex flex-col gap-2 relative border border-neutral-300 rounded-md;
     }
   </style>
   <style>
@@ -43,10 +51,9 @@
   </style>
 </head>
 
-<body class="h-screen w-screen p-4 flex flex-col items-center">
-  <div class="card flex-col mb-4">
+<body class="h-screen w-screen flex items-center">
+  <aside class="h-full border-r border-neutral-200 p-4 flex flex-col gap-2 bg-white">
     <h1 class="text-lg">Configure Streams</h1>
-    <hr class="border-neutral-300 my-2">
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
         <label for="stream-content">Stream Content</label>
@@ -56,60 +63,77 @@
           <option value="chicago-fire">Chicago Fire</option>
         </select>
       </div>
-      <div class="flex gap-4">
-        <span class="flex flex-col gap-1">
-          <label for="audience-select-1">Stream 1 Audience</label>
-          <select name="audience-1" id="audience-select-1">
-            <option value="">--Please choose an audience--</option>
-            <option value="L_Ban_POC_HIGH">High</option>
-            <option value="L_Ban_POC_MID">Mid</option>
-            <option value="L_Ban_POC_LOW">Low</option>
-          </select>
-        </span>
-        <span class="flex flex-col gap-1">
-          <label for="audience-select-2">Stream 2 Audience</label>
-          <select name="audience-2" id="audience-select-2">
-            <option value="">--Please choose an audience--</option>
-            <option value="L_Ban_POC_HIGH">High</option>
-            <option value="L_Ban_POC_MID">Mid</option>
-            <option value="L_Ban_POC_LOW">Low</option>
-          </select>
-        </span>
-      </div>
-      <div>
-        <button id="stream-button-load">LOAD</button>
-        <button id="stream-button-stop">STOP</button>
+      <span class="flex flex-col gap-1">
+        <label for="audience-select-1">Stream 1 Audience</label>
+        <select name="audience-1" id="audience-select-1">
+          <option value="">--Please choose an audience--</option>
+          <option value="L_Ban_POC_HIGH">High</option>
+          <option value="L_Ban_POC_MID">Mid</option>
+          <option value="L_Ban_POC_LOW">Low</option>
+        </select>
+      </span>
+      <span class="flex flex-col gap-1">
+        <label for="audience-select-2">Stream 2 Audience</label>
+        <select name="audience-2" id="audience-select-2">
+          <option value="">--Please choose an audience--</option>
+          <option value="L_Ban_POC_HIGH">High</option>
+          <option value="L_Ban_POC_MID">Mid</option>
+          <option value="L_Ban_POC_LOW">Low</option>
+        </select>
+      </span>
+      <div class="flex gap-2">
+        <button id="stream-button-load" class="flex-1">Start Stream</button>
+        <button id="stream-button-stop" class="flex-1">Stop Stream</button>
       </div>
     </div>
-  </div>
-  <div class="grid lg:grid-cols-2 grid-cols-1 gap-2 place-items-center w-full my-auto">
-    <div id="main-1" class="w-160 h-90 flex flex-col gap-2 relative border border-neutral-300">
-      <div id="player-1" class="w-full transition-all absolute left-0 top-0">
-        <video id="video-1" class="w-full" muted></video>
-      </div>
-    </div>
-    <div id="main-2" class="w-160 h-90 flex flex-col gap-2 relative border border-neutral-300">
-      <div id="player-2" class="w-full transition-all absolute left-0 top-0">
-        <video id="video-2" class="w-full" muted></video>
-      </div>
-    </div>
-  </div>
-  <div class="flex gap-4">
-    <div class="card gap-4">
+    <hr class="border-neutral-300 my-2">
+    <h1 class="text-lg">Playback Controls</h1>
+    <span class="flex gap-2">
+      <button id="play-button" class="flex-1">Play</button>
+      <button id="pause-button" class="flex-1">Pause</button>
+    </span>
+    <div class="gap-2 flex">
       <span class="flex flex-col gap-1">
         <label for="content-seek">Go to Ad</label>
         <select id="ad-seek-select">
           <option value="">--Please choose an ad--</option>
         </select>
       </span>
-      <button id="seek-button" class="mt-auto">Seek</button>
+      <button id="seek-button" class="flex-1 mt-auto">Go</button>
     </div>
-    <div class="card flex-col gap-1">
-      <p class="label">Playback Controls</p>
-      <span class="flex gap-4">
-        <button id="play-button">Play</button>
-        <button id="pause-button">Pause</button>
-      </span>
+  </aside>
+  <div class="flex flex-col flex-1 h-full bg-gray-100">
+    <div class="grid grid-cols-1 gap-2 place-items-center w-full h-full">
+      <div id="main-1" class="player-container">
+        <div id="player-1" class="player">
+          <video id="video-1" class="w-full" muted></video>
+        </div>
+        <svg id="player-1-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
+          <defs>
+            <pattern id="pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a" width="10" height="10" x="0" y="0"
+              patternUnits="userSpaceOnUse">
+              <path d="M-3 13 15-5M-5 5l18-18M-1 21 17 3"></path>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a)" stroke="none">
+          </rect>
+        </svg>
+      </div>
+      <div id="main-2" class="player-container">
+        <div id="player-2" class="player">
+          <video id="video-2" class="w-full" muted></video>
+        </div>
+        <svg id="player-2-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
+          <defs>
+            <pattern id="pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a" width="10" height="10" x="0" y="0"
+              patternUnits="userSpaceOnUse">
+              <path d="M-3 13 15-5M-5 5l18-18M-1 21 17 3"></path>
+            </pattern>
+          </defs>
+          <rect width="100%" height="100%" fill="url(#pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a)" stroke="none">
+          </rect>
+        </svg>
+      </div>
     </div>
   </div>
 </body>

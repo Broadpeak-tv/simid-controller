@@ -75,12 +75,29 @@ export default class App {
 
   private async loadStreams() {
     const [adBreaks] = await Promise.all(this.streams.map(stream => this.loadStream(stream)))
+    this.hidePlaceholders()
 
     for (const adBreak of adBreaks) {
       const time = adBreak - 5000 // Seek to 5 seconds before the ad break
       const element = new Option(this.getAdBreakText(time), String(this.getAdBreakInSeconds(time)))
       this.seekSelect.appendChild(element)
     }
+  }
+
+  private hidePlaceholders() {
+    const placeholder1 = document.getElementById('player-1-placeholder')
+    const placeholder2 = document.getElementById('player-2-placeholder')
+
+    placeholder1!.style.display = 'none'
+    placeholder2!.style.display = 'none'
+  }
+
+  private showPlaceholders() {
+    const placeholder1 = document.getElementById('player-1-placeholder')
+    const placeholder2 = document.getElementById('player-2-placeholder')
+
+    placeholder1!.style.display = 'block'
+    placeholder2!.style.display = 'block'
   }
 
   private getAdBreakText(milliseconds: number) {
@@ -99,6 +116,8 @@ export default class App {
     for (const stream of this.streams) {
       await this.stopStream(stream)
     }
+
+    this.seekSelect.replaceChildren(new Option('--Please choose an ad--', ''))
   }
 
   private async resizeStreams() {
@@ -133,6 +152,7 @@ export default class App {
   }
 
   private async stopStream(stream: Stream) {
+    this.showPlaceholders()
     return stream.player.stop()
   }
 
