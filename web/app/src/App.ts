@@ -14,6 +14,8 @@ const contentUrls = {
   'chicago-fire': 'https://dcv5s0ei7csoc.cloudfront.net/ab8df9f7733db561c626a58ea0149fbf/dash/Partner_-_Sky_Ad_Tech_-_Demo/401/152/259191365548-1773402486850-master.mpd?contentid=urn:theplatform:guid:GMO_00000000334594_01'
 }
 
+const AD_BREAK_DELAY = 3
+
 export default class App {
   private resizeTimer: number = -1
 
@@ -76,10 +78,9 @@ export default class App {
     this.hidePlaceholders()
 
     for (const adBreak of adBreaks) {
-      const time = adBreak - 5000 // Seek to 5 seconds before the ad break
       const element = document.createElement('button')
-      element.onclick = () => this.seekStreams(this.getAdBreakInSeconds(time))
-      element.textContent = this.getAdBreakText(time)
+      element.onclick = () => this.seekStreams(this.getAdBreakInSeconds(adBreak) - AD_BREAK_DELAY)
+      element.textContent = this.getAdBreakText(adBreak)
       this.adButtonContainer.appendChild(element)
     }
   }
