@@ -18,11 +18,13 @@ export default class Player {
   private simidControllers: Map<string, SimidController> = new Map<string, SimidController>()
   private simidIframes: Map<string, HTMLIFrameElement> = new Map<string, HTMLIFrameElement>()
   private bpkSimidController: any /* GenericSimidControllerApi */
+  private adStartTimes: number[]
 
   constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
     this.playerElement = playerElement
     this.videoElement = videoElement
+    this.adStartTimes = []
 
     this.loadPlayer()
   }
@@ -53,10 +55,12 @@ export default class Player {
       this.videoElement.muted = true
       this.videoElement.play()
     })
+
+    return this.adStartTimes
   }
 
   public seek(time: number) {
-    this.videoElement.fastSeek(time)
+    this.videoElement.currentTime = time
   }
   
   public async stop() {
@@ -106,12 +110,9 @@ export default class Player {
     session.activateAdvertising()
     session.setAdDataListener({
       onAdData: (adList: any) => {
-        let startTimes = []
-        for (const adBreakData of adList) {
-          startTimes.push(adBreakData.startPosition)
-        }
-        console.log('[Player] onAdData - start times (s):', startTimes)
-      }      
+        this.adStartTimes = adList.map((ad: any) => ad.startPosition)
+        console.log('[Player] onAdData - start times (ms):', this.adStartTimes)
+      }
     })
     session.setAdEventsListener({
         onPrepareAdBreak: (adBreakData: any) => {
