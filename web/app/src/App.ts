@@ -78,7 +78,7 @@ export default class App {
     for (const adBreak of adBreaks) {
       const time = adBreak - 5000 // Seek to 5 seconds before the ad break
       const element = document.createElement('button')
-      element.onclick = this.seekStreams(this.getAdBreakInSeconds(time))
+      element.onclick = () => this.seekStreams(this.getAdBreakInSeconds(time))
       element.textContent = this.getAdBreakText(time)
       this.adButtonContainer.appendChild(element)
     }
