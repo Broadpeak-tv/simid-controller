@@ -40,13 +40,13 @@
     .player-container {
       @apply w-160 h-90 flex flex-col gap-2 relative border border-neutral-300 rounded-md;
     }
-  </style>
-  <style>
+
+    .video {
+      @apply w-full rounded-tr-md
+    }
+
     iframe {
-      position: absolute;
-      top: 0;
-      left: 0;
-      border: 0;
+      @apply absolute rounded-md top-0 left-0 border-none
     }
   </style>
 </head>
@@ -106,7 +106,7 @@
     <div class="grid grid-cols-1 gap-2 place-items-center w-full h-full">
       <div id="main-1" class="player-container">
         <div id="player-1" class="player">
-          <video id="video-1" class="w-full" muted></video>
+          <video id="video-1" class="video" muted></video>
         </div>
         <svg id="player-1-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
           <defs>
@@ -121,7 +121,7 @@
       </div>
       <div id="main-2" class="player-container">
         <div id="player-2" class="player">
-          <video id="video-2" class="w-full" muted></video>
+          <video id="video-2" class="video" muted></video>
         </div>
         <svg id="player-2-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
           <defs>
