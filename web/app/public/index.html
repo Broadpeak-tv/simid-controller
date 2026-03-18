@@ -53,10 +53,11 @@
 
 <body class="h-screen w-screen flex items-center">
   <aside class="h-full border-r border-neutral-200 p-4 flex flex-col gap-2 bg-white">
-    <h1 class="text-lg">Configure Streams</h1>
+    <h1 class="text-xl font-medium">Live Love L-Banner</h1>
+    <hr class="border-neutral-300 my-2">
     <div class="flex flex-col gap-4">
       <div class="flex flex-col gap-1">
-        <label for="stream-content">Stream Content</label>
+        <label for="stream-content">Content</label>
         <select name="content" id="stream-content">
           <option value="">--Please choose some content--</option>
           <option value="ice-hockey">Ice Hockey</option>
@@ -82,15 +83,15 @@
         </select>
       </span>
       <div class="flex gap-2">
-        <button id="stream-button-load" class="flex-1">Start Stream</button>
-        <button id="stream-button-stop" class="flex-1">Stop Stream</button>
+        <button id="stream-button-load" class="flex-1">Load</button>
       </div>
     </div>
     <hr class="border-neutral-300 my-2">
-    <h1 class="text-lg">Playback Controls</h1>
+    <h1 class="text-md">Playback Controls</h1>
     <span class="flex gap-2">
       <button id="play-button" class="flex-1">Play</button>
       <button id="pause-button" class="flex-1">Pause</button>
+      <button id="stream-button-stop" class="flex-1">Stop</button>
     </span>
     <div class="gap-2 flex">
       <span class="flex flex-col gap-1">
@@ -104,35 +105,41 @@
   </aside>
   <div class="flex flex-col flex-1 h-full bg-gray-100">
     <div class="grid grid-cols-1 gap-2 place-items-center w-full h-full">
-      <div id="main-1" class="player-container">
-        <div id="player-1" class="player">
-          <video id="video-1" class="video" muted></video>
+      <div>
+        <h3 class="text-neutral-500 text-sm mb-2">Stream 1</h3>
+        <div id="main-1" class="player-container">
+          <div id="player-1" class="player">
+            <video id="video-1" class="video" muted></video>
+          </div>
+          <svg id="player-1-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
+            <defs>
+              <pattern id="pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a" width="10" height="10" x="0" y="0"
+                patternUnits="userSpaceOnUse">
+                <path d="M-3 13 15-5M-5 5l18-18M-1 21 17 3"></path>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a)" stroke="none">
+            </rect>
+          </svg>
         </div>
-        <svg id="player-1-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
-          <defs>
-            <pattern id="pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a" width="10" height="10" x="0" y="0"
-              patternUnits="userSpaceOnUse">
-              <path d="M-3 13 15-5M-5 5l18-18M-1 21 17 3"></path>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a)" stroke="none">
-          </rect>
-        </svg>
       </div>
-      <div id="main-2" class="player-container">
-        <div id="player-2" class="player">
-          <video id="video-2" class="video" muted></video>
+      <div>
+        <h3 class="text-neutral-500 text-sm mb-2">Stream 2</h3>
+        <div id="main-2" class="player-container">
+          <div id="player-2" class="player">
+            <video id="video-2" class="video" muted></video>
+          </div>
+          <svg id="player-2-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
+            <defs>
+              <pattern id="pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a" width="10" height="10" x="0" y="0"
+                patternUnits="userSpaceOnUse">
+                <path d="M-3 13 15-5M-5 5l18-18M-1 21 17 3"></path>
+              </pattern>
+            </defs>
+            <rect width="100%" height="100%" fill="url(#pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a)" stroke="none">
+            </rect>
+          </svg>
         </div>
-        <svg id="player-2-placeholder" fill="none" class="absolute inset-0 size-full stroke-gray-900/10">
-          <defs>
-            <pattern id="pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a" width="10" height="10" x="0" y="0"
-              patternUnits="userSpaceOnUse">
-              <path d="M-3 13 15-5M-5 5l18-18M-1 21 17 3"></path>
-            </pattern>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#pattern-d09edaee-fc6a-4f25-aca5-bf9f5f77e14a)" stroke="none">
-          </rect>
-        </svg>
       </div>
     </div>
   </div>

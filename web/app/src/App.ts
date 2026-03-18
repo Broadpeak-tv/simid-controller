@@ -58,7 +58,7 @@ export default class App {
     await this.stopStreams()
   }
 
-  private createStream(id: string, containerId: string, playerElementId: string, videoElementId: string, audienceSelectId: string) {
+  private createStream(id: string, containerId: string, playerElementId: string, videoElementId: string, audienceSelectId: string): Stream {
     const container = document.getElementById(containerId) as HTMLElement
     const playerElement = document.getElementById(playerElementId) as HTMLElement
     const videoElement = document.getElementById(videoElementId) as HTMLMediaElement
@@ -74,6 +74,9 @@ export default class App {
   }
 
   private async loadStreams() {
+    // Stop the previous stream
+    this.stopStreams()
+
     const [adBreaks] = await Promise.all(this.streams.map(stream => this.loadStream(stream)))
     this.hidePlaceholders()
 
