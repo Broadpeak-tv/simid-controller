@@ -70,7 +70,7 @@ export default class App {
 
   private async loadStreams() {
     // Stop the previous stream
-    this.stopStreams()
+    await this.stopStreams()
 
     const [adBreaks] = await Promise.all(this.streams.map(stream => this.loadStream(stream)))
     this.hidePlaceholders()
