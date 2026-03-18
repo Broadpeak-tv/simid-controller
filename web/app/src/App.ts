@@ -24,15 +24,19 @@ export default class App {
   private contentSelect: HTMLSelectElement
   private loadStreamButton: HTMLButtonElement
   private stopStreamButton: HTMLButtonElement
-  private seekInput: HTMLInputElement
+  private seekSelect: HTMLSelectElement
   private seekButton: HTMLButtonElement
+  private playButton: HTMLButtonElement
+  private pauseButton: HTMLButtonElement
 
   constructor() {
     this.contentSelect = document.getElementById('stream-content') as HTMLSelectElement
     this.loadStreamButton = document.getElementById('stream-button-load') as HTMLButtonElement
     this.stopStreamButton = document.getElementById('stream-button-stop') as HTMLButtonElement
     this.seekButton = document.getElementById('seek-button') as HTMLButtonElement
-    this.seekInput = document.getElementById('content-seek') as HTMLInputElement
+    this.seekSelect = document.getElementById('ad-seek-select') as HTMLSelectElement
+    this.playButton = document.getElementById('play-button') as HTMLButtonElement
+    this.pauseButton = document.getElementById('pause-button') as HTMLButtonElement
 
     this.streams = [
       this.createStream('player-1', 'main-1', 'player-1', 'video-1', 'audience-select-1'),
@@ -46,6 +50,8 @@ export default class App {
     this.loadStreamButton.onclick = () => this.loadStreams()
     this.stopStreamButton.onclick = () => this.stopStreams()
     this.seekButton.onclick = () => this.seekStreams()
+    this.playButton.onclick = () => this.playStreams()
+    this.pauseButton.onclick = () => this.pauseStreams()
   }
 
   public async reset() {
@@ -68,9 +74,25 @@ export default class App {
   }
 
   private async loadStreams() {
-    for (const stream of this.streams) {
-      await this.loadStream(stream)
+    const [adBreaks] = await Promise.all(this.streams.map(stream => this.loadStream(stream)))
+
+    for (const adBreak of adBreaks) {
+      const time = adBreak - 5000 // Seek to 5 seconds before the ad break
+      const element = new Option(this.getAdBreakText(time), String(this.getAdBreakInSeconds(time)))
+      this.seekSelect.appendChild(element)
     }
+  }
+
+  private getAdBreakText(milliseconds: number) {
+    const totalSeconds = Math.floor(milliseconds / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
+
+  private getAdBreakInSeconds(adBreakTimeMs: number) {
+    return adBreakTimeMs / 1000
   }
 
   private async stopStreams() {
@@ -87,15 +109,27 @@ export default class App {
 
   private async seekStreams() {
     for (const stream of this.streams) {
-      stream.player.seek(Number(this.seekInput.value))
+      stream.player.seek(Number(this.seekSelect.value))
     }
   }
 
-  private async loadStream(stream: Stream) {
+  private async loadStream(stream: Stream): Promise<number[]> {
     const contentUrl = contentUrls[this.contentSelect.value as keyof typeof contentUrls]
     const url = `${contentUrl}&audienceid=${stream.audienceSelect.value}`
     console.log(`[Load Stream] ${url} for ${stream.id}`)
-    await stream.player.load(url)
+    return await stream.player.load(url)
+  }
+
+  private async pauseStreams() {
+    for (const stream of this.streams) {
+      stream.videoElement.pause()
+    }
+  }
+
+  private async playStreams() {
+    for (const stream of this.streams) {
+      stream.videoElement.play()
+    }
   }
 
   private async stopStream(stream: Stream) {
