@@ -139,7 +139,7 @@ export default class App {
     const contentUrl = contentUrls[this.contentSelect.value as keyof typeof contentUrls]
     const url = `${contentUrl}&audienceid=${stream.audienceSelect.value}`
     console.log(`[Load Stream] ${url} for ${stream.id}`)
-    return await stream.player.load(url)
+    return await stream.player.load(url, stream.id)
   }
 
   private async pauseStreams() {

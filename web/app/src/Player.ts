@@ -20,6 +20,8 @@ export default class Player {
   private bpkSimidController: any /* GenericSimidControllerApi */
   private adStartTimes: number[]
 
+  private streamId?: string
+
   constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
     this.playerElement = playerElement
@@ -29,7 +31,8 @@ export default class Player {
     this.loadPlayer()
   }
 
-  public async load(url: string) {
+  public async load(url: string, streamId: string): Promise<number[]> {
+    this.streamId = streamId
 
     // Get stream domain name
     const domain = (new URL(url)).hostname
@@ -74,7 +77,7 @@ export default class Player {
     // Consider player container dimensions as initial creative dimensions
     const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
 
-    console.log(`[Player] Load SIMID - uri:${creativeUri} duration:${duration}`)
+    console.log(`[Player ${this.streamId}] Load SIMID - uri:${creativeUri} duration:${duration}`)
     const simidController = new SimidController(playerRect, playerRect, creativeUri, adParameters, duration, false, -1)
 
     simidController.onGetMediaState = () => this.getMediaState()
@@ -88,7 +91,7 @@ export default class Player {
 
     simidController.simidControllerApi = this.bpkSimidController
 
-    console.log(`[Player] Load SIMID controller v${simidController.getVersion()}`)
+    console.log(`[Player ${this.streamId}] Load SIMID controller v${simidController.getVersion()}`)
     simidController.load(autoStart)
 
     this.simidControllers.set(adId, simidController)
@@ -96,7 +99,7 @@ export default class Player {
 
   public handleResize() {
     const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
-    console.log('[Player] Notify resize SIMID:', playerRect)
+    console.log(`[Player ${this.streamId}] Notify resize SIMID:`, playerRect)
     this.simidControllers.forEach(controller => controller.notifyResize(playerRect, playerRect, false))
   }
 
@@ -111,18 +114,18 @@ export default class Player {
     session.setAdDataListener({
       onAdData: (adList: any) => {
         this.adStartTimes = adList.map((ad: any) => ad.startPosition)
-        console.log('[Player] onAdData - start times (ms):', this.adStartTimes)
+        console.log(`[Player ${this.streamId}] onAdData - start times (ms):`, this.adStartTimes)
       }
     })
     session.setAdEventsListener({
         onPrepareAdBreak: (adBreakData: any) => {
-            console.log('[Player] onPrepareAdBreak:', adBreakData)
+            console.log(`[Player ${this.streamId}] onPrepareAdBreak:`, adBreakData)
         },
         onAdBreakBegin: (adBreakData: any) => {
-          console.log('[Player] onAdBreakBegin:', adBreakData)
+          console.log(`[Player ${this.streamId}] onAdBreakBegin:`, adBreakData)
         },
         onPrepareAd: (adData: any) => {
-          console.log('[Player] onPrepareAd:', adData)
+          console.log(`[Player ${this.streamId}] onPrepareAd:`, adData)
           this.adDatas.set(adData.adId, adData)
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
             const iframeResources = adData.nonLinearIframeResources[0]
@@ -131,17 +134,17 @@ export default class Player {
           }
         },
         onAdBegin: (adData: any) => {
-          console.log('[Player] onAdBegin:', adData)
+          console.log(`[Player ${this.streamId}] onAdBegin:`, adData)
           const simidController = this.simidControllers.get(adData.adId)
           if (simidController) {
             simidController.start()
           }
         },
         onAdSkippable: (adData: any) => {
-          console.log('[Player] onAdSkippable:', adData)
+          console.log(`[Player ${this.streamId}] onAdSkippable:`, adData)
         },
         onAdEnd: (adData: any) => {
-          console.log('[Player] onAdEnd:', adData)
+          console.log(`[Player ${this.streamId}] onAdEnd:`, adData)
           const simidController = this.simidControllers.get(adData.adId)
           if (simidController) {
             simidController.reset()
@@ -150,7 +153,7 @@ export default class Player {
           this.adDatas.delete(adData.adId)            
         },
         onAdBreakEnd: (adBreakData: any) => {
-          console.log('[Player] onAdBreakEnd:', adBreakData)
+          console.log(`[Player ${this.streamId}] onAdBreakEnd:`, adBreakData)
         }
     })
   }
@@ -162,6 +165,7 @@ export default class Player {
   }
 
   private addSimidIframe(adId: string, iframe: HTMLIFrameElement): boolean {
+    iframe.id = `simid-iframe-${adId}`
     this.playerContainer.appendChild(iframe)
     this.simidIframes.set(adId, iframe)
     return true
@@ -186,7 +190,7 @@ export default class Player {
     if (!simidIframe) {
       return false
     }
-    console.log('[Player] Resize SIMID:', dimensions)
+    console.log(`[Player ${this.streamId}] Resize SIMID:`, dimensions)
 
     // Check if requested SIMID dimensions is not outside original player container dimensions
     const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
@@ -202,24 +206,24 @@ export default class Player {
   }
 
   private resizePlayer(mediaDimensions: DOMRect) {
-    console.log('[Player] Resize player:', mediaDimensions)
+    console.log(`[Player ${this.streamId}] Resize player:`, mediaDimensions)
     this.setElementDimensions(this.playerElement, mediaDimensions)
   }
 
   private pauseMedia(): boolean {
-    console.log('[Player] Pause media')
+    console.log(`[Player ${this.streamId}] Pause media`)
     this.videoElement.pause()
     return true
   }
 
   private playMedia(): boolean {
-    console.log('[Player] Play media')
+    console.log(`[Player ${this.streamId}] Play media`)
     this.videoElement.play()
     return true
   }
 
   private completeAd(adId: string, skipped: boolean) {
-    console.log('[Player] Complete ad, skipped:', skipped)
+    console.log(`[Player ${this.streamId}] Complete ad, skipped:`, skipped)
     const adData = this.adDatas.get(adId)
     if (skipped && adData) {
       this.skipCurrentAd(adData)
@@ -235,7 +239,7 @@ export default class Player {
   }
 
   private setElementDimensions(element: HTMLElement, dimensions: DOMRect) {
-    console.log(`[Player] Resize ${element.id} x:${dimensions.x} y:${dimensions.y} w:${dimensions.width} h:${dimensions.height}`)
+    console.log(`[Player ${this.streamId}] Resize ${element.id} x:${dimensions.x} y:${dimensions.y} w:${dimensions.width} h:${dimensions.height}`)
     const containerRect = this.playerContainer.getBoundingClientRect()
     element.style.height =  (dimensions.height * 100 / containerRect.height).toFixed(2) + '%'
     element.style.width = (dimensions.width * 100 / containerRect.width).toFixed(2) + '%'
