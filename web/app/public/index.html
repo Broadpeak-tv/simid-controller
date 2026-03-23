@@ -38,7 +38,7 @@
     }
 
     .player-container {
-      @apply w-160 h-90 flex flex-col gap-2 relative border border-neutral-300 rounded-md;
+      @apply xl:w-240 xl:h-135 w-160 h-90 flex flex-col gap-2 relative border border-neutral-300 rounded-md;
     }
 
     .video {
@@ -111,7 +111,7 @@
     </div>
   </aside>
   <div class="flex flex-col flex-1 h-full bg-gray-100">
-    <div class="grid grid-cols-1 gap-2 place-items-center w-full h-full">
+    <div class="grid grid-cols-1 gap-2 place-items-center w-full h-full overflow-y-auto p-4">
       <div>
         <h3 class="text-neutral-500 text-sm mb-2">Stream 1</h3>
         <div id="main-1" class="player-container">
