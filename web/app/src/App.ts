@@ -1,9 +1,6 @@
 import Player from './Player'
 
-const DEFAULT_STREAM_URL = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-const DEFAULT_CREATIVE_URL = 'https://interactiveadvertisingbureau.github.io/SIMID/examples/creatives/banner_nonlinear.html'
-const DEFAULT_CREATIVE_AD_PARAMS = '{"bannerText":"Click here to draw!","webUrl":"https://quickdraw.withgoogle.com/"}'
-const DEFAULT_CREATIVE_DURATION = 10
+const DEFAULT_STREAM_URL = 'https://dcv5s0ei7csoc.cloudfront.net/2ab56412b1163ee103b9ed7065a20563/AVOD/Meridian_1920x1080_30fps_SDR/conditioned/stream.mpd?ooba-tag=cooldrink-router'
 
 export default class App {
 
@@ -14,11 +11,6 @@ export default class App {
   private streamEditUrl: HTMLTextAreaElement
   private streamButtonLoad: HTMLButtonElement
   private streamButtonStop: HTMLButtonElement
-
-  private creativeEditUrl: HTMLTextAreaElement
-  private creativeEditAdParams: HTMLTextAreaElement
-  private creativeEditDuration: HTMLTextAreaElement
-  private creativeButtonStart: HTMLButtonElement
 
   private resizeTimer: number = -1
 
@@ -32,11 +24,6 @@ export default class App {
     this.streamButtonLoad = document.getElementById('stream-button-load') as HTMLButtonElement
     this.streamButtonStop = document.getElementById('stream-button-stop') as HTMLButtonElement
 
-    this.creativeEditUrl = document.getElementById('creative-edit-url') as HTMLTextAreaElement
-    this.creativeEditAdParams = document.getElementById('creative-edit-adparams') as HTMLTextAreaElement
-    this.creativeEditDuration = document.getElementById('creative-edit-duration') as HTMLTextAreaElement
-    this.creativeButtonStart = document.getElementById('creative-button-start') as HTMLButtonElement
-
     this.player = new Player(this.playerContainer, this.playerElement, this.videoElement)
 
     this.setResizeObserver()
@@ -47,15 +34,10 @@ export default class App {
     this.streamButtonLoad.onclick = (e) => this.loadStream()
     this.streamButtonStop.onclick = (e) => this.stopStream()
 
-    this.creativeButtonStart.onclick = (e) => this.startCreative()
-
     const urlParam = (new URL(window.location.href)).searchParams.get('url')
     const url = urlParam || DEFAULT_STREAM_URL
 
     this.streamEditUrl.value = url
-    this.creativeEditUrl.value = DEFAULT_CREATIVE_URL
-    this.creativeEditAdParams.value = DEFAULT_CREATIVE_AD_PARAMS
-    this.creativeEditDuration.value = DEFAULT_CREATIVE_DURATION.toString()
 
     setTimeout(() => this.loadStream(), 2000)
   }
@@ -71,13 +53,6 @@ export default class App {
 
   private async stopStream() {
     await this.player.stop()
-  }
-
-  private async startCreative() {
-    const url = this.creativeEditUrl.value
-    const adParams = this.creativeEditAdParams.value
-    const duration = parseInt(this.creativeEditDuration.value)
-    this.player.loadSimid('input-creative', url, adParams, duration, true)
   }
 
   private setResizeObserver() {
