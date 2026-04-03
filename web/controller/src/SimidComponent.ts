@@ -106,9 +106,12 @@ export class SimidComponent {
 	}
 
   protected receiveMessage(event: MessageEvent) {
-    if (!event || !event.data || !(typeof event.data === 'string')) {
-      return
-    }
+    // Filter messages coming from target (e.g. iframe) if set
+    if (this._target && event.source !== this._target) return
+
+    // Filter non SIMID like messages
+    if (!event || !event.data || !(typeof event.data === 'string')) return
+    
     let message: Message | null
     try {
       message = JSON.parse(event.data)
