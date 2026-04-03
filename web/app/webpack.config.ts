@@ -11,11 +11,16 @@ const config: webpack.Configuration = {
   module: {
     rules: [
       {
+        enforce: 'pre',
+        test: /\.js$/,
+        loader: 'source-map-loader',
+        exclude: /node_modules\/(?!@broadpeak-tv\/simid-controller)/,
+      },
+      {
         test: /\.tsx?$/,
         use: 'ts-loader',
         exclude: [
-          /node_modules/,
-          /lib/
+          /node_modules/
         ]
       },
     ],

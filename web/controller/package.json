@@ -3,18 +3,25 @@
   "version": "0.5.0",
   "description": "SIMID controller",
   "author": "Broadpeak",
-  "types": "dist/index.d.ts",
-  "main": "dist/simid-controller.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Broadpeak-tv/simid-controller.git"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
     "dist"
   ],
   "scripts": {
-    "clean": "rimraf ./dist",
+    "clean": "rimraf dist",
     "build": "rollup -c rollup.config.mjs",
     "dev": "rollup --watch -c rollup.config.mjs",
     "doc": "typedoc --options typedoc.json --readme README.md"
   },
   "dependencies": {
+    "tslib": "2.6.0"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "28.0.3",
