@@ -8,6 +8,8 @@ import { GenericSimidControllerApi } from '@broadpeak/smartlib-simid'
 
 declare const shaka: any
 
+const BPK_DOMAIN_NAMES = 'stream.broadpeak.io,dcv5s0ei7csoc.cloudfront.net'
+
 export default class Player {
 
   private playerContainer: HTMLElement
@@ -27,16 +29,16 @@ export default class Player {
     this.playerElement = playerElement
     this.videoElement = videoElement
 
+    SmartLib.getInstance().init('', '', BPK_DOMAIN_NAMES)
+
     this.loadPlayer()
   }
 
   public async load(url: string) {
 
-    // Get stream domain name
-    const domain = (new URL(url)).hostname
+    await this.stop()
 
-    // Initialize SmartLib session
-    SmartLib.getInstance().init('', '', domain)
+    // Create SmartLib session
     this.smartlibSession = SmartLib.getInstance().createStreamingSession()
     this.setAdEventsListeners(this.smartlibSession)
 
