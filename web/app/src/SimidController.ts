@@ -9,15 +9,12 @@ export default class SimidController extends simid.SimidController {
   }
 
   protected receiveMessage(event: MessageEvent): void {
-    super.receiveMessage(event)
-    if (!event || !event.data || !(typeof event.data === 'string')) {
-      return
-    }
     this._simidControllerApi?.onMessageReceived(event.data)
+    super.receiveMessage(event)
   }
 
   protected postMessage(message: simid.Message): void {
-    super.postMessage(message)
     this._simidControllerApi?.onMessageSent(JSON.stringify(message))
+    super.postMessage(message)
   }
 }
