@@ -65,6 +65,7 @@ public open class SimidController (
     private var onShowSimid: ((Boolean) -> Unit)? = null
     private var onResizeSimid: ((Rect) -> Boolean)? = null
     private var onResizePlayer: ((Rect) -> Unit)? = null
+    private var onRequestNavigation: ((String) -> Unit)? = null
     private var onComplete: ((Boolean) -> Unit)? = null
 
     private val mainScope = MainScope()
@@ -100,6 +101,10 @@ public open class SimidController (
 
     fun onResizePlayer(cb: (Rect) -> Unit) {
         this.onResizePlayer = cb
+    }
+
+    fun onRequestNavigation(cb: (String) -> Unit) {
+        this.onRequestNavigation = cb
     }
 
     fun onComplete(cb: (Boolean) -> Unit) {
@@ -181,6 +186,7 @@ public open class SimidController (
         this.addMessageListener(CreativeMessage.REQUEST_STOP, ::onCreativeRequestStop)
         this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, ::onCreativeExpandNonlinear)
         this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, ::onCreativeCollapseNonlinear)
+        this.addMessageListener(CreativeMessage.REQUEST_NAVIGATION, ::onCreativeRequestNavigation)
     }
 
     //region CREATIVE MESSAGE HANDLERS
@@ -289,6 +295,18 @@ public open class SimidController (
         this.resolveMessage(message)
         stopAd(StopCode.CREATIVE_INITIATED)
     }
+
+    private fun onCreativeRequestNavigation(message: Message) {
+        if (onRequestNavigation == null) {
+            rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, "Navigation not supported by the player")
+            return
+        }
+        val args = Gson().fromJson(message.args.toString(), CreativeRequestNavigationMessageArgs::class.java)
+        // Spec §4.4.12.1: resolve before opening the URI so the creative receives
+        // the message prior to the app being backgrounded.
+        resolveMessage(message)
+        onRequestNavigation?.invoke(args.uri)
+    }
     //endregion CREATIVE MESSAGE HANDLERS
 
     //region IFRAME/WEBVIEW MANAGEMENT
@@ -380,7 +398,7 @@ public open class SimidController (
             null, // This should be filled in on mobile
             false, // player.isDeviceMuted,
             1.0F, // player.volume,
-            null, // NavigationSupport.NOT_SUPPORTED,
+            if (onRequestNavigation != null) NavigationSupport.PLAYER_HANDLES else NavigationSupport.AD_HANDLES,
             null, // CloseButtonSupport.AD_HANDLES,
             adDuration
         )
