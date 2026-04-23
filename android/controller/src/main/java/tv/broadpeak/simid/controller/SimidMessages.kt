@@ -67,6 +67,7 @@ object CreativeMessage {
     const val REQUEST_VOLUME = "SIMID:Creative:requestVolume"
     const val REQUEST_TRACKING = "SIMID:Creative:reportTracking"
     const val REQUEST_CHANGE_AD_DURATION = "SIMID:Creative:requestChangeAdDuration"
+    const val REQUEST_NAVIGATION = "SIMID:Creative:requestNavigation"
     const val REQUEST_VIDEO_LOCATION = "SIMID:Creative:requestVideoLocation"
 }
 
@@ -81,6 +82,7 @@ val MessagesWithResponse = listOf(
     CreativeMessage.REPORT_TRACKING,
     CreativeMessage.REQUEST_CHANGE_AD_DURATION,
     CreativeMessage.REQUEST_FULL_SCREEN,
+    CreativeMessage.REQUEST_NAVIGATION,
     CreativeMessage.REQUEST_PAUSE,
     CreativeMessage.REQUEST_PLAY,
     CreativeMessage.REQUEST_RESIZE,
@@ -126,6 +128,13 @@ object PlayerErrorCode {
     const val MEDIA_NOT_SUPPORTED: Long = 1209
     const val SPEC_NOT_FOLLOWED_ON_INIT: Long = 1210
     const val SPEC_NOT_FOLLOWED_ON_MESSAGES: Long = 1211
+    const val CREATIVE_DID_NOT_REPLY_TO_INIT: Long = 1212
+    const val CREATIVE_DID_NOT_REPLY_TO_START_CREATIVE: Long = 1213
+    const val NAVIGATION_NOT_SUPPORTED: Long = 1214
+    const val NAVIGATION_NOT_POSSIBLE: Long = 1215
+    const val NAVIGATION_TOO_MANY_CALLS: Long = 1216
+    const val NAVIGATION_INVALID_URL: Long = 1217
+    const val NAVIGATION_INVALID_APP: Long = 1218
 }
 
 // A list of reasons a player could stop the ad.
