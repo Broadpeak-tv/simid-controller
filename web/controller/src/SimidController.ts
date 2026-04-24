@@ -393,6 +393,8 @@ export class SimidController extends SimidComponent {
     // Spec §4.4.12.1: resolve before opening the window so the creative receives
     // the message prior to the app being backgrounded.
     this.resolveMessage(message)
+
+    this._onPauseMedia()
     this._onOpenClickthrough(args.uri)
   }
   // #endregion CREATIVE MESSAGE HANDLERS
