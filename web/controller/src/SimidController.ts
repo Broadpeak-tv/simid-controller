@@ -76,7 +76,7 @@ export class SimidController extends SimidComponent {
   private _onShowSimid: ((boolean) => void) | undefined
   private _onResizeSimid: ((DOMRect) => boolean) | undefined
   private _onResizePlayer: ((DOMRect) => void) | undefined
-  private _onRequestNavigation: ((uri: string) => void) | undefined
+  private _onOpenClickthrough: ((uri: string) => void) | undefined
   private _onComplete: ((boolean) => void) | undefined
 
   private _timerMediaState: number | undefined
@@ -188,8 +188,8 @@ export class SimidController extends SimidComponent {
    * Used in mobile app environments where the player manages external URL navigation.
    * The player must open the URI and the callback is invoked after resolve is sent to the creative.
    */
-  public set onRequestNavigation(cb: (uri: string) => void) {
-    this._onRequestNavigation = cb
+  public set onOpenClickthrough(cb: (uri: string) => void) {
+    this._onOpenClickthrough = cb
   }
 
   /**
@@ -385,7 +385,7 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestNavigation(message: Message) {
-    if (!this._onRequestNavigation) {
+    if (!this._onOpenClickthrough) {
       this.rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, 'Navigation not supported by the player')
       return
     }
@@ -393,7 +393,7 @@ export class SimidController extends SimidComponent {
     // Spec §4.4.12.1: resolve before opening the window so the creative receives
     // the message prior to the app being backgrounded.
     this.resolveMessage(message)
-    this._onRequestNavigation(args.uri)
+    this._onOpenClickthrough(args.uri)
   }
   // #endregion CREATIVE MESSAGE HANDLERS
   // #endregion PROTECTED METHODS
@@ -418,7 +418,7 @@ export class SimidController extends SimidComponent {
       deviceId: '', // This should be filled in on mobile
       muted: mediaState ? mediaState.muted : false,
       volume: mediaState ? mediaState.volume : 1,
-      navigationSupport: this._onRequestNavigation ? NavigationSupport.PLAYER_HANDLES : NavigationSupport.AD_HANDLES,
+      navigationSupport: this._onOpenClickthrough ? NavigationSupport.PLAYER_HANDLES : NavigationSupport.AD_HANDLES,
       nonlinearDuration: this._adDuration,
     }
 
