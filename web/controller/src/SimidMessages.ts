@@ -62,6 +62,7 @@ export const CreativeMessage = {
   REQUEST_VOLUME: 'SIMID:Creative:requestVolume',
   REQUEST_TRACKING: 'SIMID:Creative:reportTracking',
   REQUEST_CHANGE_AD_DURATION: 'SIMID:Creative:requestChangeAdDuration',
+  REQUEST_NAVIGATION: 'SIMID:Creative:requestNavigation',
   REQUEST_VIDEO_LOCATION: 'SIMID:Creative:requestVideoLocation'
 }
 
@@ -76,6 +77,7 @@ export const MessagesWithResponse: String[] = [
   CreativeMessage.REPORT_TRACKING,
   CreativeMessage.REQUEST_CHANGE_AD_DURATION,
   CreativeMessage.REQUEST_FULL_SCREEN,
+  CreativeMessage.REQUEST_NAVIGATION,
   CreativeMessage.REQUEST_PAUSE,
   CreativeMessage.REQUEST_PLAY,
   CreativeMessage.REQUEST_RESIZE,
@@ -121,6 +123,13 @@ export const PlayerErrorCode = {
   MEDIA_NOT_SUPPORTED: 1209,
   SPEC_NOT_FOLLOWED_ON_INIT: 1210,
   SPEC_NOT_FOLLOWED_ON_MESSAGES: 1211,
+  CREATIVE_DID_NOT_REPLY_TO_INIT: 1212,
+  CREATIVE_DID_NOT_REPLY_TO_START_CREATIVE: 1213,
+  NAVIGATION_NOT_SUPPORTED: 1214,
+  NAVIGATION_NOT_POSSIBLE: 1215,
+  NAVIGATION_TOO_MANY_CALLS: 1216,
+  NAVIGATION_INVALID_URL: 1217,
+  NAVIGATION_INVALID_APP: 1218,
 }
 
 // A list of reasons a player could stop the ad.
@@ -229,13 +238,13 @@ export enum SkippableState {
   NOT_SKIPPABLE = 'notSkippable',
 }
 
-enum NavigationSupport {
+export enum NavigationSupport {
   AD_HANDLES = 'adHandles',
   PLAYER_HANDLES = 'playerHandles',
   NOT_SUPPORTED = 'notSupported',
 }
 
-enum CloseButtonSupport {
+export enum CloseButtonSupport {
   AD_HANDLES = 'adHandles',
   PLAYER_HANDLES = 'playerHandles',
 }
@@ -256,7 +265,7 @@ export type EnvironmentData = {
   muted?: boolean
   volume?: number
   navigationSupport?: NavigationSupport
-  loseButtonSupport?: CloseButtonSupport
+  closeButtonSupport?: CloseButtonSupport
   nonlinearDuration?: number
 }
 

@@ -27,16 +27,16 @@ export default class Player {
     this.playerElement = playerElement
     this.videoElement = videoElement
 
+    SmartLib.getInstance().init('', '', '*')
+
     this.loadPlayer()
   }
 
   public async load(url: string) {
 
-    // Get stream domain name
-    const domain = (new URL(url)).hostname
+    await this.stop()
 
-    // Initialize SmartLib session
-    SmartLib.getInstance().init('', '', domain)
+    // Create SmartLib session
     this.smartlibSession = SmartLib.getInstance().createStreamingSession()
     this.setAdEventsListeners(this.smartlibSession)
 
@@ -81,6 +81,7 @@ export default class Player {
     simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
     simidController.onPauseMedia = () => this.pauseMedia()
     simidController.onPlayMedia = () => this.playMedia()
+    simidController.onOpenClickthrough = (uri: string) => this.openClickthrough(uri)
     simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
 
     simidController.simidControllerApi = this.bpkSimidController
@@ -202,6 +203,11 @@ export default class Player {
     console.log('[Player] Play media')
     this.videoElement.play()
     return true
+  }
+
+  private openClickthrough(uri: string) {
+    console.log('[Player] Open clicktrough:', uri)
+    window.open(uri, '_blank')
   }
 
   private completeAd(adId: string, skipped: boolean) {
