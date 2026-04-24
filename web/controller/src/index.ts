@@ -26,6 +26,7 @@ export {
   Message,
   MessageCallback,
   MessagesWithResponse,
+  NavigationSupport,
   PlayerAdStoppedMessageArgs,
   PlayerErrorCode,
   PlayerFatalErrorMessageArgs,
