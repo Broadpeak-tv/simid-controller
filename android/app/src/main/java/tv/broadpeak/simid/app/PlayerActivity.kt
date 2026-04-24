@@ -1,7 +1,9 @@
 package tv.broadpeak.simid.app
 
 import android.animation.ValueAnimator
+import android.content.Intent
 import android.graphics.Rect
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -234,6 +236,7 @@ class PlayerActivity : AppCompatActivity() {
             controller.onGetMediaState { getMediaState() }
             controller.onPauseMedia { pauseMedia() }
             controller.onPlayMedia { playMedia() }
+            controller.onOpenClickthrough { uri -> openClickthrough(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
 
             controller.simidControllerApi(bpkSimidController!!)
@@ -353,6 +356,13 @@ class PlayerActivity : AppCompatActivity() {
             player?.play()
         }
         return true
+    }
+
+    private fun openClickthrough(uri: String) {
+        Log.d(TAG, "Open clickthrough: $uri")
+
+        val intent = Intent(Intent.ACTION_VIEW, uri.toUri())
+        startActivity(intent)
     }
 
     private fun completeAd(adId: String, skipped: Boolean) {
