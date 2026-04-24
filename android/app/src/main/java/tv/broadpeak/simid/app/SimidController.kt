@@ -24,12 +24,12 @@ class SimidController(
     }
 
     override fun receiveMessage(messageStr: String) {
-        super.receiveMessage(messageStr)
         this.simidControllerApi?.onMessageReceived(messageStr)
+        super.receiveMessage(messageStr)
     }
 
     override fun postMessage(message: String) {
-        super.postMessage(message)
         this.simidControllerApi?.onMessageSent(message)
+        super.postMessage(message)
     }
 }
