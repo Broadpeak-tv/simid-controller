@@ -6,5 +6,5 @@ plugins {
     alias(libs.plugins.android.library) apply false
 }
 
-version = "0.6.0"
+version = "0.7.0"
 extra["versionCode"] = 5
