@@ -305,6 +305,7 @@ public open class SimidController (
         // Spec §4.4.12.1: resolve before opening the URI so the creative receives
         // the message prior to the app being backgrounded.
         resolveMessage(message)
+        onPauseMedia?.invoke()
         onOpenClickthrough?.invoke(args.uri)
     }
     //endregion CREATIVE MESSAGE HANDLERS
