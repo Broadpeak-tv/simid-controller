@@ -162,7 +162,7 @@ abstract class SimidComponent (
             if (response.type == ProtocolMessage.RESOLVE) {
                 deferred.complete(response)
             } else if (response.type == ProtocolMessage.REJECT) {
-                val rejectMessageArgs: RejectMessageArgs = Gson().fromJson(response.args.toString(), RejectMessageArgs::class.java)
+                val rejectMessageArgs: RejectMessageArgs = Gson().fromJson(Gson().toJson(response.args), RejectMessageArgs::class.java)
                 val exception: Exception = Exception(rejectMessageArgs.value.message)
                 deferred.completeExceptionally(exception)
             }
@@ -171,7 +171,7 @@ abstract class SimidComponent (
     }
 
     private fun invokeResponseListener(message: Message) {
-        val args: ResolveMessageArgs = Gson().fromJson(message.args.toString(), ResolveMessageArgs::class.java)
+        val args: ResolveMessageArgs = Gson().fromJson(Gson().toJson(message.args), ResolveMessageArgs::class.java)
         val correlatingId = args.messageId
         responseListeners[correlatingId]?.invoke(message)
         responseListeners.remove(correlatingId)

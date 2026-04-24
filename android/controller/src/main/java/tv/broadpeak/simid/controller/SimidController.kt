@@ -229,7 +229,7 @@ public open class SimidController (
             this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Resize not supported by the player")
             return
         }
-        val args: CreativeRequestResizeMessageArgs = Gson().fromJson(message.args.toString(), CreativeRequestResizeMessageArgs::class.java)
+        val args: CreativeRequestResizeMessageArgs = Gson().fromJson(Gson().toJson(message.args), CreativeRequestResizeMessageArgs::class.java)
 
         val creativeDimensions = args.creativeDimensions
         // Add compatibility with SIMID v1.0
@@ -301,7 +301,7 @@ public open class SimidController (
             rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, "Navigation not supported by the player")
             return
         }
-        val args = Gson().fromJson(message.args.toString(), CreativeRequestNavigationMessageArgs::class.java)
+        val args = Gson().fromJson(Gson().toJson(message.args), CreativeRequestNavigationMessageArgs::class.java)
         // Spec §4.4.12.1: resolve before opening the URI so the creative receives
         // the message prior to the app being backgrounded.
         resolveMessage(message)
