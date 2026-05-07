@@ -10,11 +10,11 @@
   "keywords": [],
   "author": "Broadpeak",
   "dependencies": {
-    "@broadpeak/smartlib": "5.4.1-7a12343",
-    "@broadpeak/smartlib-ad": "5.4.1-7a12343",
-    "@broadpeak/smartlib-analytics": "5.4.1-7a12343",
-    "@broadpeak/smartlib-shaka": "5.4.1-7a12343",
-    "@broadpeak/smartlib-simid": "5.4.1-7a12343"
+    "@broadpeak/smartlib": "6.0.3-861c04c",
+    "@broadpeak/smartlib-ad": "6.0.3-861c04c",
+    "@broadpeak/smartlib-analytics": "6.0.3-861c04c",
+    "@broadpeak/smartlib-shaka": "6.0.3-861c04c",
+    "@broadpeak/smartlib-simid": "6.0.3-861c04c"
   },
   "devDependencies": {
     "@broadpeak-tv/simid-controller": "file:../controller",
