@@ -1,6 +1,6 @@
 import { MediaState } from '@broadpeak-tv/simid-controller'
 import SimidController from './SimidController'
-import { SmartLib } from '@broadpeak/smartlib'
+import { SmartLib, StreamingSessionOptions } from '@broadpeak/smartlib'
 import '@broadpeak/smartlib-ad'
 import '@broadpeak/smartlib-shaka'
 import '@broadpeak/smartlib-analytics'
@@ -41,6 +41,7 @@ export default class Player {
 
     // Create SmartLib session
     this.smartlibSession = SmartLib.getInstance().createStreamingSession()
+    this.smartlibSession.setOption(StreamingSessionOptions.AD_TRACKERS_NON_LINEAR_AUTO_SEND, false)
     this.setAdDataListeners(this.smartlibSession)    
     this.setAdEventsListeners(this.smartlibSession)
 
