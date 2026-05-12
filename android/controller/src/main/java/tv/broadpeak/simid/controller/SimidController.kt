@@ -197,7 +197,6 @@ public open class SimidController (
     }
 
     private fun onCreativeFatalError(message: Message) {
-        this.resolveMessage(message)
         this.stopAd(StopCode.CREATIVE_INITIATED)
     }
 
