@@ -280,7 +280,6 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeFatalError(message: Message) {
-    this.resolveMessage(message)
     this._stopAd(StopCode.CREATIVE_INITIATED)
   }
 
