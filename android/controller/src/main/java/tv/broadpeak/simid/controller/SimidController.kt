@@ -276,9 +276,7 @@ public open class SimidController (
             Log.w(TAG, "Session not initialized, collapseNonlinear ignored")
             return
         }
-        // Under normal circumstances, the player pauses the media.
-        // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
-        // and places the expanded creative at video zero coordinates.
+        // The player resizes the ad to its original state and resumes the content media playback.
         onPlayMedia?.invoke()
         if (onResizeSimid?.invoke(creativeDimensions) == true)
             resolveMessage(message) else

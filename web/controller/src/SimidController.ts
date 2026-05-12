@@ -317,9 +317,7 @@ export class SimidController extends SimidComponent {
       console.warn('[Player] Session not initialized, collapseNonlinear ignored')
       return
     }
-    // Under normal circumstances, the player pauses the media.
-    // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
-    // and places the expanded creative at video zero coordinates.
+    // The player resizes the ad to its original state and resumes the content media playback.
     this._onPlayMedia?.()
     this._onResizeSimid(this._creativeDimensions as DOMRect) ? 
       this.resolveMessage(message) : 
