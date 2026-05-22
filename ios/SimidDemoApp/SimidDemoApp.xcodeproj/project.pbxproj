@@ -1,0 +1,411 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B3A6008F2FBDE669001E63B7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A6008D2FBDE669001E63B7 /* ContentView.swift */; };
+		B3A600902FBDE669001E63B7 /* SimidDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A6008E2FBDE669001E63B7 /* SimidDemoApp.swift */; };
+		B3A600912FBDE669001E63B7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3A6008C2FBDE669001E63B7 /* Assets.xcassets */; };
+		B3A600B22FBF06D5001E63B7 /* PlayerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A600B12FBF06CD001E63B7 /* PlayerViewController.swift */; };
+		B3A600B42FBF0A3D001E63B7 /* PlayerViewControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A600B32FBF0A2F001E63B7 /* PlayerViewControllerRepresentable.swift */; };
+		B3A600B92FBF0F5D001E63B7 /* SimidSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */; };
+		B3A600BA2FBF0F5D001E63B7 /* SimidSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		B3A71CC82FC0519A0027791A /* AssetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A71CC72FC0519A0027791A /* AssetsView.swift */; };
+		B3A71CCA2FC053470027791A /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A71CC92FC053470027791A /* PlayerView.swift */; };
+		B3A71CCD2FC057B10027791A /* SmartLib-AVPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = B3A71CCC2FC057B10027791A /* SmartLib-AVPlayer */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		B3A600BB2FBF0F5D001E63B7 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				B3A600BA2FBF0F5D001E63B7 /* SimidSDK.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		B3A6008C2FBDE669001E63B7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		B3A6008D2FBDE669001E63B7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		B3A6008E2FBDE669001E63B7 /* SimidDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimidDemoApp.swift; sourceTree = "<group>"; };
+		B3A600B12FBF06CD001E63B7 /* PlayerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewController.swift; sourceTree = "<group>"; };
+		B3A600B32FBF0A2F001E63B7 /* PlayerViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewControllerRepresentable.swift; sourceTree = "<group>"; };
+		B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SimidSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		B3A71CC72FC0519A0027791A /* AssetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetsView.swift; sourceTree = "<group>"; };
+		B3A71CC92FC053470027791A /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
+		B3F5D2FB2FBDE5D00077FC1C /* SimidDemoApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SimidDemoApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		B3F5D2F82FBDE5D00077FC1C /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B3A71CCD2FC057B10027791A /* SmartLib-AVPlayer in Frameworks */,
+				B3A600B92FBF0F5D001E63B7 /* SimidSDK.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		B3A600A62FBDE6B3001E63B7 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		B3F5D2F22FBDE5D00077FC1C = {
+			isa = PBXGroup;
+			children = (
+				B3A600A62FBDE6B3001E63B7 /* Frameworks */,
+				B3F5D2FC2FBDE5D00077FC1C /* Products */,
+				B3A6008C2FBDE669001E63B7 /* Assets.xcassets */,
+				B3A71CC72FC0519A0027791A /* AssetsView.swift */,
+				B3A6008D2FBDE669001E63B7 /* ContentView.swift */,
+				B3A6008E2FBDE669001E63B7 /* SimidDemoApp.swift */,
+				B3A600B32FBF0A2F001E63B7 /* PlayerViewControllerRepresentable.swift */,
+				B3A71CC92FC053470027791A /* PlayerView.swift */,
+				B3A600B12FBF06CD001E63B7 /* PlayerViewController.swift */,
+			);
+			sourceTree = "<group>";
+		};
+		B3F5D2FC2FBDE5D00077FC1C /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				B3F5D2FB2FBDE5D00077FC1C /* SimidDemoApp.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		B3F5D2FA2FBDE5D00077FC1C /* SimidDemoApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = B3F5D3062FBDE5D30077FC1C /* Build configuration list for PBXNativeTarget "SimidDemoApp" */;
+			buildPhases = (
+				B3F5D2F72FBDE5D00077FC1C /* Sources */,
+				B3F5D2F82FBDE5D00077FC1C /* Frameworks */,
+				B3F5D2F92FBDE5D00077FC1C /* Resources */,
+				B3A600BB2FBF0F5D001E63B7 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SimidDemoApp;
+			packageProductDependencies = (
+				B3A71CCC2FC057B10027791A /* SmartLib-AVPlayer */,
+			);
+			productName = SimidDemoApp;
+			productReference = B3F5D2FB2FBDE5D00077FC1C /* SimidDemoApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		B3F5D2F32FBDE5D00077FC1C /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2630;
+				LastUpgradeCheck = 2630;
+				TargetAttributes = {
+					B3F5D2FA2FBDE5D00077FC1C = {
+						CreatedOnToolsVersion = 26.3;
+					};
+				};
+			};
+			buildConfigurationList = B3F5D2F62FBDE5D00077FC1C /* Build configuration list for PBXProject "SimidDemoApp" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = B3F5D2F22FBDE5D00077FC1C;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				B3A71CCB2FC057B10027791A /* XCRemoteSwiftPackageReference "smartlib-package" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = B3F5D2FC2FBDE5D00077FC1C /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				B3F5D2FA2FBDE5D00077FC1C /* SimidDemoApp */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		B3F5D2F92FBDE5D00077FC1C /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B3A600912FBDE669001E63B7 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		B3F5D2F72FBDE5D00077FC1C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				B3A600B22FBF06D5001E63B7 /* PlayerViewController.swift in Sources */,
+				B3A71CC82FC0519A0027791A /* AssetsView.swift in Sources */,
+				B3A6008F2FBDE669001E63B7 /* ContentView.swift in Sources */,
+				B3A71CCA2FC053470027791A /* PlayerView.swift in Sources */,
+				B3A600B42FBF0A3D001E63B7 /* PlayerViewControllerRepresentable.swift in Sources */,
+				B3A600902FBDE669001E63B7 /* SimidDemoApp.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		B3F5D3042FBDE5D30077FC1C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 864JJHB7BQ;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		B3F5D3052FBDE5D30077FC1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 864JJHB7BQ;
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		B3F5D3072FBDE5D30077FC1C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 864JJHB7BQ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tv.broadpeak.simid.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		B3F5D3082FBDE5D30077FC1C /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 864JJHB7BQ;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = tv.broadpeak.simid.app;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		B3F5D2F62FBDE5D00077FC1C /* Build configuration list for PBXProject "SimidDemoApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3F5D3042FBDE5D30077FC1C /* Debug */,
+				B3F5D3052FBDE5D30077FC1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		B3F5D3062FBDE5D30077FC1C /* Build configuration list for PBXNativeTarget "SimidDemoApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				B3F5D3072FBDE5D30077FC1C /* Debug */,
+				B3F5D3082FBDE5D30077FC1C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B3A71CCB2FC057B10027791A /* XCRemoteSwiftPackageReference "smartlib-package" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://delivery-platform.broadpeak.tv/ios/broadpeak/smartlib-package.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.0.4;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		B3A71CCC2FC057B10027791A /* SmartLib-AVPlayer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B3A71CCB2FC057B10027791A /* XCRemoteSwiftPackageReference "smartlib-package" */;
+			productName = "SmartLib-AVPlayer";
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = B3F5D2F32FBDE5D00077FC1C /* Project object */;
+}

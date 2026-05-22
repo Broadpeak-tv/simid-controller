@@ -1,0 +1,15 @@
+{
+  "originHash" : "24bd5529ab474edb16a1629cd7e503b972cd912e711d020559db8cd3e29cb00f",
+  "pins" : [
+    {
+      "identity" : "smartlib-package",
+      "kind" : "remoteSourceControl",
+      "location" : "https://delivery-platform.broadpeak.tv/ios/broadpeak/smartlib-package.git",
+      "state" : {
+        "revision" : "1cd48ee88c84d30727e5154a1cde35f2ebef799e",
+        "version" : "6.0.4"
+      }
+    }
+  ],
+  "version" : 3
+}
