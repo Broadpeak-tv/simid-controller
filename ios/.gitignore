@@ -16,3 +16,6 @@
 .externalNativeBuild
 .cxx
 local.properties
+derivedData
+xcshareddata
+xcuserdata
