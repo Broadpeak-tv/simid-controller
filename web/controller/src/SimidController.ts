@@ -88,7 +88,7 @@ export class SimidController extends SimidComponent {
   // #endregion MEMBERS
 
   /**
-   * Set up the SIMID controller starts listening for messages from the creative.
+   * Set up the SIMID controller and starts listening for messages from the creative.
    * @param playerDimensions the main player dimensions
    * @param creativeDimensions the initial creative dimensions the application/player will set
    * @param creativeUri The creative URI
