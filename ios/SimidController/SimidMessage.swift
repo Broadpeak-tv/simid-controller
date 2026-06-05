@@ -178,7 +178,6 @@ enum CloseButtonSupport {
 
 // MARK: - Data Structures
 
-// Note: Add public visibility to members and add init since used outside SDK
 public struct Dimensions: Codable {
     public let x: Int
     public let y: Int
@@ -198,7 +197,6 @@ public struct Dimensions: Codable {
     }
 }
 
-// Note: Add public visibility to members and add init since used outside SDK
 public struct MediaState: Codable {
 
     public let currentSrc: String?

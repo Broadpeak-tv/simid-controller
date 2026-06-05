@@ -2,34 +2,31 @@ import Foundation
 
 open class SimidComponent: NSObject {
 
-    // MARK: - Public / Protected State
-
+    // The protocol actor type ('Player' or 'Creative')
     let type: String
+
+    // The SIMID protocol supported version
     let protocolVersion: String = "1.1"
 
+    // The session ID
     var sessionId: String = ""
 
+    // The next message ID to use when sending a message
     var nextMessageId: Int = 1
 
+    // Sent messages response listeners
     var messageListeners: [String: [MessageCallback]] = [:]
+
+    // Response listeners for sent messages
     var responseListeners: [Int: MessageCallback] = [:]
 
+    // JSON endoder/decoder
     let jsonEncoder = JSONEncoder()
     let jsonDecoder = JSONDecoder()
-
-    // MARK: - Init
 
     init(type: String) {
         self.type = type
     }
-
-    // MARK: - Abstract
-
-    func postMessage(_ message: String) {
-        fatalError("Must be implemented by subclass")
-    }
-
-    // MARK: - Listener Management
 
     func addMessageListener(_ messageType: String, callback: @escaping MessageCallback) {
         if messageListeners[messageType] == nil {
@@ -38,47 +35,16 @@ open class SimidComponent: NSObject {
         messageListeners[messageType]?.append(callback)
     }
 
-    // MARK: - Sending
-
     func sendMessage(_ type: String, args: MessageArgs? = nil) async throws {
         let message = createMessage(type: type, args: args)
         try await sendSimidMessage(message)
     }
 
-    private func sendSimidMessage(_ message: Message) async throws {
-        if MessagesWithResponse.contains(message.type) {
-
-            return try await withCheckedThrowingContinuation { continuation in
-
-                self.addResponseListener(message.messageId) { response in
-
-                    if response.type == ProtocolMessage.RESOLVE {
-                        continuation.resume(returning: ())
-
-                    } else if response.type == ProtocolMessage.REJECT,
-                              let rejectArgs = response.args as? RejectMessageArgs {
-
-                        let error = NSError(
-                            domain: "SIMID",
-                            code: Int(rejectArgs.value.errorCode),
-                            userInfo: [NSLocalizedDescriptionKey: rejectArgs.value.message]
-                        )
-
-                        continuation.resume(throwing: error)
-                    }
-                }
-
-                self.postMessage(encode(message))
-            }
-        }
-
-        // "fire and forget" like JS resolve immediately
-        postMessage(encode(message))
+    open func postMessage(_ message: String) {
+        fatalError("Must be implemented by subclass")
     }
 
-    // MARK: - Receiving
-
-    func receiveMessage(_ messageStr: String) {
+    open func receiveMessage(_ messageStr: String) {
         SimidLogger.d("[SIMID][Player][R] \(messageStr)")
         guard let data = messageStr.data(using: .utf8),
               let message = try? jsonDecoder.decode(Message.self, from: data) else {
@@ -106,12 +72,10 @@ open class SimidComponent: NSObject {
         }
     }
 
-    // MARK: - Resolve / Reject
-
     func resolveMessage(_ incoming: Message, outgoingArgs: MediaState? = nil) {
         let args = ResolveMessageArgs(messageId: incoming.messageId, value: outgoingArgs)
         let message = createMessage(type: ProtocolMessage.RESOLVE, args: args)
-        postMessage(encode(message))
+        postMessage(message)
     }
 
     func rejectMessage(_ incoming: Message,
@@ -123,10 +87,8 @@ open class SimidComponent: NSObject {
 
         let message = createMessage(type: ProtocolMessage.REJECT, args: args)
 
-        postMessage(encode(message))
+        postMessage(message)
     }
-
-    // MARK: - Session Reset
 
     func resetSession() {
         messageListeners.removeAll()
@@ -134,8 +96,6 @@ open class SimidComponent: NSObject {
         sessionId = ""
         nextMessageId = 1
     }
-
-    // MARK: - Internals
 
     private func createMessage(type: String, args: MessageArgs?) -> Message {
         let messageId = nextMessageId
@@ -148,6 +108,42 @@ open class SimidComponent: NSObject {
             timestamp: Int64(Date().timeIntervalSince1970 * 1000),
             args: args
         )
+    }
+        
+    private func sendSimidMessage(_ message: Message) async throws {
+        if MessagesWithResponse.contains(message.type) {
+
+            return try await withCheckedThrowingContinuation { continuation in
+
+                self.addResponseListener(message.messageId) { response in
+
+                    if response.type == ProtocolMessage.RESOLVE {
+                        continuation.resume(returning: ())
+
+                    } else if response.type == ProtocolMessage.REJECT,
+                              let rejectArgs = response.args as? RejectMessageArgs {
+
+                        let error = NSError(
+                            domain: "SIMID",
+                            code: Int(rejectArgs.value.errorCode),
+                            userInfo: [NSLocalizedDescriptionKey: rejectArgs.value.message]
+                        )
+
+                        continuation.resume(throwing: error)
+                    }
+                }
+
+                self.postMessage(message)
+            }
+        }
+
+        // "fire and forget" like JS resolve immediately
+        postMessage(message)
+    }
+
+    private func postMessage(_ message: Message) {
+        let messageStr = encode(message)
+        postMessage(messageStr)
     }
 
     private func encode(_ message: Message) -> String {

@@ -2,22 +2,12 @@ import UIKit
 import WebKit
 import Foundation
 
-@MainActor
 open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigationDelegate {
 
-    // MARK: - Constants
-
     public static let VERSION = "1.0"
-    public static let MEDIA_TIMEUPDATE_INTERVAL_MS: UInt64 = 1000
-
-    // MARK: - Dependencies
-
-    private weak var viewController: UIViewController?
-    private weak var containerView: UIView?
+    public nonisolated static let MEDIA_TIMEUPDATE_INTERVAL_MS: UInt64 = 1000
 
     private var webView: WKWebView?
-
-    // MARK: - Configuration
 
     private var playerDimensions: Dimensions
     private var creativeDimensions: Dimensions
@@ -27,16 +17,12 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     private let adSkippable: Bool
     private let mediaTimeupdateInterval: UInt64
 
-    // MARK: - State
-
     private var autoStart = true
     private var initialized = false
     private var isStopping = false
     private var nonLinearStartTime: Double = -1
 
-    private var mediaTask: Task<Void, Never>?
-
-    // MARK: - Callbacks
+    private var mediaTimeupdateTask: Task<Void, Error>?
 
     private var onGetMediaState: (() -> MediaState)?
     private var onPlayMedia: (() -> Bool)?
@@ -48,11 +34,17 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     private var onOpenClickthrough: ((String) -> Void)?
     private var onComplete: ((Bool) -> Void)?
 
-    // MARK: - Init
-
+    /**
+     * Set up the SIMID controller an starts listening for messages from the creative.
+     * @param playerDimensions the main player dimensions
+     * @param creativeDimensions the initial creative dimensions the application/player will set
+     * @param creativeUri The creative URI
+     * @param adParameters the creative ad parameters
+     * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
+     * @param adSkippable true if the linear ad is skippable (false by default)
+     * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
+     */
     public init(
-        viewController: UIViewController,
-        containerView: UIView,
         playerDimensions: Dimensions,
         creativeDimensions: Dimensions,
         creativeUri: String,
@@ -61,8 +53,6 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         adSkippable: Bool = false,
         mediaTimeupdateInterval: UInt64 = MEDIA_TIMEUPDATE_INTERVAL_MS
     ) {
-        self.viewController = viewController
-        self.containerView = containerView
         self.playerDimensions = playerDimensions
         self.creativeDimensions = creativeDimensions
         self.creativeUri = creativeUri
@@ -75,14 +65,34 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
         addCreativeMessageListeners()
     }
-
-    // MARK: - Public API
-
+    
+    public func onGetMediaState(_ cb: @escaping () -> MediaState) { self.onGetMediaState = cb }
+    public func onPlayMedia(_ cb: @escaping () -> Bool) { self.onPlayMedia = cb }
+    public func onPauseMedia(_ cb: @escaping () -> Bool) { self.onPauseMedia = cb }
+    public func onAddSimid(_ cb: @escaping (WKWebView) -> Void) { self.onAddSimid = cb }
+    public func onShowSimid(_ cb: @escaping (Bool) -> Void) { self.onShowSimid = cb }
+    public func onResizeSimid(_ cb: @escaping (Dimensions) -> Bool) { self.onResizeSimid = cb }
+    public func onResizePlayer(_ cb: @escaping (Dimensions) -> Void) { self.onResizePlayer = cb }
+    public func onOpenClickthrough(_ cb: @escaping (String) -> Void) { self.onOpenClickthrough = cb }
+    public func onComplete(_ cb: @escaping (Bool) -> Void) { self.onComplete = cb }
+    
+    public func getVersion() -> String {
+        return SimidController.VERSION
+    }
+    
+    /**
+     * Initialize and load ad. This should be called before an ad plays.
+     * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
+     * @param autoStart true to start the creative once initialized
+     */
     public func load(autoStart: Bool = true) {
         self.autoStart = autoStart
         createWebView()
     }
 
+    /**
+     * Start the loaded creative
+     */
     public func start() {
         guard initialized else {
             autoStart = true
@@ -91,10 +101,19 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         startCreative()
     }
 
+    /**
+     * Stop and reset the SIMID controller
+     */
     public func reset() {
         stopAd()
     }
 
+    /**
+     * Notify the SIMID controller any changes any of ad components’ size
+     * @param playerDimensions the new player dimensions
+     * @param creativeDimensions the new creative dimensions
+     * @param fullscreen true if in fullscreen mode
+     */
     public func notifyResize(playerDimensions: Dimensions,
                              creativeDimensions: Dimensions,
                              fullscreen: Bool) {
@@ -109,44 +128,153 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
             fullscreen: fullscreen
         )
 
-        Task {
-            try? await sendMessage(PlayerMessage.RESIZE, args: args)
-        }
+        Task { try? await sendMessage(PlayerMessage.RESIZE, args: args) }
     }
 
-    // MARK: - Callback setters
 
-    public func onGetMediaState(_ cb: @escaping () -> MediaState) { self.onGetMediaState = cb }
-    public func onPlayMedia(_ cb: @escaping () -> Bool) { self.onPlayMedia = cb }
-    public func onPauseMedia(_ cb: @escaping () -> Bool) { self.onPauseMedia = cb }
-    public func onAddSimid(_ cb: @escaping (WKWebView) -> Void) { self.onAddSimid = cb }
-    public func onShowSimid(_ cb: @escaping (Bool) -> Void) { self.onShowSimid = cb }
-    public func onResizeSimid(_ cb: @escaping (Dimensions) -> Bool) { self.onResizeSimid = cb }
-    public func onResizePlayer(_ cb: @escaping (Dimensions) -> Void) { self.onResizePlayer = cb }
-    public func onOpenClickthrough(_ cb: @escaping (String) -> Void) { self.onOpenClickthrough = cb }
-    public func onComplete(_ cb: @escaping (Bool) -> Void) { self.onComplete = cb }
-
-    // MARK: - PostMessage bridge (SimidComponent override)
-
-    override func postMessage(_ message: String) {
+    open override func postMessage(_ message: String) {
         SimidLogger.d("[SIMID][Player][S] \(message)")
         
         Task { @MainActor in
             guard let webView = self.webView else { return }
 
             let script = "window.originalPostMessage('\(message)', '*');"
-            webView.evaluateJavaScript(script, completionHandler: nil)
+            Task {
+                try? await webView.evaluateJavaScript(script)
+            }
+//            webView.evaluateJavaScript(script, completionHandler: nil)
         }
     }
 
-    // MARK: - WebView setup
+    // MARK: CREATIVE MESSAGE HANDLERS
+
+    private func addCreativeMessageListeners() {
+        addMessageListener(ProtocolMessage.CREATE_SESSION) { [weak self] message in self?.onCreateSession(message) }
+        addMessageListener(CreativeMessage.FATAL_ERROR) { [weak self] message in self?.onCreativeFatalError(message) }
+        addMessageListener(CreativeMessage.GET_MEDIA_STATE) { [weak self] message in self?.onCreativeGetMediaState(message) }
+        addMessageListener(CreativeMessage.REQUEST_PAUSE) { [weak self] message in self?.onCreativeRequestPause(message) }
+        addMessageListener(CreativeMessage.REQUEST_PLAY) { [weak self] message in self?.onCreativeRequestPlay(message) }
+        addMessageListener(CreativeMessage.REQUEST_RESIZE) { [weak self] message in self?.onCreativeRequestResize(message) }
+        addMessageListener(CreativeMessage.REQUEST_SKIP) { [weak self] message in self?.onCreativeRequestSkip(message) }
+        addMessageListener(CreativeMessage.REQUEST_STOP) { [weak self] message in self?.onCreativeRequestStop(message) }
+        addMessageListener(CreativeMessage.EXPAND_NONLINEAR) { [weak self] message in self?.onCreativeExpandNonlinear(message) }
+        addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR) { [weak self] message in self?.onCreativeCollapseNonlinear(message) }
+        addMessageListener(CreativeMessage.REQUEST_NAVIGATION) { [weak self] message in self?.onCreativeRequestNavigation(message) }
+    }
+    
+    private func onCreateSession(_ message: Message) {
+        // [3] - createSession sent by the creative (message resolved in SimidComponent::receiveMessage())
+        // [4] - send Player:init message
+        self.sendInitMessage()
+    }
+    
+    private func onCreativeFatalError(_ message: Message) {
+        self.stopAd(reason: StopCode.CREATIVE_INITIATED)
+    }
+    
+    private func onCreativeGetMediaState(_ message: Message) {
+        let state = self.onGetMediaState?()
+        self.resolveMessage(message, outgoingArgs: state)
+    }
+
+    private func onCreativeRequestPause(_ message: Message) {
+        guard self.initialized else {
+            SimidLogger.w("Session not initialized, requestPause ignored")
+            return
+        }
+        (self.onPauseMedia?() ?? false) ? self.resolveMessage(message) : self.rejectMessage(message)
+    }
+    
+    private func onCreativeRequestPlay(_ message: Message) {
+        guard self.initialized else {
+            SimidLogger.w("Session not initialized, requestPlay ignored")
+            return
+        }
+        (self.onPlayMedia?() ?? false) ? self.resolveMessage(message) : self.rejectMessage(message)
+    }
+    
+    private func onCreativeRequestResize(_ message: Message) {
+        guard let onResizeSimid = self.onResizeSimid,
+              let onResizePlayer = self.onResizePlayer
+        else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Resize not supported by the player")
+            return
+        }
+
+        let args = message.args as? CreativeRequestResizeMessageArgs
+        let creativeDim = args!.creativeDimensions
+        let mediaDim = args!.mediaDimensions ?? args!.videoDimensions
+
+        guard let mediaDim else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Missing input dimensions to resize")
+            return
+        }
+
+        // Resize SIMID iframe
+        guard onResizeSimid(creativeDim) else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "The player is unable to complete the Creative resizing")
+            return
+        }
+        // Store creative dimensions (reused when collapsed)
+        self.creativeDimensions = creativeDim
+        
+        // If creative successfully resized then resize the main player/
+        self.onResizePlayer?(mediaDim)
+
+        self.resolveMessage(message)
+
+    }
+
+    private func onCreativeRequestSkip(_ message: Message) {
+        self.resolveMessage(message)
+        self.skipAd()
+    }
+
+    private func onCreativeRequestStop(_ message: Message) {
+        self.resolveMessage(message)
+        self.stopAd()
+    }
+    
+    private func onCreativeExpandNonlinear(_ message: Message) {
+        guard self.initialized else {
+            SimidLogger.w("Session not initialized, expandNonlinear ignored")
+            return
+        }
+        // Under normal circumstances, the player pauses the media.
+        // In cases when the content is video, the player resizes the creative iframe to the dimensions of the video
+        // and places the expanded creative at video zero coordinates.
+        _ = self.onPauseMedia?()
+        (self.onResizeSimid?(playerDimensions) ?? false) ? self.resolveMessage(message) : rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Unable to expand nonlinear ad")
+    }
+    
+    private func onCreativeCollapseNonlinear(_ message: Message) {
+        guard self.initialized else {
+            SimidLogger.w("Session not initialized, expandNonlinear ignored")
+            return
+        }
+        // The player resizes the ad to its original state and resumes the content media playback.
+        _ = self.onPlayMedia?()
+        (self.onResizeSimid?(creativeDimensions) ?? false) ? self.resolveMessage(message) : rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Unable to collapse nonlinear ad")
+    }
+    
+    private func onCreativeRequestNavigation(_ message: Message) {
+        guard let args = message.args as? CreativeRequestNavigationMessageArgs else {
+            self.rejectMessage(message)
+            return
+        }
+
+        self.resolveMessage(message)
+        _ = self.onPauseMedia?()
+        self.onOpenClickthrough?(args.uri)
+    }
+    
+    // MARK: - WEBVIEW MANAGEMENT
 
     private func createWebView() {
-        guard viewController != nil else { return }
-
         let config = WKWebViewConfiguration()
         let contentController = WKUserContentController()
 
+        // Uncomment to forward console logs to applications logs
 //        let consoleBridge = WebViewConsoleBridge()
 //        contentController.add(consoleBridge, name: "console")
 //        contentController.addUserScript(
@@ -180,109 +308,18 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         onAddSimid!(webView)
     }
 
-    // MARK: - JS Bridge
-
+    private func clearWebView() {
+        webView?.removeFromSuperview()
+        webView = nil
+    }
+    
     public func userContentController(_ userContentController: WKUserContentController,
                                       didReceive message: WKScriptMessage) {
         guard let messageStr = message.body as? String else { return }
         receiveMessage(messageStr)
     }
 
-    // MARK: - Creative message listeners
-
-    private func addCreativeMessageListeners() {
-        addMessageListener(ProtocolMessage.CREATE_SESSION) { [weak self] _ in
-            self?.sendInitMessage()
-        }
-
-        addMessageListener(CreativeMessage.FATAL_ERROR) { [weak self] _ in
-            self?.stopAd(reason: StopCode.CREATIVE_INITIATED)
-        }
-
-        addMessageListener(CreativeMessage.GET_MEDIA_STATE) { [weak self] msg in
-            guard let self else { return }
-
-            let state = self.onGetMediaState?()
-            self.resolveMessage(msg, outgoingArgs: state)
-        }
-
-        addMessageListener(CreativeMessage.REQUEST_NAVIGATION) { [weak self] msg in
-            guard let self else { return }
-
-            guard let args = msg.args as? CreativeRequestNavigationMessageArgs else {
-                self.rejectMessage(msg)
-                return
-            }
-
-            self.resolveMessage(msg)
-            self.onPauseMedia?()
-            self.onOpenClickthrough?(args.uri)
-        }
-
-        addMessageListener(CreativeMessage.REQUEST_PAUSE) { [weak self] msg in
-            guard let self else { return }
-            let ok = self.onPauseMedia?() ?? false
-            ok ? self.resolveMessage(msg) : self.rejectMessage(msg)
-        }
-
-        addMessageListener(CreativeMessage.REQUEST_PLAY) { [weak self] msg in
-            guard let self else { return }
-            let ok = self.onPlayMedia?() ?? false
-            ok ? self.resolveMessage(msg) : self.rejectMessage(msg)
-        }
-
-        addMessageListener(CreativeMessage.REQUEST_RESIZE) { [weak self] msg in
-            guard let self else { return }
-
-            guard let args = msg.args as? CreativeRequestResizeMessageArgs else {
-                self.rejectMessage(msg)
-                return
-            }
-
-            let creativeDim = args.creativeDimensions
-            let mediaDim = args.mediaDimensions ?? args.videoDimensions
-
-            guard let mediaDim else {
-                self.rejectMessage(msg)
-                return
-            }
-
-            let ok = self.onResizeSimid?(creativeDim) ?? false
-            guard ok else {
-                self.rejectMessage(msg)
-                return
-            }
-
-            self.creativeDimensions = creativeDim
-            self.onResizePlayer?(mediaDim)
-
-            self.resolveMessage(msg)
-        }
-
-        addMessageListener(CreativeMessage.REQUEST_SKIP) { [weak self] msg in
-            self?.resolveMessage(msg)
-            self?.skipAd()
-        }
-
-        addMessageListener(CreativeMessage.REQUEST_STOP) { [weak self] msg in
-            self?.resolveMessage(msg)
-            self?.stopAd()
-        }
-    }
-
     // MARK: - Session init/start
-
-    private func startCreative() {
-        Task {
-            let state = onGetMediaState?()
-            nonLinearStartTime = state?.currentTime ?? 0
-
-            try? await sendMessage(PlayerMessage.START_CREATIVE)
-
-            onShowSimid?(true)
-            startMediaTimeupdateLoop()
-        }
-    }
 
     private func sendInitMessage() {
         let env = EnvironmentData(
@@ -334,7 +371,19 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         }
     }
 
-    // MARK: - Stop flow
+    private func startCreative() {
+        Task {
+            let state = onGetMediaState?()
+            nonLinearStartTime = state?.currentTime ?? 0
+
+            try? await sendMessage(PlayerMessage.START_CREATIVE)
+
+            onShowSimid?(true)
+            startMediaTimeupdateInterval()
+        }
+    }
+    
+    // MARK: - Session stop flow
 
     private func stopAd(reason: Int = StopCode.PLAYER_INITATED) {
         stopSession(skipped: false, reason: reason)
@@ -348,7 +397,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         guard !isStopping else { return }
         isStopping = true
 
-        stopMediaLoop()
+        stopMediaTimeupdateInterval()
         onShowSimid?(false)
 
         completeAd(skipped: skipped)
@@ -365,50 +414,53 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
             clearWebView()
             resetSession()
-
-            isStopping = false
         }
     }
 
     private func completeAd(skipped: Bool) {
         onResizePlayer?(playerDimensions)
         onComplete?(skipped)
-        onPlayMedia?()
+        _ = onPlayMedia?()
     }
 
-    private func clearWebView() {
-        webView?.removeFromSuperview()
-        webView = nil
-    }
+    // MARK: - Media state loop
 
-    // MARK: - Media loop
+    private func startMediaTimeupdateInterval() {
+        stopMediaTimeupdateInterval()
 
-    private func startMediaTimeupdateLoop() {
-        stopMediaLoop()
+        mediaTimeupdateTask = Task {
+            do {
+                while true {
+                    try? await Task.sleep(nanoseconds: mediaTimeupdateInterval * 1_000_000)
+                    
+                    try Task.checkCancellation()
 
-        mediaTask = Task {
-            while true {
-                try? await Task.sleep(nanoseconds: mediaTimeupdateInterval * 1_000_000)
-
-                guard let state = onGetMediaState?(),
-                      let current = state.currentTime else { continue }
-
-                let args = MediaTimeUpdateMessageArgs(currentTime: current)
-                try? await sendMessage(MediaMessage.TIME_UPDATE, args: args)
-
-                SimidLogger.d("[SIMID][Player][MEDIA] \(nonLinearStartTime) \(adDuration) \(current)")
-                if adDuration > 0,
-                   nonLinearStartTime >= 0,
-                   current - nonLinearStartTime > adDuration {
-                    stopAd(reason: StopCode.NON_LINEAR_DURATION_COMPLETE)
-                    break
+                    guard let state = onGetMediaState?(),
+                          let currentTime = state.currentTime else { continue }
+                    
+                    mediaTimeUpdated(currentTime)
                 }
+            } catch is CancellationError {
+                return
             }
         }
     }
 
-    private func stopMediaLoop() {
-        mediaTask?.cancel()
-        mediaTask = nil
+    private func stopMediaTimeupdateInterval() {
+        mediaTimeupdateTask?.cancel()
+        mediaTimeupdateTask = nil
+    }
+    
+    private func mediaTimeUpdated(_ currentTime: Double) {
+
+        Task { try? await sendMessage(MediaMessage.TIME_UPDATE, args: MediaTimeUpdateMessageArgs(currentTime: currentTime)) }
+
+        // For nonlinear ads, stop the ad once requested duration is over
+        if adDuration > 0,
+           nonLinearStartTime >= 0,
+           currentTime - nonLinearStartTime > adDuration {
+            nonLinearStartTime = 0.0
+            stopAd(reason: StopCode.NON_LINEAR_DURATION_COMPLETE)
+        }
     }
 }
