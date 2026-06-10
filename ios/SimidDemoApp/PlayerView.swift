@@ -1,10 +1,3 @@
-//
-//  ContentView.swift
-//  interstitial-player
-//
-//  Created by Bertrand Berthelot on 01/10/2025.
-//
-
 import SwiftUI
 import AVKit
 

@@ -1,5 +1,3 @@
-
-
 import SwiftUI
 import SimidSDK
 
@@ -7,7 +5,6 @@ import SimidSDK
 struct SimidDemoApp: App {
     var body: some Scene {
         WindowGroup {
-//            ContentView()
             AssetsView()
         }
     }
