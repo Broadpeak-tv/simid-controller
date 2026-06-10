@@ -7,11 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		B3A6008F2FBDE669001E63B7 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A6008D2FBDE669001E63B7 /* ContentView.swift */; };
 		B3A600902FBDE669001E63B7 /* SimidDemoApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A6008E2FBDE669001E63B7 /* SimidDemoApp.swift */; };
 		B3A600912FBDE669001E63B7 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = B3A6008C2FBDE669001E63B7 /* Assets.xcassets */; };
 		B3A600B22FBF06D5001E63B7 /* PlayerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A600B12FBF06CD001E63B7 /* PlayerViewController.swift */; };
-		B3A600B42FBF0A3D001E63B7 /* PlayerViewControllerRepresentable.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A600B32FBF0A2F001E63B7 /* PlayerViewControllerRepresentable.swift */; };
 		B3A600B92FBF0F5D001E63B7 /* SimidSDK.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */; };
 		B3A600BA2FBF0F5D001E63B7 /* SimidSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B3A71CC82FC0519A0027791A /* AssetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A71CC72FC0519A0027791A /* AssetsView.swift */; };
@@ -35,10 +33,8 @@
 
 /* Begin PBXFileReference section */
 		B3A6008C2FBDE669001E63B7 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		B3A6008D2FBDE669001E63B7 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		B3A6008E2FBDE669001E63B7 /* SimidDemoApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SimidDemoApp.swift; sourceTree = "<group>"; };
 		B3A600B12FBF06CD001E63B7 /* PlayerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewController.swift; sourceTree = "<group>"; };
-		B3A600B32FBF0A2F001E63B7 /* PlayerViewControllerRepresentable.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerViewControllerRepresentable.swift; sourceTree = "<group>"; };
 		B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; path = SimidSDK.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3A71CC72FC0519A0027791A /* AssetsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetsView.swift; sourceTree = "<group>"; };
 		B3A71CC92FC053470027791A /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
@@ -73,9 +69,7 @@
 				B3F5D2FC2FBDE5D00077FC1C /* Products */,
 				B3A6008C2FBDE669001E63B7 /* Assets.xcassets */,
 				B3A71CC72FC0519A0027791A /* AssetsView.swift */,
-				B3A6008D2FBDE669001E63B7 /* ContentView.swift */,
 				B3A6008E2FBDE669001E63B7 /* SimidDemoApp.swift */,
-				B3A600B32FBF0A2F001E63B7 /* PlayerViewControllerRepresentable.swift */,
 				B3A71CC92FC053470027791A /* PlayerView.swift */,
 				B3A600B12FBF06CD001E63B7 /* PlayerViewController.swift */,
 			);
@@ -168,9 +162,7 @@
 			files = (
 				B3A600B22FBF06D5001E63B7 /* PlayerViewController.swift in Sources */,
 				B3A71CC82FC0519A0027791A /* AssetsView.swift in Sources */,
-				B3A6008F2FBDE669001E63B7 /* ContentView.swift in Sources */,
 				B3A71CCA2FC053470027791A /* PlayerView.swift in Sources */,
-				B3A600B42FBF0A3D001E63B7 /* PlayerViewControllerRepresentable.swift in Sources */,
 				B3A600902FBDE669001E63B7 /* SimidDemoApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
