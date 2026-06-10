@@ -20,6 +20,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "SIMID Demo Application"
+rootProject.name = "SIMID Controller"
 include(":app")
 include(":controller")

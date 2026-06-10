@@ -1,10 +1,16 @@
 package tv.broadpeak.simid.controller
 
 import android.util.Log
-import com.google.gson.Gson
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
-import java.util.Calendar
+
+import kotlinx.datetime.Clock
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 
 abstract class SimidComponent (
     // The protocol actor type ('Player' or 'Creative')
@@ -19,6 +25,11 @@ abstract class SimidComponent (
 
     // The session ID
     protected var sessionId: String = ""
+
+    @OptIn(ExperimentalSerializationApi::class)
+    protected val json = Json {
+        explicitNulls = false
+    }
 
     // The next message ID to use when sending a message
     var nextMessageId: Int = 1
@@ -36,7 +47,7 @@ abstract class SimidComponent (
         messageListeners[messageType]?.add(callback)
     }
 
-    protected fun sendMessage(type: String, args: kotlin.Any? = null): Deferred<Message?> {
+    protected fun sendMessage(type: String, args: JsonElement? = null): Deferred<Message?> {
         val message: Message = createMessage(type, args)
         return sendSimidMessage(message)
     }
@@ -46,7 +57,7 @@ abstract class SimidComponent (
     protected open fun receiveMessage(messageStr: String) {
         Log.v(TAG, "[SIMID][$type][R]: $messageStr")
 
-        val message: Message = Gson().fromJson(messageStr, Message::class.java);
+        val message: Message = json.decodeFromString<Message>(messageStr)
 
         // A sessionId is valid in one of two cases:
         // 1. It is not set and the message type is createSession.
@@ -80,16 +91,16 @@ abstract class SimidComponent (
         }
     }
 
-    protected fun resolveMessage(incomingMessage: Message, outgoingArgs: Any? = null) {
+    protected fun resolveMessage(incomingMessage: Message, outgoingArgs: JsonElement? = null) {
         val args = ResolveMessageArgs(incomingMessage.messageId, outgoingArgs)
-        val message = createMessage(ProtocolMessage.RESOLVE, args)
+        val message = createMessage(ProtocolMessage.RESOLVE, json.encodeToJsonElement(args))
         postMessage(message)
     }
 
     protected fun rejectMessage(incomingMessage: Message, errorCode: Long = PlayerErrorCode.UNSPECIFIED, errorMessage: String = "") {
         val value = RejectMessageValue(errorCode, errorMessage)
         val args = RejectMessageArgs(incomingMessage.messageId, value)
-        val message = createMessage(ProtocolMessage.REJECT, args)
+        val message = createMessage(ProtocolMessage.REJECT, json.encodeToJsonElement(args))
         postMessage(message)
     }
 
@@ -102,7 +113,7 @@ abstract class SimidComponent (
     }
 
     //region PRIVATE METHODS
-    private fun createMessage(type: String, args: kotlin.Any?): Message {
+    private fun createMessage(type: String, args: JsonElement?): Message {
 
         // Incrementing between messages keeps each message id unique.
         val messageId: Int = nextMessageId++
@@ -111,7 +122,7 @@ abstract class SimidComponent (
             type = type,
             sessionId = sessionId,
             messageId = messageId,
-            timestamp = Calendar.getInstance().time.time,
+            timestamp = Clock.System.now().toEpochMilliseconds(),
             args = args
         )
 
@@ -143,17 +154,7 @@ abstract class SimidComponent (
     }
 
     private fun postMessage(message: Message) {
-
-        // Convert to a LinkedHashMap to keep fields ordering when serializing (for debug purpose)
-        val messageMap = linkedMapOf<String, Any?>(
-            "type" to message.type,
-            "sessionId" to message.sessionId,
-            "messageId" to message.messageId,
-            "timestamp" to message.timestamp,
-            "args" to message.args
-        )
-
-        val messageStr = Gson().toJson(messageMap)
+        val messageStr = json.encodeToString(message)
         postMessage(messageStr)
     }
 
@@ -161,8 +162,8 @@ abstract class SimidComponent (
         val listener: MessageCallback = fun (response: Message) {
             if (response.type == ProtocolMessage.RESOLVE) {
                 deferred.complete(response)
-            } else if (response.type == ProtocolMessage.REJECT) {
-                val rejectMessageArgs: RejectMessageArgs = Gson().fromJson(Gson().toJson(response.args), RejectMessageArgs::class.java)
+            } else if (response.type == ProtocolMessage.REJECT && response.args != null) {
+                val rejectMessageArgs = json.decodeFromJsonElement<RejectMessageArgs>(response.args)
                 val exception: Exception = Exception(rejectMessageArgs.value.message)
                 deferred.completeExceptionally(exception)
             }
@@ -171,7 +172,8 @@ abstract class SimidComponent (
     }
 
     private fun invokeResponseListener(message: Message) {
-        val args: ResolveMessageArgs = Gson().fromJson(Gson().toJson(message.args), ResolveMessageArgs::class.java)
+        val args: ResolveMessageArgs = json.decodeFromJsonElement<ResolveMessageArgs>(message.args!!)
+
         val correlatingId = args.messageId
         responseListeners[correlatingId]?.invoke(message)
         responseListeners.remove(correlatingId)

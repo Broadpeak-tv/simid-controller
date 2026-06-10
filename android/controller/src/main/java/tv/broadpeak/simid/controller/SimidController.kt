@@ -12,12 +12,12 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.RelativeLayout
-import com.google.gson.Gson
-import java.util.Timer
-import java.util.TimerTask
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.apache.commons.text.StringEscapeUtils
+import kotlinx.serialization.json.decodeFromJsonElement
+import kotlinx.serialization.json.encodeToJsonElement
 
 /**
  * Set up the SIMID controller starts listening for messages from the creative.
@@ -32,8 +32,8 @@ import org.apache.commons.text.StringEscapeUtils
 public open class SimidController (
     private val activity: Activity,
     private val context: Context,
-    private var playerDimensions: Rect,
-    private var creativeDimensions: Rect,
+    private var playerDimensions: Dimensions,
+    private var creativeDimensions: Dimensions,
     private val creativeUri: String,
     private val adParameters: String = "",
     private val adDuration: Float = 0.0F,
@@ -56,15 +56,15 @@ public open class SimidController (
 
     private var _nonLinearStartTime: Float = 0.0F
     private var _isStopping: Boolean = false
-    private var _timerMediaTimeupdate: Timer? = null
+    private var _timerMediaTimeupdate: Job? = null
 
     private var onGetMediaState: (() -> MediaState)? = null
     private var onPlayMedia: (() -> Boolean)? = null
     private var onPauseMedia: (() -> Boolean)? = null
     private var onAddSimid: ((WebView) -> Unit)? = null
     private var onShowSimid: ((Boolean) -> Unit)? = null
-    private var onResizeSimid: ((Rect) -> Boolean)? = null
-    private var onResizePlayer: ((Rect) -> Unit)? = null
+    private var onResizeSimid: ((Dimensions) -> Boolean)? = null
+    private var onResizePlayer: ((Dimensions) -> Unit)? = null
     private var onOpenClickthrough: ((String) -> Unit)? = null
     private var onComplete: ((Boolean) -> Unit)? = null
 
@@ -95,11 +95,11 @@ public open class SimidController (
         this.onShowSimid = cb
     }
 
-    fun onResizeSimid(cb: (Rect) -> Boolean) {
+    fun onResizeSimid(cb: (Dimensions) -> Boolean) {
         this.onResizeSimid = cb
     }
 
-    fun onResizePlayer(cb: (Rect) -> Unit) {
+    fun onResizePlayer(cb: (Dimensions) -> Unit) {
         this.onResizePlayer = cb
     }
 
@@ -152,14 +152,14 @@ public open class SimidController (
      * @param creativeDimensions the new creative dimensions
      * @param fullscreen true if in fullscreen mode
      */
-    fun notifyResize(playerDimensions: Rect, creativeDimensions: Rect, fullscreen: Boolean) {
+    fun notifyResize(playerDimensions: Dimensions, creativeDimensions: Dimensions, fullscreen: Boolean) {
         if (!this._initialized) {
             return
         }
         this.playerDimensions = playerDimensions
         this.creativeDimensions = creativeDimensions
-        val args = PlayerResizeMessageArgs(dimensions(playerDimensions), dimensions(creativeDimensions), fullscreen)
-        this.sendMessage(PlayerMessage.RESIZE, args)
+        val args = PlayerResizeMessageArgs(playerDimensions, creativeDimensions, fullscreen)
+        this.sendMessage(PlayerMessage.RESIZE, json.encodeToJsonElement(args))
     }
 
     override fun postMessage(message: String) {
@@ -203,7 +203,7 @@ public open class SimidController (
     private fun onCreativeGetMediaState(message: Message) {
         activity.runOnUiThread {
             val mediaState: MediaState? = onGetMediaState?.invoke()
-            this.resolveMessage(message, mediaState)
+            this.resolveMessage(message, json.encodeToJsonElement(mediaState))
         }
     }
 
@@ -228,7 +228,7 @@ public open class SimidController (
             this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Resize not supported by the player")
             return
         }
-        val args: CreativeRequestResizeMessageArgs = Gson().fromJson(Gson().toJson(message.args), CreativeRequestResizeMessageArgs::class.java)
+        val args: CreativeRequestResizeMessageArgs = json.decodeFromJsonElement<CreativeRequestResizeMessageArgs>(message.args!!)
 
         val creativeDimensions = args.creativeDimensions
         // Add compatibility with SIMID v1.0
@@ -239,20 +239,16 @@ public open class SimidController (
             return
         }
 
-        var dim = creativeDimensions
-        val creativeRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
         // Resize SIMID iframe
-        if (onResizeSimid?.invoke(creativeRect) == false) {
+        if (onResizeSimid?.invoke(creativeDimensions) == false) {
             rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "The player is unable to complete the Creative resizing")
             return
         }
         // Store creative dimensions (reused when collapsed)
-        this.creativeDimensions = creativeRect
+        this.creativeDimensions = creativeDimensions
 
         // If creative successfully resized then resize the main player
-        dim = mediaDimensions
-        val playerRect = Rect(dim.x, dim.y, dim.x + dim.width, dim.y + dim.height)
-        onResizePlayer?.invoke(playerRect)
+        onResizePlayer?.invoke(mediaDimensions)
 
         resolveMessage(message)
     }
@@ -298,7 +294,7 @@ public open class SimidController (
             rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, "Navigation not supported by the player")
             return
         }
-        val args = Gson().fromJson(Gson().toJson(message.args), CreativeRequestNavigationMessageArgs::class.java)
+        val args: CreativeRequestNavigationMessageArgs = json.decodeFromJsonElement<CreativeRequestNavigationMessageArgs>(message.args!!)
         // Spec §4.4.12.1: resolve before opening the URI so the creative receives
         // the message prior to the app being backgrounded.
         resolveMessage(message)
@@ -382,8 +378,8 @@ public open class SimidController (
         // [4] - send Player:init message
 
         val environmentData = EnvironmentData(
-            dimensions(playerDimensions),
-            dimensions(creativeDimensions),
+            playerDimensions,
+            creativeDimensions,
             false,
             true,
             true,
@@ -402,14 +398,14 @@ public open class SimidController (
         )
 
         // Escape characters to avoid JSON parsing failure in Creative
-        val adParams = StringEscapeUtils.escapeJava(adParameters)
+        val adParams = adParameters.replace("\"", "\\\"")
 
-        val creativeData = CreativeData(adParams,"")
+        val creativeData = CreativeData(adParams)
         val args = PlayerInitMessageArgs(environmentData, creativeData)
 
         try {
             mainScope.launch {
-                sendMessage(PlayerMessage.INIT, args).await()
+                sendMessage(PlayerMessage.INIT, json.encodeToJsonElement(args)).await()
                 _initialized = true
                 if (_autoStart) {
                     startCreative()
@@ -422,9 +418,9 @@ public open class SimidController (
     }
 
     private fun startCreative() {
-        activity.runOnUiThread {
+        mainScope.launch {
             val mediaState = onGetMediaState?.invoke()
-            this._nonLinearStartTime = mediaState?.currentTime!!
+            _nonLinearStartTime = mediaState?.currentTime!!
         }
 
         try {
@@ -472,7 +468,7 @@ public open class SimidController (
             if (_initialized) {
                 (when (skipped) {
                     true -> sendMessage(PlayerMessage.AD_SKIPPED)
-                    false -> sendMessage(PlayerMessage.AD_STOPPED, PlayerAdStoppedMessageArgs(reason))
+                    false -> sendMessage(PlayerMessage.AD_STOPPED, json.encodeToJsonElement(PlayerAdStoppedMessageArgs(reason)))
                 }).await()
             }
             clearWebView()
@@ -509,17 +505,15 @@ public open class SimidController (
             return
         }
 
-        _timerMediaTimeupdate = Timer()
-        _timerMediaTimeupdate?.schedule(object : TimerTask() {
-            override fun run() {
-                activity.runOnUiThread {
-                    val mediaState = onGetMediaState?.invoke()
-                    if (mediaState != null) {
-                        mediaTimeUpdated(mediaState.currentTime!!)
-                    }
+        _timerMediaTimeupdate = mainScope.launch {
+            while (true) {
+                val mediaState = onGetMediaState?.invoke()
+                if (mediaState != null) {
+                    mediaTimeUpdated(mediaState.currentTime!!)
                 }
+                delay(mediaTimeupdateInterval)
             }
-        }, mediaTimeupdateInterval, mediaTimeupdateInterval)
+        }
     }
 
     private fun stopMediaTimeupdateInterval() {
@@ -529,7 +523,7 @@ public open class SimidController (
 
     private fun mediaTimeUpdated(currentTime: Float) {
 
-        this.sendMessage(MediaMessage.TIME_UPDATE, MediaTimeUpdateMessageArgs(currentTime))
+        this.sendMessage(MediaMessage.TIME_UPDATE, json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
 
         // For nonlinear ads, stop the ad once requested duration is over
         if (adDuration > 0 &&

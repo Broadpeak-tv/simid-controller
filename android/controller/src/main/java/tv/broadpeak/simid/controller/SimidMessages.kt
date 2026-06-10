@@ -1,5 +1,8 @@
 package tv.broadpeak.simid.controller
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.JsonElement
+
 typealias MessageCallback = (message: Message) -> Unit
 
 object ProtocolMessage {
@@ -165,6 +168,7 @@ object CloseButtonSupport {
 }
 
 // Data structures
+@Serializable
 class Dimensions(
     val x: Int,
     val y: Int,
@@ -172,6 +176,7 @@ class Dimensions(
     val height: Int
 )
 
+@Serializable
 class MediaState(
     val currentSrc: String?,
     val currentTime: Float?,
@@ -183,42 +188,49 @@ class MediaState(
     val fullscreen: Boolean?
 )
 
+@Serializable
 data class Message(
     val type: String,
     val sessionId: String,
     val messageId: Int,
     val timestamp: Long,
-    val args: kotlin.Any?
+    val args: JsonElement? = null
 )
 
+@Serializable
 data class ResolveMessageArgs(
     val messageId: Int,
-    val value: kotlin.Any?
+    val value: JsonElement? = null
 )
-
+@Serializable
 data class RejectMessageValue(
     val errorCode: Long,
     val message: String
 )
 
+@Serializable
 data class RejectMessageArgs(
     val messageId: Int,
     val value: RejectMessageValue
 )
 
+@Serializable
 data class DurationMessageArgs(
     val duration: Int
 )
 
+@Serializable
 data class ErrorMessageArgs(
     val errorCode: Int,
     val errorMessage: String
 )
 
+@Serializable
 data class LogMessageArgs(
     val message: String
 )
 
+@Serializable
 data class VolumeChangeMessageArgs(
     val volume: Int,
     val muted: Boolean
@@ -226,39 +238,47 @@ data class VolumeChangeMessageArgs(
 
 // Media message args
 
+@Serializable
 data class MediaDurationChangeMessageArgs(
     val duration: Float
 )
 
+@Serializable
 data class MediaErrorMessageArgs(
     val error: Int,
     val message: String
 )
 
+@Serializable
 data class MediaTimeUpdateMessageArgs(
     val currentTime: Float
 )
 
+@Serializable
 data class MediaVolumeChangeMessageArgs(
     val volume: Int,
     val muted: Boolean
 )
 
 // Player message args
+@Serializable
 data class PlayerAdStoppedMessageArgs(
     val code: Int
 )
 
+@Serializable
 data class PlayerFatalErrorMessageArgs(
     val errorCode: Int,
     val errorMessage: String
 )
 
+@Serializable
 data class CreativeData(
     val adParameters: String,
-    val clickThruUrl: String
+    val clickThruUrl: String? = null
 )
 
+@Serializable
 data class EnvironmentData(
     val videoDimensions: Dimensions,
     val creativeDimensions: Dimensions,
@@ -279,15 +299,18 @@ data class EnvironmentData(
     val nonlinearDuration: Float?
 )
 
+@Serializable
 data class PlayerInitMessageArgs(
     val environmentData: EnvironmentData,
     val creativeData: CreativeData
 )
 
+@Serializable
 data class PlayerLogMessageArgs(
     val message: String
 )
 
+@Serializable
 data class PlayerResizeMessageArgs(
     val videoDimensions: Dimensions,
     val creativeDimensions: Dimensions,
@@ -295,6 +318,7 @@ data class PlayerResizeMessageArgs(
 )
 
 // Creative message args
+@Serializable
 data class CreativeClickThruMessageArgs(
     val x: Int?,
     val y: Int?,
@@ -302,40 +326,49 @@ data class CreativeClickThruMessageArgs(
     val url: String?
 )
 
+@Serializable
 data class CreativeExpandNonLinearResolveMessageArgs(
     val creativeDimensions: Dimensions
 )
 
+@Serializable
 data class CreativeFatalErrorMessageArgs(
     val errorCode: Int,
     val errorMessage: String
 )
 
+@Serializable
 data class CreativeGetMediaStateMessageArgs(
     val mediaState: MediaState
 )
 
+@Serializable
 data class CreativeLogMessageArgs(
     val message: String
 )
 
+@Serializable
 data class CreativeReportTrackingMessageArgs(
     val urls: List<String>
 )
 
+@Serializable
 data class CreativeRequestChangeAdDurationMessageArgs(
     val duration: Float
 )
 
+@Serializable
 data class CreativeRequestChangeVolumeMessageArgs(
     val volume: Float,
     val muted: Boolean
 )
 
+@Serializable
 data class CreativeRequestNavigationMessageArgs(
     val uri: String
 )
 
+@Serializable
 data class CreativeRequestResizeMessageArgs(
     val mediaDimensions: Dimensions?,
     // SIMID v1.0 compatibility

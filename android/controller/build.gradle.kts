@@ -1,18 +1,21 @@
 plugins {
-    id("com.android.library")
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.kotlin.serialization)
     kotlin("android")
 }
 
 android {
     namespace = "tv.broadpeak.simid.controller"
-    compileSdk = 35
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_11
+        targetCompatibility = JavaVersion.VERSION_11
+    }
 
     defaultConfig {
-        minSdk = 21
-
+        minSdk = libs.versions.android.minSdk.get().toInt()
         buildConfigField("String", "VERSION", "\"${rootProject.version}\"")
-
-        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
     }
 
@@ -30,10 +33,7 @@ android {
         buildConfig = true
     }
 
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
+
 
     kotlinOptions {
         jvmTarget = "11"
@@ -42,12 +42,16 @@ android {
 
 dependencies {
     //noinspection UseTomlInstead
-    implementation("androidx.core:core-ktx:1.16.0")
-    implementation("androidx.appcompat:appcompat:1.7.1")
-    implementation("com.google.android.material:material:1.12.0")
-    testImplementation("junit:junit:4.13.2")
-    androidTestImplementation("androidx.test.ext:junit:1.2.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
-    implementation("com.google.code.gson:gson:2.11.0")
-    implementation("org.apache.commons:commons-text:1.3")
+    implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.serialization.json)
+    implementation(libs.kotlinx.datetime)
+
+//    implementation("androidx.core:core-ktx:1.16.0")
+//    implementation("androidx.appcompat:appcompat:1.7.1")
+//    implementation("com.google.android.material:material:1.12.0")
+//    testImplementation("junit:junit:4.13.2")
+//    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+//    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+//    implementation("com.google.code.gson:gson:2.11.0")
+//    implementation("org.apache.commons:commons-text:1.3")
 }

@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace = "tv.broadpeak.simid.app"
-    compileSdk = 35
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
 
     defaultConfig {
         applicationId = "tv.broadpeak.simid.app"
-        minSdk = 21
-        targetSdk = 35
+        minSdk = libs.versions.android.minSdk.get().toInt()
+        targetSdk = libs.versions.android.targetSdk.get().toInt()
 
         versionName = rootProject.version.toString()
         versionCode = rootProject.extra["versionCode"] as Int

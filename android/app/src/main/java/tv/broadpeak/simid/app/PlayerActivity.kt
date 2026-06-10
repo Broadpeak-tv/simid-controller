@@ -27,6 +27,7 @@ import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerNotificationManager
 import tv.broadpeak.simid.controller.MediaState
+import tv.broadpeak.simid.controller.Dimensions
 import tv.broadpeak.smartlib.SmartLib
 import tv.broadpeak.smartlib.ad.AdBreakData
 import tv.broadpeak.smartlib.ad.AdData
@@ -222,11 +223,11 @@ class PlayerActivity : AppCompatActivity() {
         }
 
         // Consider player container dimensions as initial creative dimensions
-        val playerRect: Rect = Rect(playerContainer!!.left, playerContainer!!.top, playerContainer!!.width, playerContainer!!.height)
+        val playerDimensions: Dimensions = Dimensions(playerContainer!!.left, playerContainer!!.top, playerContainer!!.width, playerContainer!!.height)
 
-        Log.d(TAG, "Load SIMID: ${playerRect.toShortString()} $creativeUri $duration")
+        Log.d(TAG, "Load SIMID: ${playerDimensions.toString()} $creativeUri $duration")
 
-        val simidController = SimidController(this, applicationContext, playerRect, playerRect, creativeUri, adParameters, duration)
+        val simidController = SimidController(this, applicationContext, playerDimensions, playerDimensions, creativeUri, adParameters, duration)
 
         simidController.let { controller ->
             controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
@@ -285,15 +286,15 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun resizeSimid(adId: String, dimensions: Rect): Boolean {
-        Log.d(TAG, "Resize SIMID: ${dimensions.toShortString()}")
+    private fun resizeSimid(adId: String, dimensions: Dimensions): Boolean {
+        Log.d(TAG, "Resize SIMID: ${dimensions.toString()}")
 
         val webView = simidWebViews[adId] ?: return false
 
         // Check if requested SIMID dimensions is not outside original player dimensions
         val playerRect = Rect(playerContainer!!.left, playerContainer!!.top, playerContainer!!.width, playerContainer!!.height)
-        val widthFits = dimensions.left + dimensions.width() <= playerRect.width()
-        val heightFits = dimensions.top + dimensions.height() <= playerRect.height()
+        val widthFits = dimensions.x + dimensions.width <= playerRect.width()
+        val heightFits = dimensions.y + dimensions.height <= playerRect.height()
         if (!widthFits || !heightFits) {
             return false;
         }
@@ -302,22 +303,22 @@ class PlayerActivity : AppCompatActivity() {
         return true
     }
 
-    private fun resizePlayer(dimensions: Rect): Boolean {
-        Log.d(TAG, "Resize player: ${dimensions.toShortString()}")
+    private fun resizePlayer(dimensions: Dimensions): Boolean {
+        Log.d(TAG, "Resize player: ${dimensions.toString()}")
         val playerView = playerView ?: return false
         resizeView(playerView, dimensions, useAnimations)
         return true
     }
 
-    private fun resizeView(view: View, dimensions: Rect, animate: Boolean) {
+    private fun resizeView(view: View, dimensions: Dimensions, animate: Boolean) {
         runOnUiThread {
             if (!animate) {
                 // Instant resize without animation
                 (view.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                    leftMargin = dimensions.left
-                    topMargin = dimensions.top
-                    width = dimensions.width()
-                    height = dimensions.height()
+                    leftMargin = dimensions.x
+                    topMargin = dimensions.y
+                    width = dimensions.width
+                    height = dimensions.height
                 }
                 view.requestLayout()
             } else {
@@ -330,10 +331,10 @@ class PlayerActivity : AppCompatActivity() {
                     addUpdateListener { va ->
                         val f = va.animatedFraction
                         (view.layoutParams as ViewGroup.MarginLayoutParams).apply {
-                            leftMargin = (from.left + (dimensions.left - from.left) * f).toInt()
-                            topMargin = (from.top + (dimensions.top - from.top) * f).toInt()
-                            width = (from.width() + (dimensions.width() - from.width()) * f).toInt()
-                            height = (from.height() + (dimensions.height() - from.height()) * f).toInt()
+                            leftMargin = (from.left + (dimensions.x - from.left) * f).toInt()
+                            topMargin = (from.top + (dimensions.y - from.top) * f).toInt()
+                            width = (from.width() + (dimensions.width - from.width()) * f).toInt()
+                            height = (from.height() + (dimensions.height - from.height()) * f).toInt()
                         }
                         view.requestLayout()
                     }
