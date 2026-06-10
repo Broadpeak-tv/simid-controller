@@ -5,6 +5,12 @@ import WebKit
 import SmartLib
 import SimidSDK
 
+class BpkSimidController : GenericSimidControllerApi {
+    override func getSimidControllerName() -> String {
+        return "Bpk SIMID Controller"
+    }
+}
+
 final class PlayerViewController: UIViewController, AdEventsListener {
 
     var asset: Asset?
@@ -28,6 +34,8 @@ final class PlayerViewController: UIViewController, AdEventsListener {
     private var simidControllers: [String: SimidController] = [:]
     private var simidWebViews: [String: WKWebView] = [:]
 
+    private var bpkSimidController: BpkSimidController?
+    
     // MARK: - Lifecycle
 
     override func viewDidLoad() {
@@ -103,8 +111,11 @@ final class PlayerViewController: UIViewController, AdEventsListener {
         
         session.activateAdvertising()
         session.setAdEventsListener(self)
-        session.attachPlayer(player)
         
+        self.bpkSimidController = BpkSimidController()
+        
+        session.attachPlayer(player!)
+        session.attachSimidController(self.bpkSimidController as Any)
     }
 
     private func loadStream() {
@@ -199,9 +210,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             height: Int(bounds.height)
         )
 
-        let controller = SimidController(
-            viewController: self,
-            containerView: containerView,
+        let controller = GenericSimidController(
             playerDimensions: dims,
             creativeDimensions: dims,
             creativeUri: creativeUri,
@@ -258,6 +267,8 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             print("[SIMID] Completed skipped:", skipped)
         }
 
+        controller.simidControllerApi(self.bpkSimidController!)
+        
         controller.load(autoStart: autoStart)
 
         simidControllers[adId] = controller
