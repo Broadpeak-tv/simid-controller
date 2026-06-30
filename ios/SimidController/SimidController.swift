@@ -4,7 +4,7 @@ import Foundation
 
 open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigationDelegate {
 
-    public static let VERSION = "1.0"
+    public static let VERSION = "0.7.0"
     public nonisolated static let MEDIA_TIMEUPDATE_INTERVAL_MS: UInt64 = 1000
 
     private var webView: WKWebView?
