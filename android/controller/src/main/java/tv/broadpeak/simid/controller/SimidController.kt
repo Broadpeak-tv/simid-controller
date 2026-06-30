@@ -20,7 +20,7 @@ import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
 /**
- * Set up the SIMID controller starts listening for messages from the creative.
+ * Set up the SIMID controller an starts listening for messages from the creative.
  * @param playerDimensions the main player dimensions
  * @param creativeDimensions the initial creative dimensions the application/player will set
  * @param creativeUri The creative URI
