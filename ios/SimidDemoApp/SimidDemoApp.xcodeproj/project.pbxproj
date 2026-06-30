@@ -22,6 +22,7 @@
 		B3A600BA2FBF0F5D001E63B7 /* SimidSDK.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = B3A600B82FBF0F5D001E63B7 /* SimidSDK.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		B3A71CC82FC0519A0027791A /* AssetsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A71CC72FC0519A0027791A /* AssetsView.swift */; };
 		B3A71CCA2FC053470027791A /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3A71CC92FC053470027791A /* PlayerView.swift */; };
+		B3B1A7BA2FF3EF6C00109AD4 /* SmartLib-AVPlayer in Frameworks */ = {isa = PBXBuildFile; productRef = B3B1A7B92FF3EF6C00109AD4 /* SmartLib-AVPlayer */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -58,6 +59,7 @@
 				B3A4AA462FD1CD7F00029D25 /* SmartLib-AVPlayer in Frameworks */,
 				B3A4AA3D2FD1BD5A00029D25 /* SmartLib-AVPlayer in Frameworks */,
 				B3A4AA352FD1733800029D25 /* SmartLib-AVPlayer in Frameworks */,
+				B3B1A7BA2FF3EF6C00109AD4 /* SmartLib-AVPlayer in Frameworks */,
 				B3A4AA3A2FD1AC4600029D25 /* SmartLib-AVPlayer in Frameworks */,
 				B3A4AA402FD1C64200029D25 /* SmartLib-AVPlayer in Frameworks */,
 				B3A4AA432FD1CA1C00029D25 /* SmartLib-AVPlayer in Frameworks */,
@@ -123,6 +125,7 @@
 				B3A4AA422FD1CA1C00029D25 /* SmartLib-AVPlayer */,
 				B3A4AA452FD1CD7F00029D25 /* SmartLib-AVPlayer */,
 				B3601B9E2FD9A510002A9677 /* SmartLib-AVPlayer */,
+				B3B1A7B92FF3EF6C00109AD4 /* SmartLib-AVPlayer */,
 			);
 			productName = SimidDemoApp;
 			productReference = B3F5D2FB2FBDE5D00077FC1C /* SimidDemoApp.app */;
@@ -153,7 +156,7 @@
 			mainGroup = B3F5D2F22FBDE5D00077FC1C;
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
-				B3601B9D2FD9A510002A9677 /* XCLocalSwiftPackageReference "../../../../Broadpeak/SmartLib/targets/apple/build/smartlib-package" */,
+				B3B1A7B82FF3EF6C00109AD4 /* XCRemoteSwiftPackageReference "smartlib-package" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = B3F5D2FC2FBDE5D00077FC1C /* Products */;
@@ -402,12 +405,16 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCLocalSwiftPackageReference section */
-		B3601B9D2FD9A510002A9677 /* XCLocalSwiftPackageReference "../../../../Broadpeak/SmartLib/targets/apple/build/smartlib-package" */ = {
-			isa = XCLocalSwiftPackageReference;
-			relativePath = "../../../../Broadpeak/SmartLib/targets/apple/build/smartlib-package";
+/* Begin XCRemoteSwiftPackageReference section */
+		B3B1A7B82FF3EF6C00109AD4 /* XCRemoteSwiftPackageReference "smartlib-package" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://delivery-platform.broadpeak.tv/ios/broadpeak/smartlib-package.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.1.1;
+			};
 		};
-/* End XCLocalSwiftPackageReference section */
+/* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		B3601B9E2FD9A510002A9677 /* SmartLib-AVPlayer */ = {
@@ -436,6 +443,11 @@
 		};
 		B3A4AA452FD1CD7F00029D25 /* SmartLib-AVPlayer */ = {
 			isa = XCSwiftPackageProductDependency;
+			productName = "SmartLib-AVPlayer";
+		};
+		B3B1A7B92FF3EF6C00109AD4 /* SmartLib-AVPlayer */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = B3B1A7B82FF3EF6C00109AD4 /* XCRemoteSwiftPackageReference "smartlib-package" */;
 			productName = "SmartLib-AVPlayer";
 		};
 /* End XCSwiftPackageProductDependency section */
