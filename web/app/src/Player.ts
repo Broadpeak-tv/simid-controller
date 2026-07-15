@@ -1,4 +1,4 @@
-import { MediaState } from '@broadpeak-tv/simid-controller'
+import { CreativeData, MediaState } from '@broadpeak-tv/simid-controller'
 import SimidController from './SimidController'
 import { SmartLib } from '@broadpeak/smartlib'
 import '@broadpeak/smartlib-ad'
@@ -66,13 +66,17 @@ export default class Player {
     await this.player.unload()
   }
 
-  public loadSimid(adId: string, creativeUri: string, adParameters: string, duration: number, autoStart = false) {
+  public loadSimid(adId: string, iframeResource: any, duration: number, autoStart = false) {
 
     // Consider player container dimensions as initial creative dimensions
     const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
 
-    console.log(`[Player] Load SIMID - uri:${creativeUri} duration:${duration}`)
-    const simidController = new SimidController(playerRect, playerRect, creativeUri, adParameters, duration, false)
+    console.log(`[Player] Load SIMID - uri:${iframeResource.uri} duration:${duration}`)
+    const creativeData: CreativeData = {
+      adParameters: iframeResource.parameters,
+      clickThruUrl: iframeResource.clickThruUrl
+    }
+    const simidController = new SimidController(playerRect, playerRect, iframeResource.uri, creativeData, duration, false, -1)
 
     simidController.onGetMediaState = () => this.getMediaState()
     simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
@@ -81,7 +85,7 @@ export default class Player {
     simidController.onResizePlayer = (dimensions: DOMRect) => this.resizePlayer(dimensions)
     simidController.onPauseMedia = () => this.pauseMedia()
     simidController.onPlayMedia = () => this.playMedia()
-    simidController.onOpenClickthrough = (uri: string) => this.openClickthrough(uri)
+    simidController.onOpenPage = (uri: string) => this.openPage(uri)
     simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
 
     simidController.simidControllerApi = this.bpkSimidController
@@ -118,9 +122,10 @@ export default class Player {
           console.log('[Player] onPrepareAd:', adData)
           this.adDatas.set(adData.adId, adData)
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
-            const iframeResources = adData.nonLinearIframeResources[0]
+            const iframeResource = adData.nonLinearIframeResources[0]
+            iframeResource.clickThruUrl = adData.clickURL
             const duration = adData.duration ? (adData.duration / 1000) : 0
-            this.loadSimid(adData.adId, iframeResources.url, iframeResources.parameters, duration)
+            this.loadSimid(adData.adId, iframeResource, duration)
           }
         },
         onAdBegin: (adData: any, adBreakData: any) => {
@@ -205,8 +210,8 @@ export default class Player {
     return true
   }
 
-  private openClickthrough(uri: string) {
-    console.log('[Player] Open clicktrough:', uri)
+  private openPage(uri: string) {
+    console.log('[Player] Open page:', uri)
     window.open(uri, '_blank')
   }
 
