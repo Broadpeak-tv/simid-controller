@@ -289,8 +289,7 @@ export type CreativeClickThruMessageArgs = {
   x?: number
   y?: number
   playerHandles?: boolean
-  uri?: string
-  url?: string // deprecated in favor of uri
+  url?: string
 }
 
 export type CreativeExpandNonLinearResolveMessageArgs = {
