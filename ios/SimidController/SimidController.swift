@@ -220,7 +220,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         self.creativeDimensions = creativeDim
         
         // If creative successfully resized then resize the main player/
-        self.onResizePlayer?(mediaDim)
+        onResizePlayer(mediaDim)
 
         self.resolveMessage(message)
 
