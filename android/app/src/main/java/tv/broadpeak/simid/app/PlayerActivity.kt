@@ -26,6 +26,7 @@ import androidx.media3.ui.PlayerView
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.ui.PlayerNotificationManager
+import tv.broadpeak.simid.controller.CreativeData
 import tv.broadpeak.simid.controller.MediaState
 import tv.broadpeak.simid.controller.Dimensions
 import tv.broadpeak.smartlib.SmartLib
@@ -141,8 +142,9 @@ class PlayerActivity : AppCompatActivity() {
         val b = intent.extras
         val creativeUrl = b?.getString("creativeUrl") ?: return
         val creativeAdParams = b.getString("creativeAdParams") ?: ""
+        val creativeClickThruUrl = b.getString("creativeClickThruUrl") ?: ""
         val creativeDuration = b.getInt("creativeDuration")
-        loadSimid("input-creative", creativeUrl, creativeAdParams, creativeDuration.toFloat(), true)
+        loadSimid("input-creative", creativeUrl, creativeAdParams, creativeClickThruUrl, creativeDuration.toFloat(), true)
     }
 
     private fun initSmartLib(url: String) {
@@ -171,7 +173,8 @@ class PlayerActivity : AppCompatActivity() {
                         runOnUiThread {
                             val iframeResource = adData.nonLinearIframeResources[0].url
                             val adParameters = adData.nonLinearIframeResources[0].parameters
-                            loadSimid(adData.adId, iframeResource, adParameters, (adData.duration.toFloat() / 1000.0F))
+                            val clickThruUrl = adData.clickURL
+                            loadSimid(adData.adId, iframeResource, adParameters, clickThruUrl, (adData.duration.toFloat() / 1000.0F))
                         }
                     }
                 }
@@ -216,7 +219,7 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, duration: Float, autoStart: Boolean = false) {
+    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, clickThruUrl: String, duration: Float, autoStart: Boolean = false) {
 
         if (playerContainer == null) {
             return
@@ -227,7 +230,8 @@ class PlayerActivity : AppCompatActivity() {
 
         Log.d(TAG, "Load SIMID: ${playerDimensions.toString()} $creativeUri $duration")
 
-        val simidController = SimidController(this, applicationContext, playerDimensions, playerDimensions, creativeUri, adParameters, duration)
+        val creativeData = CreativeData(adParameters, clickThruUrl)
+        val simidController = SimidController(this, applicationContext, playerDimensions, playerDimensions, creativeUri, creativeData, duration)
 
         simidController.let { controller ->
             controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
@@ -237,7 +241,7 @@ class PlayerActivity : AppCompatActivity() {
             controller.onGetMediaState { getMediaState() }
             controller.onPauseMedia { pauseMedia() }
             controller.onPlayMedia { playMedia() }
-            controller.onOpenClickthrough { uri -> openClickthrough(uri) }
+            controller.onOpenPage { uri -> openPage(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
 
             controller.simidControllerApi(bpkSimidController!!)
@@ -359,8 +363,8 @@ class PlayerActivity : AppCompatActivity() {
         return true
     }
 
-    private fun openClickthrough(uri: String) {
-        Log.d(TAG, "Open clickthrough: $uri")
+    private fun openPage(uri: String) {
+        Log.d(TAG, "Open page: $uri")
 
         val intent = Intent(Intent.ACTION_VIEW, uri.toUri())
         startActivity(intent)
