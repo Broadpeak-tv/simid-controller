@@ -374,9 +374,17 @@ struct PlayerFatalErrorMessageArgs: MessageArgs {
 
 // MARK: - Creative / Environment
 
-struct CreativeData: Codable {
+public struct CreativeData: Codable {
     let adParameters: String
     let clickThruUrl: String
+    
+    public init(
+        adParameters: String,
+        clickThruUrl: String
+    ) {
+        self.adParameters = adParameters
+        self.clickThruUrl = clickThruUrl
+    }
 }
 
 struct EnvironmentData: Codable {
@@ -420,7 +428,8 @@ struct CreativeClickThruMessageArgs: MessageArgs {
     let x: Int?
     let y: Int?
     let playerHandles: Bool?
-    let url: String?
+    let uri: String?
+    let url: String? // deprecated in favor of uri
 }
 
 struct CreativeFatalErrorMessageArgs: MessageArgs {
