@@ -66,17 +66,17 @@ export default class Player {
     await this.player.unload()
   }
 
-  public loadSimid(adId: string, iframeResource: any, duration: number, autoStart = false) {
+  public loadSimid(adId: string, creativeUri: string, adParameters: string, clickThruUrl: string, duration: number, autoStart = false) {
 
     // Consider player container dimensions as initial creative dimensions
     const playerRect: DOMRect = this.getElementDimensions(this.playerContainer)
 
-    console.log(`[Player] Load SIMID - uri:${iframeResource.uri} duration:${duration}`)
+    console.log(`[Player] Load SIMID - uri:${creativeUri} duration:${duration}`)
     const creativeData: CreativeData = {
-      adParameters: iframeResource.parameters,
-      clickThruUrl: iframeResource.clickThruUrl
+      adParameters,
+      clickThruUrl
     }
-    const simidController = new SimidController(playerRect, playerRect, iframeResource.uri, creativeData, duration, false, -1)
+    const simidController = new SimidController(playerRect, playerRect, creativeUri, creativeData, duration, false, -1)
 
     simidController.onGetMediaState = () => this.getMediaState()
     simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
@@ -123,9 +123,8 @@ export default class Player {
           this.adDatas.set(adData.adId, adData)
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
             const iframeResource = adData.nonLinearIframeResources[0]
-            iframeResource.clickThruUrl = adData.clickURL
             const duration = adData.duration ? (adData.duration / 1000) : 0
-            this.loadSimid(adData.adId, iframeResource, duration)
+            this.loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, adData.clickURL, duration)
           }
         },
         onAdBegin: (adData: any, adBreakData: any) => {
