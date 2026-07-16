@@ -392,7 +392,8 @@ export class SimidController extends SimidComponent {
       return
     }
 
-    this._onOpenUri(message, args.url)
+    const uri = args.uri || args.url // url deprecated in favor of uri
+    this._onOpenUri(message, uri)
   }
 
   protected onCreativeRequestNavigation(message: Message) {
@@ -602,6 +603,7 @@ export class SimidController extends SimidComponent {
 
     this._onPauseMedia()
     this._onOpenPage(uri)
+
   }
   // #endregion CLICK THROUGH
 
