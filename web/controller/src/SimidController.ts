@@ -385,7 +385,6 @@ export class SimidController extends SimidComponent {
 
   protected onCreativeClickThru(message: Message) {
     const args = message.args as CreativeClickThruMessageArgs
-    const uri = args.uri || args.url // url deprecated in favor of uri
 
     // Open landing page only when playerHandles is true
     if (!args.playerHandles) {
@@ -393,13 +392,12 @@ export class SimidController extends SimidComponent {
       return
     }
 
-    this._onOpenUri(message, uri)
+    this._onOpenUri(message, args.url)
   }
 
   protected onCreativeRequestNavigation(message: Message) {
     const args = message.args as CreativeRequestNavigationMessageArgs
-    const uri = args.uri
-    this._onOpenUri(message, uri)
+    this._onOpenUri(message, args.uri)
   }
   // #endregion CREATIVE MESSAGE HANDLERS
   // #endregion PROTECTED METHODS
@@ -604,7 +602,6 @@ export class SimidController extends SimidComponent {
 
     this._onPauseMedia()
     this._onOpenPage(uri)
-
   }
   // #endregion CLICK THROUGH
 
