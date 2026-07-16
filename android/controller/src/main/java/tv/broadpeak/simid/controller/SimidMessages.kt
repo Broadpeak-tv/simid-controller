@@ -323,7 +323,8 @@ data class CreativeClickThruMessageArgs(
     val x: Int?,
     val y: Int?,
     val playerHandles: Boolean?,
-    val url: String?
+    val uri: String?,
+    val url: String? // deprecated in favor of uri
 )
 
 @Serializable
