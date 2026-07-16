@@ -74,13 +74,11 @@ export default class App {
   }
 
   private async startCreative() {
-    const iframeResource = {
-      uri: this.creativeEditUrl.value,
-      parameters: this.creativeEditAdParams.value,
-      clickThruUrl: ''
-    }
+    const url = this.creativeEditUrl.value
+    const adParams = this.creativeEditAdParams.value
+    const clickThruUrl = ''
     const duration = parseInt(this.creativeEditDuration.value)
-    this.player.loadSimid('input-creative', iframeResource, duration, true)
+    this.player.loadSimid('input-creative', url, adParams, clickThruUrl, duration, true)
   }
 
   private setResizeObserver() {
