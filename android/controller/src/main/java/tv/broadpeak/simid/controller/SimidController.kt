@@ -295,7 +295,6 @@ public open class SimidController (
 
         // Open landing page only when playerHandles is true
         if (!(args.playerHandles ?: false)) {
-            this.resolveMessage(message)
             return
         }
 

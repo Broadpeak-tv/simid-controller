@@ -266,7 +266,6 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
         // Open landing page only when playerHandles is true
         if args.playerHandles != true {
-            self.resolveMessage(message)
             return
         }
         

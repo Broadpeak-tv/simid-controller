@@ -388,7 +388,6 @@ export class SimidController extends SimidComponent {
 
     // Open landing page only when playerHandles is true
     if (!args.playerHandles) {
-      this.resolveMessage(message)
       return
     }
 
