@@ -24,7 +24,7 @@ import kotlinx.serialization.json.encodeToJsonElement
  * @param playerDimensions the main player dimensions
  * @param creativeDimensions the initial creative dimensions the application/player will set
  * @param creativeUri The creative URI
- * @param adParameters the creative ad parameters
+ * @param creativeData the creative data (ad parameters, clickThruUrl)
  * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
  * @param adSkippable true if the linear ad is skippable (false by default)
  * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
@@ -35,7 +35,7 @@ public open class SimidController (
     private var playerDimensions: Dimensions,
     private var creativeDimensions: Dimensions,
     private val creativeUri: String,
-    private val adParameters: String = "",
+    private val creativeData: CreativeData,
     private val adDuration: Float = 0.0F,
     private val adSkippable: Boolean = false,
     private val mediaTimeupdateInterval: Long = MEDIA_TIMEUPDATE_INTERVAL_MS
@@ -65,7 +65,7 @@ public open class SimidController (
     private var onShowSimid: ((Boolean) -> Unit)? = null
     private var onResizeSimid: ((Dimensions) -> Boolean)? = null
     private var onResizePlayer: ((Dimensions) -> Unit)? = null
-    private var onOpenClickthrough: ((String) -> Unit)? = null
+    private var onOpenPage: ((String) -> Unit)? = null
     private var onComplete: ((Boolean) -> Unit)? = null
 
     private val mainScope = MainScope()
@@ -103,8 +103,8 @@ public open class SimidController (
         this.onResizePlayer = cb
     }
 
-    fun onOpenClickthrough(cb: (String) -> Unit) {
-        this.onOpenClickthrough = cb
+    fun onOpenPage(cb: (String) -> Unit) {
+        this.onOpenPage = cb
     }
 
     fun onComplete(cb: (Boolean) -> Unit) {
@@ -186,6 +186,7 @@ public open class SimidController (
         this.addMessageListener(CreativeMessage.REQUEST_STOP, ::onCreativeRequestStop)
         this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, ::onCreativeExpandNonlinear)
         this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, ::onCreativeCollapseNonlinear)
+        this.addMessageListener(CreativeMessage.CLICK_THRU, ::onCreativeClickThru)
         this.addMessageListener(CreativeMessage.REQUEST_NAVIGATION, ::onCreativeRequestNavigation)
     }
 
@@ -289,17 +290,20 @@ public open class SimidController (
         stopAd(StopCode.CREATIVE_INITIATED)
     }
 
-    private fun onCreativeRequestNavigation(message: Message) {
-        if (onOpenClickthrough == null) {
-            rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, "Navigation not supported by the player")
+    private fun onCreativeClickThru(message: Message) {
+        val args: CreativeClickThruMessageArgs = json.decodeFromJsonElement<CreativeClickThruMessageArgs>(message.args!!)
+
+        // Open landing page only when playerHandles is true
+        if (!(args.playerHandles ?: false)) {
             return
         }
+
+        val uri = args.uri ?: args.url // url deprecated in favor of uri
+        this.onOpenUri(message, args.url)
+    }
+    private fun onCreativeRequestNavigation(message: Message) {
         val args: CreativeRequestNavigationMessageArgs = json.decodeFromJsonElement<CreativeRequestNavigationMessageArgs>(message.args!!)
-        // Spec §4.4.12.1: resolve before opening the URI so the creative receives
-        // the message prior to the app being backgrounded.
-        resolveMessage(message)
-        onPauseMedia?.invoke()
-        onOpenClickthrough?.invoke(args.uri)
+        this.onOpenUri(message, args.uri)
     }
     //endregion CREATIVE MESSAGE HANDLERS
 
@@ -392,15 +396,15 @@ public open class SimidController (
             null, // This should be filled in on mobile
             false, // player.isDeviceMuted,
             1.0F, // player.volume,
-            if (onOpenClickthrough != null) NavigationSupport.PLAYER_HANDLES else NavigationSupport.AD_HANDLES,
+            if (this.onOpenPage != null) NavigationSupport.PLAYER_HANDLES else NavigationSupport.AD_HANDLES,
             null, // CloseButtonSupport.AD_HANDLES,
             adDuration
         )
 
         // Escape characters to avoid JSON parsing failure in Creative
-        val adParams = adParameters.replace("\"", "\\\"")
+        val adParams = this.creativeData.adParameters.replace("\"", "\\\"")
 
-        val creativeData = CreativeData(adParams)
+        val creativeData = CreativeData(adParams, this.creativeData.clickThruUrl)
         val args = PlayerInitMessageArgs(environmentData, creativeData)
 
         try {
@@ -533,9 +537,26 @@ public open class SimidController (
             stopAd(StopCode.NON_LINEAR_DURATION_COMPLETE)
         }
     }
-
-    private fun dimensions(rect: Rect): Dimensions {
-        return Dimensions(rect.top, rect.left, rect.width(), rect.height())
-    }
     //endregion MAIN VIDEO STATE
+
+    // region CLICK THROUGH
+    private fun onOpenUri(message: Message, uri: String?) {
+        if (uri == null) {
+            this.rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, "Invalid URI")
+            return
+        }
+
+        if (this.onOpenPage == null) {
+            this.rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, "Navigation not supported by the player")
+            return
+        }
+
+        // Spec §4.4.12.1: resolve before opening the window so the creative receives
+        // the message prior to the app being backgrounded.
+        this.resolveMessage(message)
+
+        this.onPauseMedia?.invoke()
+        this.onOpenPage?.invoke(uri)
+    }
+    // endregion CLICK THROUGH
 }

@@ -12,7 +12,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     private var playerDimensions: Dimensions
     private var creativeDimensions: Dimensions
     private let creativeUri: String
-    private let adParameters: String
+    private let creativeData: CreativeData
     private let adDuration: Double
     private let adSkippable: Bool
     private let mediaTimeupdateInterval: UInt64
@@ -31,7 +31,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     private var onShowSimid: ((Bool) -> Void)?
     private var onResizeSimid: ((Dimensions) -> Bool)?
     private var onResizePlayer: ((Dimensions) -> Void)?
-    private var onOpenClickthrough: ((String) -> Void)?
+    private var onOpenPage: ((String) -> Void)?
     private var onComplete: ((Bool) -> Void)?
 
     /**
@@ -39,7 +39,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
      * @param playerDimensions the main player dimensions
      * @param creativeDimensions the initial creative dimensions the application/player will set
      * @param creativeUri The creative URI
-     * @param adParameters the creative ad parameters
+     * @param creativeData the creative data (ad parameters, clickThruUrl)
      * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
      * @param adSkippable true if the linear ad is skippable (false by default)
      * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
@@ -48,7 +48,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         playerDimensions: Dimensions,
         creativeDimensions: Dimensions,
         creativeUri: String,
-        adParameters: String = "",
+        creativeData: CreativeData,
         adDuration: Double = 0,
         adSkippable: Bool = false,
         mediaTimeupdateInterval: UInt64 = MEDIA_TIMEUPDATE_INTERVAL_MS
@@ -56,7 +56,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         self.playerDimensions = playerDimensions
         self.creativeDimensions = creativeDimensions
         self.creativeUri = creativeUri
-        self.adParameters = adParameters
+        self.creativeData = creativeData
         self.adDuration = adDuration
         self.adSkippable = adSkippable
         self.mediaTimeupdateInterval = mediaTimeupdateInterval
@@ -73,7 +73,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     public func onShowSimid(_ cb: @escaping (Bool) -> Void) { self.onShowSimid = cb }
     public func onResizeSimid(_ cb: @escaping (Dimensions) -> Bool) { self.onResizeSimid = cb }
     public func onResizePlayer(_ cb: @escaping (Dimensions) -> Void) { self.onResizePlayer = cb }
-    public func onOpenClickthrough(_ cb: @escaping (String) -> Void) { self.onOpenClickthrough = cb }
+    public func onOpenPage(_ cb: @escaping (String) -> Void) { self.onOpenPage = cb }
     public func onComplete(_ cb: @escaping (Bool) -> Void) { self.onComplete = cb }
     
     public func getVersion() -> String {
@@ -159,6 +159,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         addMessageListener(CreativeMessage.REQUEST_STOP) { [weak self] message in self?.onCreativeRequestStop(message) }
         addMessageListener(CreativeMessage.EXPAND_NONLINEAR) { [weak self] message in self?.onCreativeExpandNonlinear(message) }
         addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR) { [weak self] message in self?.onCreativeCollapseNonlinear(message) }
+        addMessageListener(CreativeMessage.CLICK_THRU) { [weak self] message in self?.onCreativeClickThru(message) }
         addMessageListener(CreativeMessage.REQUEST_NAVIGATION) { [weak self] message in self?.onCreativeRequestNavigation(message) }
     }
     
@@ -219,7 +220,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         self.creativeDimensions = creativeDim
         
         // If creative successfully resized then resize the main player/
-        self.onResizePlayer?(mediaDim)
+        onResizePlayer(mediaDim)
 
         self.resolveMessage(message)
 
@@ -256,16 +257,27 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         _ = self.onPlayMedia?()
         (self.onResizeSimid?(creativeDimensions) ?? false) ? self.resolveMessage(message) : rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Unable to collapse nonlinear ad")
     }
-    
-    private func onCreativeRequestNavigation(_ message: Message) {
-        guard let args = message.args as? CreativeRequestNavigationMessageArgs else {
+
+    private func onCreativeClickThru(_ message: Message) {
+        guard let args = message.args as? CreativeClickThruMessageArgs else {
             self.rejectMessage(message)
             return
         }
 
-        self.resolveMessage(message)
-        _ = self.onPauseMedia?()
-        self.onOpenClickthrough?(args.uri)
+        // Open landing page only when playerHandles is true
+        if args.playerHandles != true {
+            return
+        }
+        
+        let uri = args.uri ?? args.url // url deprecated in favor of uri
+        self.onOpenUri(message: message, uri: uri)
+    }
+    
+    private func onCreativeRequestNavigation(_ message: Message) {
+        guard let args = message.args as? CreativeRequestNavigationMessageArgs else {
+            return
+        }
+        self.onOpenUri(message: message, uri: args.uri)
     }
     
     // MARK: - WEBVIEW MANAGEMENT
@@ -337,7 +349,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
             deviceId: nil,
             muted: false,
             volume: 1.0,
-            navigationSupport: onOpenClickthrough != nil
+            navigationSupport: onOpenPage != nil
                 ? NavigationSupport.PLAYER_HANDLES
                 : NavigationSupport.AD_HANDLES,
             closeButtonSupport: nil,
@@ -345,19 +357,19 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         )
 
         // Escape characters to avoid JSON parsing failure in Creative
-        let adParams = adParameters.replacingOccurrences(
+        let adParams = self.creativeData.adParameters.replacingOccurrences(
             of: "\"",
             with: "\\\""
         )
         
-        let creative = CreativeData(
+        let creativeData = CreativeData(
             adParameters: adParams,
-            clickThruUrl: ""
+            clickThruUrl: self.creativeData.clickThruUrl
         )
 
         let args = PlayerInitMessageArgs(
             environmentData: env,
-            creativeData: creative
+            creativeData: creativeData
         )
 
         Task {
@@ -462,5 +474,25 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
             nonLinearStartTime = 0.0
             stopAd(reason: StopCode.NON_LINEAR_DURATION_COMPLETE)
         }
+    }
+    
+    // MARK: - Click through
+    private func onOpenUri(message: Message, uri: String?) {
+        guard uri != nil else {
+            self.rejectMessage(message, errorCode:PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, errorMessage:"Invalid URI")
+            return
+        }
+
+        guard self.onOpenPage != nil else {
+            self.rejectMessage(message, errorCode:PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, errorMessage: "Navigation not supported by the player")
+            return
+        }
+
+        // Spec §4.4.12.1: resolve before opening the window so the creative receives
+        // the message prior to the app being backgrounded.
+        self.resolveMessage(message)
+
+        _ = self.onPauseMedia?()
+        self.onOpenPage?(uri!)
     }
 }

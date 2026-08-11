@@ -54,6 +54,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
                     adId: "simid-ad",
                     creativeUri: (asset?.simidURL)!.absoluteString,
                     adParameters: (asset?.adParameters)!,
+                    clickThruUrl: (asset?.clickThruUrl)!,
                     duration: 10.0
                 )
             }
@@ -164,6 +165,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
                 adId: adData.adId,
                 creativeUri: iframeResource.url,
                 adParameters: iframeResource.parameters,
+                clickThruUrl: adData.clickURL,
                 duration: Double(adData.duration) / 1000.0
             )
         }
@@ -197,6 +199,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
         adId: String,
         creativeUri: String,
         adParameters: String,
+        clickThruUrl: String,
         duration: Double,
         autoStart: Bool = true
     ) {
@@ -209,12 +212,17 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             width: Int(bounds.width),
             height: Int(bounds.height)
         )
+        
+        let creativeData = CreativeData(
+            adParameters: adParameters,
+            clickThruUrl: clickThruUrl
+        )
 
         let controller = GenericSimidController(
             playerDimensions: dims,
             creativeDimensions: dims,
             creativeUri: creativeUri,
-            adParameters: adParameters,
+            creativeData: creativeData,
             adDuration: duration
         )
 
@@ -257,8 +265,8 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             return true
         }
 
-        controller.onOpenClickthrough { url in
-            if let u = URL(string: url) {
+        controller.onOpenPage { uri in
+            if let u = URL(string: uri) {
                 UIApplication.shared.open(u)
             }
         }

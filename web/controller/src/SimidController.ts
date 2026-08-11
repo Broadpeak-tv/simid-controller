@@ -21,6 +21,7 @@ import {
   MediaTimeUpdateMessageArgs,
   NavigationSupport,
   PlayerResizeMessageArgs,
+  CreativeClickThruMessageArgs,
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
 
@@ -44,8 +45,8 @@ export class SimidController extends SimidComponent {
   // The creative URI
   private _creativeUri: string
 
-  // The ad parameters
-  private _adParameters: string
+  // The creative data (ad parameters, clickThruUrl)
+  private _creativeData: CreativeData | undefined
 
   // A reference to the iframe holding the SIMID creative
   private _simidIframe: HTMLIFrameElement
@@ -76,7 +77,7 @@ export class SimidController extends SimidComponent {
   private _onShowSimid: ((boolean) => void) | undefined
   private _onResizeSimid: ((DOMRect) => boolean) | undefined
   private _onResizePlayer: ((DOMRect) => void) | undefined
-  private _onOpenClickthrough: ((uri: string) => void) | undefined
+  private _onOpenPage: ((uri: string) => void) | undefined
   private _onComplete: ((boolean) => void) | undefined
 
   private _timerMediaState: number | undefined
@@ -92,7 +93,7 @@ export class SimidController extends SimidComponent {
    * @param playerDimensions the main player dimensions
    * @param creativeDimensions the initial creative dimensions the application/player will set
    * @param creativeUri The creative URI
-   * @param adParameters the creative ad parameters
+   * @param creativeData the creative data (ad parameters, clickThruUrl)
    * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
    * @param adSkippable true if the linear ad is skippable (false by default)
    * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
@@ -101,7 +102,7 @@ export class SimidController extends SimidComponent {
     playerDimensions: DOMRect, 
     creativeDimensions: DOMRect, 
     creativeUri: string,
-    adParameters = '',
+    creativeData: CreativeData | undefined = undefined,
     adDuration = 0,
     adSkippable = false,
     mediaTimeupdateInterval = MEDIA_TIMEUPDATE_INTERVAL_MS) {
@@ -112,7 +113,7 @@ export class SimidController extends SimidComponent {
     this._creativeDimensions = creativeDimensions as Dimensions
 
     this._creativeUri = creativeUri
-    this._adParameters = adParameters
+    this._creativeData = creativeData
     this._adSkippable = adSkippable
     this._isStopping = false
 
@@ -188,8 +189,8 @@ export class SimidController extends SimidComponent {
    * Used in mobile app environments where the player manages external URL navigation.
    * The player must open the URI and the callback is invoked after resolve is sent to the creative.
    */
-  public set onOpenClickthrough(cb: (uri: string) => void) {
-    this._onOpenClickthrough = cb
+  public set onOpenPage(cb: (uri: string) => void) {
+    this._onOpenPage = cb
   }
 
   /**
@@ -268,6 +269,7 @@ export class SimidController extends SimidComponent {
     this.addMessageListener(CreativeMessage.REQUEST_STOP, (message: Message) => this.onCreativeRequestStop(message))
     this.addMessageListener(CreativeMessage.EXPAND_NONLINEAR, (message: Message) => this.onCreativeExpandNonlinear(message))
     this.addMessageListener(CreativeMessage.COLLAPSE_NONLINEAR, (message: Message) => this.onCreativeCollapseNonlinear(message))
+    this.addMessageListener(CreativeMessage.CLICK_THRU, (message: Message) => this.onCreativeClickThru(message))
     this.addMessageListener(CreativeMessage.REQUEST_NAVIGATION, (message: Message) => this.onCreativeRequestNavigation(message))
   }
 
@@ -381,18 +383,21 @@ export class SimidController extends SimidComponent {
     this._stopAd(StopCode.CREATIVE_INITIATED)
   }
 
-  protected onCreativeRequestNavigation(message: Message) {
-    if (!this._onOpenClickthrough) {
-      this.rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, 'Navigation not supported by the player')
+  protected onCreativeClickThru(message: Message) {
+    const args = message.args as CreativeClickThruMessageArgs
+
+    // Open landing page only when playerHandles is true
+    if (!args.playerHandles) {
       return
     }
-    const args = message.args as CreativeRequestNavigationMessageArgs
-    // Spec §4.4.12.1: resolve before opening the window so the creative receives
-    // the message prior to the app being backgrounded.
-    this.resolveMessage(message)
 
-    this._onPauseMedia()
-    this._onOpenClickthrough(args.uri)
+    const uri = args.uri || args.url // url deprecated in favor of uri
+    this._onOpenUri(message, uri)
+  }
+
+  protected onCreativeRequestNavigation(message: Message) {
+    const args = message.args as CreativeRequestNavigationMessageArgs
+    this._onOpenUri(message, args.uri)
   }
   // #endregion CREATIVE MESSAGE HANDLERS
   // #endregion PROTECTED METHODS
@@ -417,22 +422,13 @@ export class SimidController extends SimidComponent {
       deviceId: '', // This should be filled in on mobile
       muted: mediaState ? mediaState.muted : false,
       volume: mediaState ? mediaState.volume : 1,
-      navigationSupport: this._onOpenClickthrough ? NavigationSupport.PLAYER_HANDLES : NavigationSupport.AD_HANDLES,
+      navigationSupport: this._onOpenPage ? NavigationSupport.PLAYER_HANDLES : NavigationSupport.AD_HANDLES,
       nonlinearDuration: this._adDuration,
-    }
-
-    const creativeData: CreativeData = {
-      adParameters: this._adParameters,
-      clickThruUrl: '',
-      // These values should be populated from the VAST response
-      // adId: '',
-      // creativeId : '',
-      // adServingId: '',
     }
 
     const args: PlayerInitMessageArgs = {
       environmentData : environmentData,
-      creativeData: creativeData,
+      creativeData: this._creativeData,
     }
 
     try {
@@ -587,6 +583,28 @@ export class SimidController extends SimidComponent {
     }
   }
   // #endregion MAIN VIDEO STATE
+
+  // #region CLICK THROUGH
+  private _onOpenUri(message: Message, uri?: string) {
+    if (!uri) {
+      this.rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, 'Invalid URI')
+      return
+    }
+
+    if (!this._onOpenPage) {
+      this.rejectMessage(message, PlayerErrorCode.NAVIGATION_NOT_SUPPORTED, 'Navigation not supported by the player')
+      return
+    }
+
+    // Spec §4.4.12.1: resolve before opening the window so the creative receives
+    // the message prior to the app being backgrounded.
+    this.resolveMessage(message)
+
+    this._onPauseMedia()
+    this._onOpenPage(uri)
+
+  }
+  // #endregion CLICK THROUGH
 
   // #endregion PRIVATE METHODS
 }
