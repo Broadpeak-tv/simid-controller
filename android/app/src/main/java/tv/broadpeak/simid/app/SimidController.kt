@@ -4,6 +4,7 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Rect
 import tv.broadpeak.simid.controller.Dimensions
+import tv.broadpeak.simid.controller.CreativeData
 import tv.broadpeak.smartlib.ad.simid.GenericSimidControllerApi
 
 class SimidController(
@@ -12,11 +13,11 @@ class SimidController(
     private val mainPlayerDimensions: Dimensions,
     private val creativeDimensions: Dimensions,
     private val creativeUri: String,
-    private val adParameters: String = "",
+    private val creativeData: CreativeData,
     private val adDuration: Float = 0.0F,
     private val adSkippable: Boolean = false,
     private val mediaStatePollingInterval: Long = MEDIA_TIMEUPDATE_INTERVAL_MS
-) : tv.broadpeak.simid.controller.SimidController(activity, context, mainPlayerDimensions, creativeDimensions, creativeUri, adParameters, adDuration, adSkippable, mediaStatePollingInterval) {
+) : tv.broadpeak.simid.controller.SimidController(activity, context, mainPlayerDimensions, creativeDimensions, creativeUri, creativeData, adDuration, adSkippable, mediaStatePollingInterval) {
 
     private var simidControllerApi: GenericSimidControllerApi? = null
 

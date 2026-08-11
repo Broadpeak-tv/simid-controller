@@ -62,9 +62,9 @@ export class SimidComponent {
     this._nextMessageId = 0
     this._responseListeners = new Map<number, MessageCallback>()
 
-    // By default target window is top window, that will be used by the creative
+    // By default target window is parent window, that will be used by the creative
     // The SIMID controller should use the creative iframe window as target window (see SimidController)
-    this._target = window.top
+    this._target = window.parent
 
     // Initialize postMessage event listener
     this._messageHandler = (event: MessageEvent) => {

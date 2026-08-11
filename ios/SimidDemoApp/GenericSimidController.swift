@@ -9,7 +9,7 @@ class GenericSimidController: SimidController {
         playerDimensions: Dimensions,
         creativeDimensions: Dimensions,
         creativeUri: String,
-        adParameters: String = "",
+        creativeData: CreativeData,
         adDuration: Double = 0,
         adSkippable: Bool = false,
         mediaTimeupdateInterval: UInt64 = SimidController.MEDIA_TIMEUPDATE_INTERVAL_MS
@@ -17,7 +17,7 @@ class GenericSimidController: SimidController {
         super.init(playerDimensions: playerDimensions,
                    creativeDimensions: creativeDimensions,
                    creativeUri: creativeUri,
-                   adParameters: adParameters,
+                   creativeData: creativeData,
                    adDuration: adDuration,
                    adSkippable: adSkippable,
                    mediaTimeupdateInterval: mediaTimeupdateInterval
