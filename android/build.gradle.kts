@@ -7,5 +7,5 @@ plugins {
     alias(libs.plugins.kotlin.serialization) apply false
 }
 
-version = "0.8.0"
+version = "0.9.0"
 extra["versionCode"] = 5
