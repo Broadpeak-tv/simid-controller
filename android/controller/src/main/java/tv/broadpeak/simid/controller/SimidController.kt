@@ -491,7 +491,7 @@ public open class SimidController (
         // Resize the main player to its original dimensions
         onResizePlayer?.invoke(playerDimensions)
 
-        // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
+        // Notify player ad is complete, if skipped this enables player to seek after the current linear ad
         onComplete?.invoke(skipped)
     }
 

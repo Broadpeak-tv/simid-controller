@@ -433,7 +433,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         // Resize the main player to its original dimensions
         onResizePlayer?(playerDimensions)
 
-        // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
+        // Notify player ad is complete, if skipped this enables player to seek after the current linear ad
         onComplete?(skipped)
     }
 
