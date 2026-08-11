@@ -411,7 +411,7 @@
 			repositoryURL = "https://delivery-platform.broadpeak.tv/ios/broadpeak/smartlib-package.git";
 			requirement = {
 				kind = upToNextMajorVersion;
-				minimumVersion = 6.1.1;
+				minimumVersion = 6.1.3;
 			};
 		};
 /* End XCRemoteSwiftPackageReference section */
