@@ -3,7 +3,6 @@ package tv.broadpeak.simid.app
 import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Rect
-import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -25,7 +24,6 @@ import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.ui.PlayerView
 import androidx.core.net.toUri
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.ui.PlayerNotificationManager
 import tv.broadpeak.simid.controller.CreativeData
 import tv.broadpeak.simid.controller.MediaState
 import tv.broadpeak.simid.controller.Dimensions
@@ -169,7 +167,7 @@ class PlayerActivity : AppCompatActivity() {
                     Log.d(TAG, "onAdPrepare: ${adData.adId}")
 
                     adDatas[adData.adId] = adData
-                    if (adData.nonLinearIframeResources?.size!! > 0) {
+                    if (adData.nonLinearIframeResources.isNotEmpty()) {
                         runOnUiThread {
                             val iframeResource = adData.nonLinearIframeResources[0].url
                             val adParameters = adData.nonLinearIframeResources[0].parameters
@@ -219,7 +217,7 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, clickThruUrl: String, duration: Float, autoStart: Boolean = false) {
+    private fun loadSimid(adId: String, creativeUri: String, adParameters: String, clickThruUrl: String?, duration: Float, autoStart: Boolean = false) {
 
         if (playerContainer == null) {
             return
