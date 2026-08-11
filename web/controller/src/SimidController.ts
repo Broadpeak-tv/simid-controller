@@ -535,9 +535,6 @@ export class SimidController extends SimidComponent {
 
     // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
     this._onComplete?.(skipped)
-
-    // Resume main video playback
-    this._onPlayMedia?.()
   }
       
   // #endregion CREATIVE AD MANAGEMENT

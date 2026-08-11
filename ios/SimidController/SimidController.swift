@@ -430,9 +430,11 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
 
     private func completeAd(skipped: Bool) {
+        // Resize the main player to its original dimensions
         onResizePlayer?(playerDimensions)
+
+        // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
         onComplete?(skipped)
-        _ = onPlayMedia?()
     }
 
     // MARK: - Media state loop

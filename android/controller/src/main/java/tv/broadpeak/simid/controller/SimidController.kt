@@ -493,9 +493,6 @@ public open class SimidController (
 
         // Notify player ad is complete, if skipped this enable player to seek after the current linear ad
         onComplete?.invoke(skipped)
-
-        // Resume main video playback
-        onPlayMedia?.invoke()
     }
 
     //region MAIN VIDEO STATE
