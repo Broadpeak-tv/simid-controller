@@ -76,7 +76,7 @@ export default class Player {
       adParameters,
       clickThruUrl
     }
-    const simidController = new SimidController(playerRect, playerRect, creativeUri, creativeData, duration, false, -1)
+    const simidController = new SimidController(playerRect, playerRect, creativeUri, creativeData, duration, false)
 
     simidController.onGetMediaState = () => this.getMediaState()
     simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
