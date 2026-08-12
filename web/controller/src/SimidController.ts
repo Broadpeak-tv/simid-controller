@@ -415,11 +415,6 @@ export class SimidController extends SimidComponent {
   // #endregion PROTECTED METHODS
 
   // #region PRIVATE METHODS
-  private _notifyReject(message: string, reject: RejectMessageArgs) {
-    const value = reject.value
-    this._onError?.(message, value.errorCode, value.message)
-  }
-
   private async _sendInitMessage() {
     // [4] - send Player:init message
 
@@ -456,7 +451,8 @@ export class SimidController extends SimidComponent {
       }
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
-      this._notifyReject(PlayerMessage.INIT, e)
+      // e as RejectMessageArgs
+      this._onError?.(PlayerMessage.INIT, e.errorCode, e.message)
       this._stopAd()
     }
   }
