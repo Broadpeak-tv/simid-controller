@@ -22,6 +22,7 @@ import {
   NavigationSupport,
   PlayerResizeMessageArgs,
   CreativeClickThruMessageArgs,
+  CreativeFatalErrorMessageArgs,
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
 
@@ -79,6 +80,7 @@ export class SimidController extends SimidComponent {
   private _onResizePlayer: ((DOMRect) => void) | undefined
   private _onOpenPage: ((uri: string) => void) | undefined
   private _onComplete: ((boolean) => void) | undefined
+  private _onError: ((number, string) => void) | undefined
 
   private _timerMediaState: number | undefined
   private _mediaTimeupdateInterval: number
@@ -200,6 +202,13 @@ export class SimidController extends SimidComponent {
     this._onComplete = cb
   }
 
+  /**
+   * Set the callback function called when an error occured. 
+   */
+  public set onError(cb: (code: number, message: string) => void) {
+    this._onError = cb
+  }
+
   public getVersion(): string {
     return __VERSION__
   }
@@ -282,6 +291,8 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeFatalError(message: Message) {
+    const args = message.args as CreativeFatalErrorMessageArgs
+    this._onError?.(args.errorCode, args.errorMessage)
     this._stopAd(StopCode.CREATIVE_INITIATED)
   }
 
