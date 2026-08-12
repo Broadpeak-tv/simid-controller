@@ -67,6 +67,7 @@ public open class SimidController (
     private var onResizePlayer: ((Dimensions) -> Unit)? = null
     private var onOpenPage: ((String) -> Unit)? = null
     private var onComplete: ((Boolean) -> Unit)? = null
+    private var onError: ((Int, String) -> Unit)? = null
 
     private val mainScope = MainScope()
 
@@ -109,6 +110,10 @@ public open class SimidController (
 
     fun onComplete(cb: (Boolean) -> Unit) {
         this.onComplete = cb
+    }
+
+    fun onError(cb: (Int, String) -> Unit) {
+        this.onError = cb
     }
     //endregion Callbacks
 
@@ -198,6 +203,8 @@ public open class SimidController (
     }
 
     private fun onCreativeFatalError(message: Message) {
+        val args: CreativeFatalErrorMessageArgs = json.decodeFromJsonElement<CreativeFatalErrorMessageArgs>(message.args!!)
+        onError?.invoke(args.errorCode, args.errorMessage)
         this.stopAd(StopCode.CREATIVE_INITIATED)
     }
 
