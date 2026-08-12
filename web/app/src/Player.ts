@@ -87,6 +87,7 @@ export default class Player {
     simidController.onPlayMedia = () => this.playMedia()
     simidController.onOpenPage = (uri: string) => this.openPage(uri)
     simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
+    simidController.onError = (code: number, message: string) => this.onError(code, message)
 
     simidController.simidControllerApi = this.bpkSimidController
 
@@ -220,6 +221,10 @@ export default class Player {
     if (skipped && adData) {
       this.skipCurrentAd(adData)
     }
+  }
+
+  private onError(code: number, message: string) {
+    console.error('[Player] Error:', code, message)
   }
 
   private getElementDimensions(element: HTMLElement): DOMRect {
