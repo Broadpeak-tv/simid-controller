@@ -241,7 +241,7 @@ class PlayerActivity : AppCompatActivity() {
             controller.onPlayMedia { playMedia() }
             controller.onOpenPage { uri -> openPage(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
-            controller.onError { code, message -> onError(code, message) }
+            controller.onError { message, errorCode, errorMessage -> onError(message, errorCode, errorMessage) }
 
             controller.simidControllerApi(bpkSimidController!!)
 
@@ -377,8 +377,8 @@ class PlayerActivity : AppCompatActivity() {
         }
     }
 
-    private fun onError(code: Int, message: String) {
-        Log.e(TAG, "Error: $code $message")
+    private fun onError(message: String, errorCode: Int, errorMessage: String) {
+        Log.e(TAG, "Error: message=$message errorCode=$errorCode errorMessage=$errorMessage")
     }
 
     private fun skipCurrentAd(adData: AdData) {
