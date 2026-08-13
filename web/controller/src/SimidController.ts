@@ -507,7 +507,8 @@ export class SimidController extends SimidComponent {
       this._startMediaTimeupdateInterval()
     } catch (e) {
       console.error('[PLAYER] Failed to start creative', e)
-      this._notifyReject(PlayerMessage.START_CREATIVE, e)
+      // e as RejectMessageArgs
+      this._onError?.(PlayerMessage.START_CREATIVE, e.errorCode, e.message)
     }
   }
 
