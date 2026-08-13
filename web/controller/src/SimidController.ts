@@ -204,7 +204,10 @@ export class SimidController extends SimidComponent {
   }
 
   /**
-   * Set the callback function called when an error occured. 
+   * Set the callback function called when an error occured.
+   * @param message the message type that caused/sent the error
+   * @param errorCode the error code
+   * @param errorMEssage the error message
    */
   public set onError(cb: (message: string, errorCode: number, errorMessage: string) => void) {
     this._onError = cb
