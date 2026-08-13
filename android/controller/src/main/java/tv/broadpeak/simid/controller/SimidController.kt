@@ -112,7 +112,7 @@ public open class SimidController (
         this.onComplete = cb
     }
 
-    fun onError(cb: (Int, String) -> Unit) {
+    fun onError(cb: (String, Int, String) -> Unit) {
         this.onError = cb
     }
     //endregion Callbacks
