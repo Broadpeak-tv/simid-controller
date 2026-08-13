@@ -12,6 +12,11 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
 
+class RejectException(
+    val errorCode: Int,
+    override val message: String
+) : Exception(message)
+
 abstract class SimidComponent (
     // The protocol actor type ('Player' or 'Creative')
     protected val type: String
@@ -164,7 +169,7 @@ abstract class SimidComponent (
                 deferred.complete(response)
             } else if (response.type == ProtocolMessage.REJECT && response.args != null) {
                 val rejectMessageArgs = json.decodeFromJsonElement<RejectMessageArgs>(response.args)
-                val exception: Exception = Exception(rejectMessageArgs.value.message)
+                val exception: RejectException = RejectException(rejectMessageArgs.value.errorCode.toInt(), rejectMessageArgs.value.message)
                 deferred.completeExceptionally(exception)
             }
         }
