@@ -125,7 +125,7 @@ export default class Player {
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
             const iframeResource = adData.nonLinearIframeResources[0]
             const duration = adData.duration ? (adData.duration / 1000) : 0
-            this.loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, adData.clickURL, duration)
+            this.loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, duration)
           }
         },
         onAdBegin: (adData: any, adBreakData: any) => {

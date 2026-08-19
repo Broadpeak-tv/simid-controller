@@ -165,7 +165,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
                 adId: adData.adId,
                 creativeUri: iframeResource.url,
                 adParameters: iframeResource.parameters,
-                clickThruUrl: adData.clickURL,
+                clickThruUrl: iframeResource.clickURL,
                 duration: Double(adData.duration) / 1000.0
             )
         }

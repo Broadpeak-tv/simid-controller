@@ -169,10 +169,8 @@ class PlayerActivity : AppCompatActivity() {
                     adDatas[adData.adId] = adData
                     if (adData.nonLinearIframeResources.isNotEmpty()) {
                         runOnUiThread {
-                            val iframeResource = adData.nonLinearIframeResources[0].url
-                            val adParameters = adData.nonLinearIframeResources[0].parameters
-                            val clickThruUrl = adData.clickURL
-                            loadSimid(adData.adId, iframeResource, adParameters, clickThruUrl, (adData.duration.toFloat() / 1000.0F))
+                            val iframeResource = adData.nonLinearIframeResources[0]
+                            loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, (adData.duration.toFloat() / 1000.0F))
                         }
                     }
                 }
