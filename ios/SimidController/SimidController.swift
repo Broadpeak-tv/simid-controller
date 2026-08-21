@@ -58,7 +58,7 @@ public typealias OpenPageCallback = (_ uri: String) -> Void
  * Callback function called when the current SIMID has completed.
  * @skipped true when SIMID has been skipped and terminated by the user 
  */
-public typealias CompleteCallback = (_ skipped: boolean) -> Void
+public typealias CompleteCallback = (_ skipped: Bool) -> Void
 
 /**
  * Callback function called when an error occurred.
@@ -66,7 +66,7 @@ public typealias CompleteCallback = (_ skipped: boolean) -> Void
  * - Parameter errorCode the error code
  * - Parameter errorMEssage the error message
  */
-public typealias ErrorCallback = (_ messageType: String, _ errorCode: number, _ errorMessage: String) -> Void
+public typealias ErrorCallback = (_ messageType: String, _ errorCode: Int, _ errorMessage: String) -> Void
 
 open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigationDelegate {
 
@@ -90,16 +90,16 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
     private var mediaTimeupdateTask: Task<Void, Error>?
 
-    private var onGetMediaState: (() -> MediaState)?
-    private var onPlayMedia: (() -> Bool)?
-    private var onPauseMedia: (() -> Bool)?
-    private var onAddSimid: ((WKWebView) -> Void)?
-    private var onShowSimid: ((Bool) -> Void)?
-    private var onResizeSimid: ((Dimensions) -> Bool)?
-    private var onResizePlayer: ((Dimensions) -> Void)?
-    private var onOpenPage: ((String) -> Void)?
-    private var onComplete: ((Bool) -> Void)?
-    private var onError: ((String, Int, String) -> Void)?
+    private var onGetMediaState: GetMediaStateCallback?
+    private var onPlayMedia: PlayMediaCallabck?
+    private var onPauseMedia: PauseMediaCallback?
+    private var onAddSimid: AddSimidCallback?
+    private var onShowSimid: ShowSimidCallback?
+    private var onResizeSimid: ResizeSimidCallback?
+    private var onResizePlayer: ResizeSimidCallback?
+    private var onOpenPage: ResizePlayerCallback?
+    private var onComplete: CompleteCallback?
+    private var onError: ErrorCallback?
 
     /**
      * Set up the SIMID controller an starts listening for messages from the creative.
