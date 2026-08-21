@@ -15,7 +15,7 @@ struct AssetsView: View {
     let assets: [Asset] = [
         Asset(title: "Big Buck Bunny",
               url: URL(string: "https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8")!,
-              simidURL: URL(string: "http://192.168.10.2:8080/Broadpeak/simid/adserver/creatives/creative-test.html"),
+              simidURL: URL(string: "https://interactiveadvertisingbureau.github.io/SIMID/examples/creatives/banner_nonlinear.html"),
               adParameters: "{\"bannerText\":\"Click here to draw!\",\"webUrl\":\"https://quickdraw.withgoogle.com/\"}",
               clickThruUrl: ""
         ),

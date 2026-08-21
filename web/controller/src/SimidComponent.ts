@@ -173,11 +173,6 @@ export class SimidComponent {
     this.postMessage(message)
   }
 
-  /**
-   * Rejects an incoming message.
-   * @param {!Object} incomingMessage the message that is being resolved.
-   * @param {!Object} outgoingArgs Any arguments that are part of the resolution.
-   */
   protected rejectMessage(incomingMessage: Message, errorCode?: number, errorMessage?: string) {
     const value: RejectMessageArgsValue = {
       errorCode,

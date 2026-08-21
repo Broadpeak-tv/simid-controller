@@ -169,10 +169,8 @@ class PlayerActivity : AppCompatActivity() {
                     adDatas[adData.adId] = adData
                     if (adData.nonLinearIframeResources.isNotEmpty()) {
                         runOnUiThread {
-                            val iframeResource = adData.nonLinearIframeResources[0].url
-                            val adParameters = adData.nonLinearIframeResources[0].parameters
-                            val clickThruUrl = adData.clickURL
-                            loadSimid(adData.adId, iframeResource, adParameters, clickThruUrl, (adData.duration.toFloat() / 1000.0F))
+                            val iframeResource = adData.nonLinearIframeResources[0]
+                            loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, (adData.duration.toFloat() / 1000.0F))
                         }
                     }
                 }
@@ -241,6 +239,7 @@ class PlayerActivity : AppCompatActivity() {
             controller.onPlayMedia { playMedia() }
             controller.onOpenPage { uri -> openPage(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
+            controller.onError { messageType, errorCode, errorMessage -> onError(messageType, errorCode, errorMessage) }
 
             controller.simidControllerApi(bpkSimidController!!)
 
@@ -374,6 +373,10 @@ class PlayerActivity : AppCompatActivity() {
         if (skipped && adData != null) {
             skipCurrentAd(adData)
         }
+    }
+
+    private fun onError(messageType: String, errorCode: Int, errorMessage: String) {
+        Log.e(TAG, "Error: message=$messageType errorCode=$errorCode errorMessage=$errorMessage")
     }
 
     private fun skipCurrentAd(adData: AdData) {

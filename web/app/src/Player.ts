@@ -87,6 +87,7 @@ export default class Player {
     simidController.onPlayMedia = () => this.playMedia()
     simidController.onOpenPage = (uri: string) => this.openPage(uri)
     simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
+    simidController.onError = (messageType: string, errorCode: number, errorMessage: string) => this.onError(messageType, errorCode, errorMessage)
 
     simidController.simidControllerApi = this.bpkSimidController
 
@@ -124,7 +125,7 @@ export default class Player {
           if (adData.nonLinearIframeResources && adData.nonLinearIframeResources.length) {
             const iframeResource = adData.nonLinearIframeResources[0]
             const duration = adData.duration ? (adData.duration / 1000) : 0
-            this.loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, adData.clickURL, duration)
+            this.loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, duration)
           }
         },
         onAdBegin: (adData: any, adBreakData: any) => {
@@ -220,6 +221,10 @@ export default class Player {
     if (skipped && adData) {
       this.skipCurrentAd(adData)
     }
+  }
+
+  private onError(messageType: string, errorCode: number, errorMessage: string) {
+    console.error(`[Player] Error: message=${messageType} errorCode=${errorCode} errorMessage=${errorMessage} `)
   }
 
   private getElementDimensions(element: HTMLElement): DOMRect {

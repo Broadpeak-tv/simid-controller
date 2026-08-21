@@ -165,7 +165,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
                 adId: adData.adId,
                 creativeUri: iframeResource.url,
                 adParameters: iframeResource.parameters,
-                clickThruUrl: adData.clickURL,
+                clickThruUrl: iframeResource.clickURL,
                 duration: Double(adData.duration) / 1000.0
             )
         }
@@ -228,6 +228,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
 
         controller.onAddSimid { [weak self] webView in
             self?.addWebView(adId: adId, webView: webView)
+            return true
         }
 
         controller.onShowSimid { [weak self] show in
@@ -275,6 +276,10 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             print("[SIMID] Completed skipped:", skipped)
         }
 
+        controller.onError { messageType, errorCode, errorMessage in
+            print("[SIMID] Error: message=\(messageType) errorCode=\(errorCode) errorMessage=\(errorMessage)")
+        }
+        
         controller.simidControllerApi(self.bpkSimidController!)
         
         controller.load(autoStart: autoStart)

@@ -1,4 +1,5 @@
 export {
+  CloseButtonSupport,
   CreativeClickThruMessageArgs,
   CreativeData,
   CreativeErrorCode,
@@ -44,4 +45,16 @@ export {
   VolumeChangeMessageArgs
 } from './SimidMessages'
 export { SimidComponent } from './SimidComponent'
-export { SimidController } from './SimidController'
+export {
+  SimidController,
+  AddSimidCallback,
+  CompleteCallback,
+  ErrorCallback,
+  GetMediaStateCallback,
+  OpenPageCallback,
+  PauseMediaCallback,
+  PlayMediaCallabck,
+  ResizePlayerCallback,
+  ResizeSimidCallback,
+  ShowSimidCallback
+} from './SimidController'

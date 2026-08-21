@@ -1,5 +1,10 @@
 import Foundation
 
+struct RejectError: Error {
+    let errorCode: Int
+    let message: String
+}
+
 open class SimidComponent: NSObject {
 
     // The protocol actor type ('Player' or 'Creative')
@@ -72,8 +77,8 @@ open class SimidComponent: NSObject {
         }
     }
 
-    func resolveMessage(_ incoming: Message, outgoingArgs: MediaState? = nil) {
-        let args = ResolveMessageArgs(messageId: incoming.messageId, value: outgoingArgs)
+    func resolveMessage(_ incoming: Message, outgoingArgs: ResolveRejectMessageValue? = nil) {
+        let args = ResolveRejectMessageArgs(messageId: incoming.messageId, value: outgoingArgs)
         let message = createMessage(type: ProtocolMessage.RESOLVE, args: args)
         postMessage(message)
     }
@@ -83,7 +88,7 @@ open class SimidComponent: NSObject {
                        errorMessage: String = "") {
 
         let value = RejectMessageValue(errorCode: errorCode, message: errorMessage)
-        let args = RejectMessageArgs(messageId: incoming.messageId, value: value)
+        let args = ResolveRejectMessageArgs(messageId: incoming.messageId, value: .reject(value))
 
         let message = createMessage(type: ProtocolMessage.REJECT, args: args)
 
@@ -119,16 +124,10 @@ open class SimidComponent: NSObject {
 
                     if response.type == ProtocolMessage.RESOLVE {
                         continuation.resume(returning: ())
-
-                    } else if response.type == ProtocolMessage.REJECT,
-                              let rejectArgs = response.args as? RejectMessageArgs {
-
-                        let error = NSError(
-                            domain: "SIMID",
-                            code: Int(rejectArgs.value.errorCode),
-                            userInfo: [NSLocalizedDescriptionKey: rejectArgs.value.message]
-                        )
-
+                    } else if response.type == ProtocolMessage.REJECT {
+                        guard let rejectArgs = response.args as? ResolveRejectMessageArgs else { return }
+                        guard case .reject(let value) = rejectArgs.value else { return }
+                        let error = RejectError(errorCode: Int(value.errorCode), message: value.message)
                         continuation.resume(throwing: error)
                     }
                 }
@@ -154,14 +153,13 @@ open class SimidComponent: NSObject {
         return string
     }
 
-    private func addResponseListener(_ messageId: Int,
-                                      callback: @escaping MessageCallback) {
+    private func addResponseListener(_ messageId: Int, callback: @escaping MessageCallback) {
         responseListeners[messageId] = callback
     }
 
     private func invokeResponseListener(_ message: Message) {
         guard
-            let args = message.args as? ResolveMessageArgs
+            let args = message.args as? ResolveRejectMessageArgs
         else { return }
 
         let id = args.messageId

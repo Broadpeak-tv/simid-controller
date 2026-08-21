@@ -5,7 +5,6 @@ import android.app.Activity
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
-import android.graphics.Rect
 import android.util.Log
 import android.view.View
 import android.webkit.WebChromeClient
@@ -18,6 +17,72 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+
+/**
+ * Callback function called to retrieve current media state.
+ * @return the current media state
+ */
+typealias GetMediaStateCallback = () -> MediaState
+
+/**
+ * Callback function called when the main video has to be played or resumed.
+ * @return true if main video successfully played or resumed
+ */
+typealias PlayMediaCallback = () -> Boolean
+
+/**
+ * Callback function called when the main video has to be paused.
+ * @return true if main video successfully played or resumed
+ */
+typealias PauseMediaCallback = () -> Boolean
+
+/**
+ * Callback function called when a new SIMID WebView has to be added in application.
+ * @param webview the SIMID WebView
+ * @return true if SIMID WebView has been successfully added, false otherwise
+ */
+typealias AddSimidCallback = (webview: WebView) -> Boolean
+
+/**
+ * Callback function called when the SIMID WebView has to be shown or hidden.
+ * @param show true to show the SIMID WebView, false to hide it
+ */
+typealias ShowSimidCallback = (show: Boolean) -> Unit
+
+/**
+ * Callback function called when the SIMID WebView has to be resized.
+ * @param dimensions the new SIMID WebView dimensions
+ * @return true if the SIMID WebView has been successfully resized, false otherwise
+ */
+typealias ResizeSimidCallback = (dimensions: Dimensions) -> Boolean
+
+/**
+ * Callback function called when the media player element has to be resized.
+ * @param dimensions the new player dimensions
+ */
+typealias ResizePlayerCallback = (dimensions: Dimensions) -> Unit
+
+/**
+ * Callback function called when the creative requests navigation to an external URI.
+ * Used in mobile app environments where the player manages external URL navigation.
+ * The player must open the URI and the callback is invoked after resolve is sent to the creative.
+ * @param uri the external URI to open
+ */
+typealias OpenPageCallback = (uri: String) -> Unit
+
+/**
+ * Callback function called when the current SIMID has completed.
+ * @param skipped true when SIMID has been skipped and terminated by the user
+ */
+typealias CompleteCallback = (skipped: Boolean) -> Unit
+
+/**
+ * Callback function called when an error occurred.
+ * @param messageType the message type that caused/sent the error
+ * @param errorCode the error code
+ * @param errorMEssage the error message
+ */
+typealias ErrorCallback = (messageType: String, errorCode: Int, errorMessage: String) -> Unit
 
 /**
  * Set up the SIMID controller an starts listening for messages from the creative.
@@ -58,15 +123,16 @@ public open class SimidController (
     private var _isStopping: Boolean = false
     private var _timerMediaTimeupdate: Job? = null
 
-    private var onGetMediaState: (() -> MediaState)? = null
-    private var onPlayMedia: (() -> Boolean)? = null
-    private var onPauseMedia: (() -> Boolean)? = null
-    private var onAddSimid: ((WebView) -> Unit)? = null
-    private var onShowSimid: ((Boolean) -> Unit)? = null
-    private var onResizeSimid: ((Dimensions) -> Boolean)? = null
-    private var onResizePlayer: ((Dimensions) -> Unit)? = null
-    private var onOpenPage: ((String) -> Unit)? = null
-    private var onComplete: ((Boolean) -> Unit)? = null
+    private var onGetMediaState: GetMediaStateCallback? = null
+    private var onPlayMedia: PlayMediaCallback? = null
+    private var onPauseMedia: PauseMediaCallback? = null
+    private var onAddSimid: AddSimidCallback? = null
+    private var onShowSimid: ShowSimidCallback? = null
+    private var onResizeSimid: ResizeSimidCallback? = null
+    private var onResizePlayer: ResizePlayerCallback? = null
+    private var onOpenPage: OpenPageCallback? = null
+    private var onComplete: CompleteCallback? = null
+    private var onError: ErrorCallback? = null
 
     private val mainScope = MainScope()
 
@@ -75,51 +141,101 @@ public open class SimidController (
     }
 
     //region Callbacks
-    fun onGetMediaState(cb: () -> MediaState) {
+    /**
+     * Set the callback function called to retrieve current media state.
+     * @param cb the callback function
+     */
+    fun onGetMediaState(cb: GetMediaStateCallback) {
         this.onGetMediaState = cb
     }
 
-    fun onPlayMedia(cb: () -> Boolean) {
+    /**
+     * Set the callback function called when the main video has to be played or resumed.
+     * @param cb the callback function
+     */
+    fun onPlayMedia(cb: PlayMediaCallback) {
         this.onPlayMedia = cb
     }
 
-    fun onPauseMedia(cb: () -> Boolean) {
+    /**
+     * Set the callback function called when the main video has to be paused.
+     * @param cb the callback function
+     */
+    fun onPauseMedia(cb: PauseMediaCallback) {
         this.onPauseMedia = cb
     }
 
-    fun onAddSimid(cb: (WebView) -> Unit) {
+    /**
+     * Set the callback function called when a new SIMID WebView has to be added in application.
+     * @param cb the callback function
+     */
+    fun onAddSimid(cb: AddSimidCallback) {
         this.onAddSimid = cb
     }
 
-    fun onShowSimid(cb: (Boolean) -> Unit) {
+    /**
+     * Set the callback function called when the SIMID WebView has to be shown or hidden.
+     * @param cb the callback function
+     */
+    fun onShowSimid(cb: ShowSimidCallback) {
         this.onShowSimid = cb
     }
 
-    fun onResizeSimid(cb: (Dimensions) -> Boolean) {
+    /**
+     * Set the callback function called when the SIMID WebView has to be resized.
+     * @param cb the callback function
+     */
+    fun onResizeSimid(cb: ResizeSimidCallback) {
         this.onResizeSimid = cb
     }
 
-    fun onResizePlayer(cb: (Dimensions) -> Unit) {
+    /**
+     * Set the callback function called when the media player element has to be resized.
+     * @param cb the callback function
+     */
+    fun onResizePlayer(cb: ResizePlayerCallback) {
         this.onResizePlayer = cb
     }
 
-    fun onOpenPage(cb: (String) -> Unit) {
+    /**
+     * Set the callback function called when the creative requests navigation to an external URI.
+     * Used in mobile app environments where the player manages external URL navigation.
+     * The player must open the URI and the callback is invoked after resolve is sent to the creative.
+     * @param cb the callback function
+     */
+    fun onOpenPage(cb: OpenPageCallback) {
         this.onOpenPage = cb
     }
 
-    fun onComplete(cb: (Boolean) -> Unit) {
+    /**
+     * Set the callback function called when the current SIMID has completed.
+     * @param cb the callback function
+     */
+    fun onComplete(cb: CompleteCallback) {
         this.onComplete = cb
+    }
+
+    /**
+     * Set the callback function called when an error occurred.
+     * @param cb the callback function
+     */
+    fun onError(cb: ErrorCallback) {
+        this.onError = cb
     }
     //endregion Callbacks
 
     @SuppressLint("SetJavaScriptEnabled")
+    /*
+     * Return the current SIMID controller version.
+     * @return the current SIMID controller version
+     */
     fun getVersion(): String {
         return VERSION
     }
 
     /**
      * Initialize and load ad. This should be called before an ad plays.
-     * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
+     * Create a WebView and load the SIMID creative.
      * @param autoStart true to start the creative once initialized
      */
     fun load(autoStart: Boolean = true) {
@@ -140,14 +256,14 @@ public open class SimidController (
     }
 
     /**
-     * Stop and reset the SIMID controller
+     * Stop and reset the SIMID session.
      */
     fun reset() {
         stopAd()
     }
 
     /**
-     * Notify the SIMID controller any changes any of ad components’ size
+     * Notify the SIMID controller any changes any of ad components’ size.
      * @param playerDimensions the new player dimensions
      * @param creativeDimensions the new creative dimensions
      * @param fullscreen true if in fullscreen mode
@@ -198,6 +314,8 @@ public open class SimidController (
     }
 
     private fun onCreativeFatalError(message: Message) {
+        val args: CreativeFatalErrorMessageArgs = json.decodeFromJsonElement<CreativeFatalErrorMessageArgs>(message.args!!)
+        onError?.invoke(CreativeMessage.FATAL_ERROR, args.errorCode, args.errorMessage)
         this.stopAd(StopCode.CREATIVE_INITIATED)
     }
 
@@ -407,17 +525,18 @@ public open class SimidController (
         val creativeData = CreativeData(adParams, this.creativeData.clickThruUrl)
         val args = PlayerInitMessageArgs(environmentData, creativeData)
 
-        try {
-            mainScope.launch {
+        mainScope.launch {
+            try {
                 sendMessage(PlayerMessage.INIT, json.encodeToJsonElement(args)).await()
                 _initialized = true
                 if (_autoStart) {
                     startCreative()
                 }
+            } catch (e: RejectException) {
+                Log.v(TAG, "Init failed: $e")
+                onError?.invoke(PlayerMessage.INIT, e.errorCode, e.message)
+                stopSession()
             }
-        } catch (e: Exception) {
-            Log.v(TAG, "Init failed: " + e.message)
-            stopSession()
         }
     }
 
@@ -427,14 +546,15 @@ public open class SimidController (
             _nonLinearStartTime = mediaState?.currentTime!!
         }
 
-        try {
-            mainScope.launch {
+        mainScope.launch {
+            try {
                 sendMessage(PlayerMessage.START_CREATIVE).await()
                 onShowSimid?.invoke(true)
                 startMediaTimeupdateInterval()
+            } catch (e: RejectException) {
+                Log.v(TAG, "Failed to start creative: " + e.message)
+                onError?.invoke(PlayerMessage.START_CREATIVE, e.errorCode, e.message)
             }
-        } catch (e: Exception) {
-            Log.v(TAG, "Failed to start creative: " + e.message)
         }
     }
 
