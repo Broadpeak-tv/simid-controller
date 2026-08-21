@@ -96,8 +96,8 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     private var onAddSimid: AddSimidCallback?
     private var onShowSimid: ShowSimidCallback?
     private var onResizeSimid: ResizeSimidCallback?
-    private var onResizePlayer: ResizeSimidCallback?
-    private var onOpenPage: ResizePlayerCallback?
+    private var onResizePlayer: ResizePlayerCallback?
+    private var onOpenPage: OpenPageCallback?
     private var onComplete: CompleteCallback?
     private var onError: ErrorCallback?
 
