@@ -64,8 +64,16 @@ simidController.onOpenClickthrough { url in
   // Called by the SIMID controller when the creative requests navigation to an external URI
 }
 
+simidController.onOpenPage { uri in
+  // Called when the creative requests navigation to an external URI
+}
+
 simidController.onComplete { skipped in
   // Called by the SIMID controller when the SIMID nonlinear ad is completed  with indication if ad has been skipped
+}
+
+simidController.onError { messageType, errorCode, errorMessage in
+  // Called when an error occurred
 }
 
 // 3 - Loads the SIMID creative

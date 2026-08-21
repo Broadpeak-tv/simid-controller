@@ -228,6 +228,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
 
         controller.onAddSimid { [weak self] webView in
             self?.addWebView(adId: adId, webView: webView)
+            return true
         }
 
         controller.onShowSimid { [weak self] show in

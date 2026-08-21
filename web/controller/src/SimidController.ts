@@ -31,6 +31,72 @@ const MEDIA_TIMEUPDATE_INTERVAL_MS = 250
 
 declare const __VERSION__: string;
 
+/**
+ * Callback function called to retrieve current media state.
+ * @return the current media state
+ */
+export type GetMediaStateCallback = () => MediaState
+
+/**
+ * Callback function called when the main video has to be played or resumed. 
+ * @return true if main video successfully played or resumed
+ */
+export type PlayMediaCallabck = () => boolean
+
+/**
+ * Callback function called when the main video has to be paused. 
+ * @return true if main video successfully played or resumed
+ */
+export type PauseMediaCallback = () => boolean
+
+/**
+ * Callback function called when a new SIMID iframe has to be added in application DOM. 
+ * @param iframe the SIMID iframe
+ * @return true if SIMID iframe has been successfully added, false otherwise
+ */
+export type AddSimidCallback = (iframe: HTMLIFrameElement) => boolean
+
+/**
+ * Callback function called when the SIMID iframe has to be shown or hidden.
+ * @param show true to show the SIMID iframe, false to hide it
+ */
+export type ShowSimidCallback = (show: boolean) => void
+
+/**
+ * Callback function called when the SIMID iframe has to be resized. 
+ * @param dimensions the new SIMID iframe dimensions
+ * @return true if the SIMID iframe has been successfully resized, false otherwise
+ */
+export type ResizeSimidCallback = (dimensions: DOMRect) => boolean
+
+/**
+ * Callback function called when the media player element has to be resized.
+ * @param dimensions the new player dimensions
+ */
+export type ResizePlayerCallback = (dimensions: DOMRect) => void
+
+/**
+ * Callback function called when the creative requests navigation to an external URI.
+ * Used in mobile app environments where the player manages external URL navigation.
+ * The player must open the URI and the callback is invoked after resolve is sent to the creative.
+ * @param uri the external URI to open
+ */
+export type OpenPageCallback = (uri: string) => void
+
+/**
+ * Callback function called when the current SIMID has completed.
+ * @skipped true when SIMID has been skipped and terminated by the user 
+ */
+export type CompleteCallback = (skipped: boolean) => void
+
+/**
+ * Callback function called when an error occurred.
+ * @param messageType the message type that caused/sent the error
+ * @param errorCode the error code
+ * @param errorMEssage the error message
+ */
+export type ErrorCallback = (messageType: string, errorCode: number, errorMessage: string) => void
+
 /** 
  * All the logic for a simple SIMID player/controller
  */
@@ -72,16 +138,16 @@ export class SimidController extends SimidComponent {
   private _adDuration: number
 
   // Callback functions
-  private _onGetMediaState: (() => MediaState) | undefined
-  private _onPlayMedia: (() => boolean) | undefined
-  private _onPauseMedia: (() => boolean) | undefined
-  private _onAddSimid: ((HTMLIFrameElement) => void) | undefined
-  private _onShowSimid: ((boolean) => void) | undefined
-  private _onResizeSimid: ((DOMRect) => boolean) | undefined
-  private _onResizePlayer: ((DOMRect) => void) | undefined
-  private _onOpenPage: ((uri: string) => void) | undefined
-  private _onComplete: ((boolean) => void) | undefined
-  private _onError: ((message: string, errorCode: number, errorMessage: string) => void) | undefined
+  private _onGetMediaState: GetMediaStateCallback | undefined
+  private _onPlayMedia: PlayMediaCallabck | undefined
+  private _onPauseMedia: PauseMediaCallback | undefined
+  private _onAddSimid: AddSimidCallback | undefined
+  private _onShowSimid: ShowSimidCallback | undefined
+  private _onResizeSimid: ResizeSimidCallback | undefined
+  private _onResizePlayer: ResizePlayerCallback | undefined
+  private _onOpenPage: OpenPageCallback | undefined
+  private _onComplete: CompleteCallback | undefined
+  private _onError: ErrorCallback| undefined
 
   private _timerMediaState: number | undefined
   private _mediaTimeupdateInterval: number
@@ -132,6 +198,10 @@ export class SimidController extends SimidComponent {
     this.addCreativeMessageListeners()
   }
 
+  /*
+  * Return the current SIMID controller version
+  * @return the current SIMID controller version
+  */
   public static get version(): string {
     return __VERSION__
   }
@@ -139,51 +209,58 @@ export class SimidController extends SimidComponent {
   // #region PUBLIC METHODS 
 
   /**
-   * Set the callback function called to retrieve current media state. 
+   * Set the callback function called to retrieve current media state.
+   * @param cb the callback function
    */
-  public set onGetMediaState(cb: () => MediaState) {
+  public set onGetMediaState(cb: GetMediaStateCallback) {
     this._onGetMediaState = cb
   }
 
   /**
-   * Set the callback function called when the main video has to be played or resumed. 
+   * Set the callback function called when the main video has to be played or resumed.
+   * @param cb the callback function
    */
-  public set onPlayMedia(cb: () => boolean) {
+  public set onPlayMedia(cb: PlayMediaCallabck) {
     this._onPlayMedia = cb
   }
 
   /**
    * Set the callback function called when the main video has to be paused. 
+   * @param cb the callback function
    */
-  public set onPauseMedia(cb: () => boolean) {
+  public set onPauseMedia(cb: PauseMediaCallback) {
     this._onPauseMedia = cb
   }
 
   /**
    * Set the callback function called when a new SIMID iframe has to be added in application DOM. 
+   * @param cb the callback function
    */
-  public set onAddSimid(cb: (iframe: HTMLIFrameElement) => boolean) {
+  public set onAddSimid(cb: AddSimidCallback) {
     this._onAddSimid = cb
   }
 
   /**
-   * Set the callback function called when a the SIMID iframe has to be showed of hidden. 
+   * Set the callback function called when the SIMID iframe has to be shown or hidden.
+   * @param cb the callback function
    */
-  public set onShowSimid(cb: (show: boolean) => void) {
+  public set onShowSimid(cb: ShowSimidCallback) {
     this._onShowSimid = cb
   }
 
   /**
    * Set the callback function called when the SIMID iframe has to be resized. 
+   * @param cb the callback function
    */
-    public set onResizeSimid(cb: (dimensions: DOMRect) => boolean) {
+  public set onResizeSimid(cb: ResizeSimidCallback) {
       this._onResizeSimid = cb
     }
   
   /**
-   * Set the callback function called when the media player element has to be resized. 
+   * Set the callback function called when the media player element has to be resized.
+   * @param cb the callback function
    */
-  public set onResizePlayer(cb: (dimensions: DOMRect) => void) {
+  public set onResizePlayer(cb: ResizePlayerCallback) {
     this._onResizePlayer = cb
   }
 
@@ -191,35 +268,39 @@ export class SimidController extends SimidComponent {
    * Set the callback function called when the creative requests navigation to an external URI.
    * Used in mobile app environments where the player manages external URL navigation.
    * The player must open the URI and the callback is invoked after resolve is sent to the creative.
+   * @param cb the callback function
    */
-  public set onOpenPage(cb: (uri: string) => void) {
+  public set onOpenPage(cb: OpenPageCallback) {
     this._onOpenPage = cb
   }
 
   /**
-   * Set the callback function called when the current SIMID duration has completed. 
+   * Set the callback function called when the current SIMID has completed.
+   * @param cb the callback function
    */
-  public set onComplete(cb: (skipped: boolean) => void) {
+  public set onComplete(cb: CompleteCallback) {
     this._onComplete = cb
   }
 
   /**
-   * Set the callback function called when an error occured.
-   * @param messageType the message type that caused/sent the error
-   * @param errorCode the error code
-   * @param errorMEssage the error message
+   * Set the callback function called when an error occurred.
+   * @param cb the callback function
    */
-  public set onError(cb: (messageType: string, errorCode: number, errorMessage: string) => void) {
+  public set onError(cb: ErrorCallback) {
     this._onError = cb
   }
 
+  /*
+  * Return the current SIMID controller version.
+  * @return the current SIMID controller version
+  */  
   public getVersion(): string {
     return __VERSION__
   }
 
   /**
    * Initialize and load ad. This should be called before an ad plays.
-   * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
+   * Creates an iframe and load the SIMID creative.
    * @param autoStart true to start the creative once initialized
    */
   public load(autoStart = false) {
@@ -231,7 +312,7 @@ export class SimidController extends SimidComponent {
   }
 
   /**
-   * Start the loaded creative
+   * Start the loaded creative.
    */
   public start() {
     if (!this._initialized) {
@@ -243,14 +324,14 @@ export class SimidController extends SimidComponent {
   }
 
   /**
-   * Stop and reset the SIMID controller
+   * Stop and reset the SIMID session.
    */
   public reset() {
     this._stopAd()
   }
 
   /**
-   * Notify the SIMID controller any changes any of ad components’ size
+   * Notify the SIMID controller any changes any of ad components’ size.
    * @param playerDimensions the new player dimensions
    * @param creativeDimensions the new creative dimensions
    * @param fullscreen true if in fullscreen mode 

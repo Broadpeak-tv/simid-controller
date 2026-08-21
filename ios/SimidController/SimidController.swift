@@ -2,6 +2,72 @@ import UIKit
 import WebKit
 import Foundation
 
+/**
+ * Callback function called to retrieve current media state.
+ * - Returns: the current media state
+ */
+public typealias GetMediaStateCallback = () -> MediaState
+
+/**
+ * Callback function called when the main video has to be played or resumed. 
+ * - Returns: true if main video successfully played or resumed
+ */
+public typealias PlayMediaCallabck = () -> Bool
+
+/**
+ * Callback function called when the main video has to be paused. 
+ * - Returns: true if main video successfully played or resumed
+ */
+public typealias PauseMediaCallback = () -> Bool
+
+/**
+ * Callback function called when a new SIMID WebView has to be added in application. 
+ * - Parameter webview the SIMID WebView
+ * - Returns: true if SIMID iframe has been successfully added, false otherwise
+ */
+public typealias AddSimidCallback = (_ webview: WKWebView) -> Bool
+
+/**
+ * Callback function called when the SIMID WebView has to be shown or hidden.
+ * - Parameter show true to show the SIMID iframe, false to hide it
+ */
+public typealias ShowSimidCallback = (_ show: Bool) -> Void
+
+/**
+ * Callback function called when the SIMID WebView has to be resized. 
+ * - Parameter dimensions the new SIMID WebView dimensions
+ * - Returns: true if the SIMID WebView has been successfully resized, false otherwise
+ */
+public typealias ResizeSimidCallback = (_ dimensions: Dimensions) -> Bool
+
+/**
+ * Callback function called when the media player element has to be resized.
+ * - Parameter dimensions the new player dimensions
+ */
+public typealias ResizePlayerCallback = (_ dimensions: Dimensions) -> Void
+
+/**
+ * Callback function called when the creative requests navigation to an external URI.
+ * Used in mobile app environments where the player manages external URL navigation.
+ * The player must open the URI and the callback is invoked after resolve is sent to the creative.
+ * - Parameter uri the external URI to open
+ */
+public typealias OpenPageCallback = (_ uri: String) -> Void
+
+/**
+ * Callback function called when the current SIMID has completed.
+ * @skipped true when SIMID has been skipped and terminated by the user 
+ */
+public typealias CompleteCallback = (_ skipped: Bool) -> Void
+
+/**
+ * Callback function called when an error occurred.
+ * - Parameter messageType the message type that caused/sent the error
+ * - Parameter errorCode the error code
+ * - Parameter errorMEssage the error message
+ */
+public typealias ErrorCallback = (_ messageType: String, _ errorCode: Int, _ errorMessage: String) -> Void
+
 open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigationDelegate {
 
     public static let VERSION = "0.9.0"
@@ -24,26 +90,26 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
     private var mediaTimeupdateTask: Task<Void, Error>?
 
-    private var onGetMediaState: (() -> MediaState)?
-    private var onPlayMedia: (() -> Bool)?
-    private var onPauseMedia: (() -> Bool)?
-    private var onAddSimid: ((WKWebView) -> Void)?
-    private var onShowSimid: ((Bool) -> Void)?
-    private var onResizeSimid: ((Dimensions) -> Bool)?
-    private var onResizePlayer: ((Dimensions) -> Void)?
-    private var onOpenPage: ((String) -> Void)?
-    private var onComplete: ((Bool) -> Void)?
-    private var onError: ((String, Int, String) -> Void)?
+    private var onGetMediaState: GetMediaStateCallback?
+    private var onPlayMedia: PlayMediaCallabck?
+    private var onPauseMedia: PauseMediaCallback?
+    private var onAddSimid: AddSimidCallback?
+    private var onShowSimid: ShowSimidCallback?
+    private var onResizeSimid: ResizeSimidCallback?
+    private var onResizePlayer: ResizePlayerCallback?
+    private var onOpenPage: OpenPageCallback?
+    private var onComplete: CompleteCallback?
+    private var onError: ErrorCallback?
 
     /**
      * Set up the SIMID controller an starts listening for messages from the creative.
-     * @param playerDimensions the main player dimensions
-     * @param creativeDimensions the initial creative dimensions the application/player will set
-     * @param creativeUri The creative URI
-     * @param creativeData the creative data (ad parameters, clickThruUrl)
-     * @param adDuration the display duration of the creative (0 by default, meaning no requested duration)
-     * @param adSkippable true if the linear ad is skippable (false by default)
-     * @param mediaTimeupdateInterval the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
+     * - Parameter playerDimensions: the main player dimensions
+     * - Parameter creativeDimensions: the initial creative dimensions the application/player will set
+     * - Parameter creativeUri: The creative URI
+     * - Parameter creativeData: the creative data (ad parameters, clickThruUrl)
+     * - Parameter adDuration: the display duration of the creative (0 by default, meaning no requested duration)
+     * - Parameter adSkippable: true if the linear ad is skippable (false by default)
+     * - Parameter mediaTimeupdateInterval: the interval in ms to send media timeupdate message to the creative (250ms by default, -1 to disable)
      */
     public init(
         playerDimensions: Dimensions,
@@ -67,25 +133,80 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         addCreativeMessageListeners()
     }
     
-    public func onGetMediaState(_ cb: @escaping () -> MediaState) { self.onGetMediaState = cb }
-    public func onPlayMedia(_ cb: @escaping () -> Bool) { self.onPlayMedia = cb }
-    public func onPauseMedia(_ cb: @escaping () -> Bool) { self.onPauseMedia = cb }
-    public func onAddSimid(_ cb: @escaping (WKWebView) -> Void) { self.onAddSimid = cb }
-    public func onShowSimid(_ cb: @escaping (Bool) -> Void) { self.onShowSimid = cb }
-    public func onResizeSimid(_ cb: @escaping (Dimensions) -> Bool) { self.onResizeSimid = cb }
-    public func onResizePlayer(_ cb: @escaping (Dimensions) -> Void) { self.onResizePlayer = cb }
-    public func onOpenPage(_ cb: @escaping (String) -> Void) { self.onOpenPage = cb }
-    public func onComplete(_ cb: @escaping (Bool) -> Void) { self.onComplete = cb }
-    public func onError(_ cb: @escaping (String, Int, String) -> Void) { self.onError = cb }
+    /**
+     * Set the callback function called to retrieve current media state.
+     * - Parameter cb: the callback function
+     */
+    public func onGetMediaState(_ cb: @escaping GetMediaStateCallback) { self.onGetMediaState = cb }
 
+    /**
+     * Set the callback function called when the main video has to be played or resumed.
+     * - Parameter cb: the callback function
+     */
+    public func onPlayMedia(_ cb: @escaping PlayMediaCallabck) { self.onPlayMedia = cb }
+
+    /**
+     * Set the callback function called when the main video has to be paused.
+     * - Parameter cb: the callback function
+     */
+    public func onPauseMedia(_ cb: @escaping PauseMediaCallback) { self.onPauseMedia = cb }
+
+    /**
+     * Set the callback function called when a new SIMID WebView has to be added in application.
+     * - Parameter cb: the callback function
+     */
+    public func onAddSimid(_ cb: @escaping AddSimidCallback) { self.onAddSimid = cb }
+
+    /**
+     * Set the callback function called when the SIMID iframe has to be shown or hidden.
+     * - Parameter cb: the callback function
+     */
+    public func onShowSimid(_ cb: @escaping ShowSimidCallback) { self.onShowSimid = cb }
+
+    /**
+     * Set the callback function called when the SIMID iframe has to be resized.
+     * - Parameter cb: the callback function
+     */
+    public func onResizeSimid(_ cb: @escaping ResizeSimidCallback) { self.onResizeSimid = cb }
+
+    /**
+     * Set the callback function called when the media player element has to be resized.
+     * - Parameter cb: the callback function
+     */
+    public func onResizePlayer(_ cb: @escaping ResizePlayerCallback) { self.onResizePlayer = cb }
+
+    /**
+     * Set the callback function called when the creative requests navigation to an external URI.
+     * Used in mobile app environments where the player manages external URL navigation.
+     * The player must open the URI and the callback is invoked after resolve is sent to the creative.
+     * - Parameter cb: the callback function
+     */
+    public func onOpenPage(_ cb: @escaping OpenPageCallback) { self.onOpenPage = cb }
+
+    /**
+     * Set the callback function called when the current SIMID has completed.
+     * - Parameter cb: the callback function
+     */
+    public func onComplete(_ cb: @escaping CompleteCallback) { self.onComplete = cb }
+
+    /**
+     * Set the callback function called when an error occurred.
+     * - Parameter cb: the callback function
+     */
+    public func onError(_ cb: @escaping ErrorCallback) { self.onError = cb }
+
+    /*
+     * Return the current SIMID controller version.
+     * - Returns: the current SIMID controller version
+     */
     public func getVersion() -> String {
         return SimidController.VERSION
     }
     
     /**
      * Initialize and load ad. This should be called before an ad plays.
-     * Creates an iframe with the creative in it, then uses a promise to call init on the creative as soon as the creative initializes a session.
-     * @param autoStart true to start the creative once initialized
+     * Creates a WebView and load the SIMID the creative.
+     * - Parameter autoStart: true to start the creative once initialized
      */
     public func load(autoStart: Bool = true) {
         self.autoStart = autoStart
@@ -93,7 +214,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
 
     /**
-     * Start the loaded creative
+     * Start the loaded creative.
      */
     public func start() {
         guard initialized else {
@@ -104,7 +225,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
 
     /**
-     * Stop and reset the SIMID controller
+     * Stop and reset the SIMID session.
      */
     public func reset() {
         stopAd()
@@ -112,9 +233,9 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
     /**
      * Notify the SIMID controller any changes any of ad components’ size
-     * @param playerDimensions the new player dimensions
-     * @param creativeDimensions the new creative dimensions
-     * @param fullscreen true if in fullscreen mode
+     * - Parameter playerDimensions: the new player dimensions
+     * - Parameter creativeDimensions: the new creative dimensions
+     * - Parameter fullscreen: true if in fullscreen mode
      */
     public func notifyResize(playerDimensions: Dimensions,
                              creativeDimensions: Dimensions,
