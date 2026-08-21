@@ -39,8 +39,16 @@ simidController.onResizePlayer { dimensions: DOMRect ->
   // Called by the SIMID controller when the main player element has to be resized
 }
 
-simidController.onComplete = {skipped: Boolean ->
+simidController.onOpenPage = { uri: String ->
+  // Called when the creative requests navigation to an external URI
+}
+
+simidController.onComplete = { skipped: Boolean ->
   // Called by the SIMID controller when the SIMID nonlinear ad is completed  with indication if ad has been skipped
+}
+
+simidController.onError = { messageType: String, errorCode: Int, errorMessage: String ->
+  // Called when an error occurred
 }
 
 // 3 - Loads the SIMID creative
