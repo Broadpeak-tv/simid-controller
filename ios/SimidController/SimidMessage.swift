@@ -286,8 +286,8 @@ protocol MessageArgs: Codable {}
 
 struct MessageArgsRegistry {
     static let shared: [String: MessageArgs.Type] = [
-        ProtocolMessage.RESOLVE: ResolveMessageArgs.self,
-        ProtocolMessage.REJECT: RejectMessageArgs.self,
+        ProtocolMessage.RESOLVE: ResolveRejectMessageArgs.self,
+        ProtocolMessage.REJECT: ResolveRejectMessageArgs.self,
         MediaMessage.DURATION_CHANGE: MediaDurationChangeMessageArgs.self,
         MediaMessage.ERROR: MediaErrorMessageArgs.self,
         MediaMessage.TIME_UPDATE: MediaTimeUpdateMessageArgs.self,
@@ -308,19 +308,46 @@ struct MessageArgsRegistry {
     ]
 }
 
-struct ResolveMessageArgs: MessageArgs {
+// resolve/reject message args value:
+// - RejectMessageValue for protocol reject message
+// - MediaState for CreativeMessage.GET_MEDIA_STATE message resolve
+enum ResolveRejectMessageValue: Codable {
+    case reject(RejectMessageValue)
+    case mediaState(MediaState)
+
+    init(from decoder: Decoder) throws {
+        if let value = try? RejectMessageValue(from: decoder) {
+            self = .reject(value)
+        } else if let value = try? MediaState(from: decoder) {
+            self = .mediaState(value)
+        } else {
+            throw DecodingError.dataCorrupted(
+                DecodingError.Context(
+                    codingPath: decoder.codingPath,
+                    debugDescription: "Invalid ResolveRejectMessageValue"
+                )
+            )
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        switch self {
+        case .reject(let value):
+            try value.encode(to: encoder)
+        case .mediaState(let value):
+            try value.encode(to: encoder)
+        }
+    }
+}
+
+struct ResolveRejectMessageArgs: MessageArgs {
     let messageId: Int
-    let value: MediaState?
+    let value: ResolveRejectMessageValue?
 }
 
 struct RejectMessageValue: MessageArgs {
     let errorCode: Int64
     let message: String
-}
-
-struct RejectMessageArgs: MessageArgs {
-    let messageId: Int
-    let value: RejectMessageValue
 }
 
 struct DurationMessageArgs: MessageArgs {

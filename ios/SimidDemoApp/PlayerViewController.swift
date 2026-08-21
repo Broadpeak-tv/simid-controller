@@ -275,6 +275,10 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             print("[SIMID] Completed skipped:", skipped)
         }
 
+        controller.onError { messageType, errorCode, errorMessage in
+            print("[SIMID] Error: message=\(messageType) errorCode=\(errorCode) errorMessage=\(errorMessage)")
+        }
+        
         controller.simidControllerApi(self.bpkSimidController!)
         
         controller.load(autoStart: autoStart)

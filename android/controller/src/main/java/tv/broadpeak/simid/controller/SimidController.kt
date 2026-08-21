@@ -67,6 +67,7 @@ public open class SimidController (
     private var onResizePlayer: ((Dimensions) -> Unit)? = null
     private var onOpenPage: ((String) -> Unit)? = null
     private var onComplete: ((Boolean) -> Unit)? = null
+    private var onError: ((String, Int, String) -> Unit)? = null
 
     private val mainScope = MainScope()
 
@@ -109,6 +110,10 @@ public open class SimidController (
 
     fun onComplete(cb: (Boolean) -> Unit) {
         this.onComplete = cb
+    }
+
+    fun onError(cb: (String, Int, String) -> Unit) {
+        this.onError = cb
     }
     //endregion Callbacks
 
@@ -198,6 +203,8 @@ public open class SimidController (
     }
 
     private fun onCreativeFatalError(message: Message) {
+        val args: CreativeFatalErrorMessageArgs = json.decodeFromJsonElement<CreativeFatalErrorMessageArgs>(message.args!!)
+        onError?.invoke(CreativeMessage.FATAL_ERROR, args.errorCode, args.errorMessage)
         this.stopAd(StopCode.CREATIVE_INITIATED)
     }
 
@@ -407,17 +414,18 @@ public open class SimidController (
         val creativeData = CreativeData(adParams, this.creativeData.clickThruUrl)
         val args = PlayerInitMessageArgs(environmentData, creativeData)
 
-        try {
-            mainScope.launch {
+        mainScope.launch {
+            try {
                 sendMessage(PlayerMessage.INIT, json.encodeToJsonElement(args)).await()
                 _initialized = true
                 if (_autoStart) {
                     startCreative()
                 }
+            } catch (e: RejectException) {
+                Log.v(TAG, "Init failed: $e")
+                onError?.invoke(PlayerMessage.INIT, e.errorCode, e.message)
+                stopSession()
             }
-        } catch (e: Exception) {
-            Log.v(TAG, "Init failed: " + e.message)
-            stopSession()
         }
     }
 
@@ -427,14 +435,15 @@ public open class SimidController (
             _nonLinearStartTime = mediaState?.currentTime!!
         }
 
-        try {
-            mainScope.launch {
+        mainScope.launch {
+            try {
                 sendMessage(PlayerMessage.START_CREATIVE).await()
                 onShowSimid?.invoke(true)
                 startMediaTimeupdateInterval()
+            } catch (e: RejectException) {
+                Log.v(TAG, "Failed to start creative: " + e.message)
+                onError?.invoke(PlayerMessage.START_CREATIVE, e.errorCode, e.message)
             }
-        } catch (e: Exception) {
-            Log.v(TAG, "Failed to start creative: " + e.message)
         }
     }
 

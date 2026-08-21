@@ -33,6 +33,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     private var onResizePlayer: ((Dimensions) -> Void)?
     private var onOpenPage: ((String) -> Void)?
     private var onComplete: ((Bool) -> Void)?
+    private var onError: ((String, Int, String) -> Void)?
 
     /**
      * Set up the SIMID controller an starts listening for messages from the creative.
@@ -75,7 +76,8 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     public func onResizePlayer(_ cb: @escaping (Dimensions) -> Void) { self.onResizePlayer = cb }
     public func onOpenPage(_ cb: @escaping (String) -> Void) { self.onOpenPage = cb }
     public func onComplete(_ cb: @escaping (Bool) -> Void) { self.onComplete = cb }
-    
+    public func onError(_ cb: @escaping (String, Int, String) -> Void) { self.onError = cb }
+
     public func getVersion() -> String {
         return SimidController.VERSION
     }
@@ -170,12 +172,14 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
     
     private func onCreativeFatalError(_ message: Message) {
+        let args = message.args as? CreativeFatalErrorMessageArgs
+        self.onError?(CreativeMessage.FATAL_ERROR, args!.errorCode, args!.errorMessage)
         self.stopAd(reason: StopCode.CREATIVE_INITIATED)
     }
     
     private func onCreativeGetMediaState(_ message: Message) {
-        let state = self.onGetMediaState?()
-        self.resolveMessage(message, outgoingArgs: state)
+        guard let state = self.onGetMediaState?() else { return }
+        self.resolveMessage(message, outgoingArgs: .mediaState(state))
     }
 
     private func onCreativeRequestPause(_ message: Message) {
@@ -377,8 +381,10 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
                 try await sendMessage(PlayerMessage.INIT, args: args)
                 initialized = true
                 if autoStart { startCreative() }
-            } catch {
-                stopSession()
+            } catch let error as RejectError {
+                SimidLogger.d("Init failed: \(error)")
+                self.onError?(PlayerMessage.INIT, error.errorCode, error.message)
+                self.stopAd()
             }
         }
     }
@@ -388,10 +394,14 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
             let state = onGetMediaState?()
             nonLinearStartTime = state?.currentTime ?? 0
 
-            try? await sendMessage(PlayerMessage.START_CREATIVE)
-
-            onShowSimid?(true)
-            startMediaTimeupdateInterval()
+            do {
+                try await sendMessage(PlayerMessage.START_CREATIVE)
+                onShowSimid?(true)
+                startMediaTimeupdateInterval()
+            } catch let error as RejectError {
+                SimidLogger.d("Failed to start creative: \(error)")
+                self.onError?(PlayerMessage.START_CREATIVE, error.errorCode, error.message)
+            }
         }
     }
     

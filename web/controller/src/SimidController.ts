@@ -11,6 +11,7 @@ import {
   PlayerInitMessageArgs,
   PlayerMessage,
   ProtocolMessage,
+  RejectMessageArgs,
   RejectMessageArgsValue,
   SkippableState,
   StopCode,
@@ -22,6 +23,7 @@ import {
   NavigationSupport,
   PlayerResizeMessageArgs,
   CreativeClickThruMessageArgs,
+  CreativeFatalErrorMessageArgs,
 } from './SimidMessages'
 import { SimidComponent } from "./SimidComponent"
 
@@ -79,6 +81,7 @@ export class SimidController extends SimidComponent {
   private _onResizePlayer: ((DOMRect) => void) | undefined
   private _onOpenPage: ((uri: string) => void) | undefined
   private _onComplete: ((boolean) => void) | undefined
+  private _onError: ((message: string, errorCode: number, errorMessage: string) => void) | undefined
 
   private _timerMediaState: number | undefined
   private _mediaTimeupdateInterval: number
@@ -200,6 +203,16 @@ export class SimidController extends SimidComponent {
     this._onComplete = cb
   }
 
+  /**
+   * Set the callback function called when an error occured.
+   * @param messageType the message type that caused/sent the error
+   * @param errorCode the error code
+   * @param errorMEssage the error message
+   */
+  public set onError(cb: (messageType: string, errorCode: number, errorMessage: string) => void) {
+    this._onError = cb
+  }
+
   public getVersion(): string {
     return __VERSION__
   }
@@ -282,6 +295,8 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeFatalError(message: Message) {
+    const args = message.args as CreativeFatalErrorMessageArgs
+    this._onError?.(CreativeMessage.FATAL_ERROR, args.errorCode, args.errorMessage)
     this._stopAd(StopCode.CREATIVE_INITIATED)
   }
 
@@ -439,6 +454,8 @@ export class SimidController extends SimidComponent {
       }
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
+      // e as RejectMessageArgs
+      this._onError?.(PlayerMessage.INIT, e.errorCode, e.message)
       this._stopAd()
     }
   }
@@ -493,6 +510,8 @@ export class SimidController extends SimidComponent {
       this._startMediaTimeupdateInterval()
     } catch (e) {
       console.error('[PLAYER] Failed to start creative', e)
+      // e as RejectMessageArgs
+      this._onError?.(PlayerMessage.START_CREATIVE, e.errorCode, e.message)
     }
   }
 
