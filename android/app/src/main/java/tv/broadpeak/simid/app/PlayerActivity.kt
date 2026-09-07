@@ -168,10 +168,8 @@ class PlayerActivity : AppCompatActivity() {
 
                     adDatas[adData.adId] = adData
                     if (adData.nonLinearIframeResources.isNotEmpty()) {
-                        runOnUiThread {
-                            val iframeResource = adData.nonLinearIframeResources[0]
-                            loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, (adData.duration.toFloat() / 1000.0F))
-                        }
+                        val iframeResource = adData.nonLinearIframeResources[0]
+                        loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, (adData.duration.toFloat() / 1000.0F))
                     }
                 }
 
@@ -239,14 +237,22 @@ class PlayerActivity : AppCompatActivity() {
             controller.onPlayMedia { playMedia() }
             controller.onOpenPage { uri -> openPage(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
-            controller.onError { messageType, errorCode, errorMessage -> onError(messageType, errorCode, errorMessage) }
+            controller.onError { messageType, errorCode, errorMessage ->
+                onError(
+                    messageType,
+                    errorCode,
+                    errorMessage
+                )
+            }
 
             controller.simidControllerApi(bpkSimidController!!)
 
-            Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
-            controller.load(autoStart)
-
             simidControllers[adId] = controller
+
+            runOnUiThread {
+                Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
+                controller.load(autoStart)
+            }
         }
     }
 
