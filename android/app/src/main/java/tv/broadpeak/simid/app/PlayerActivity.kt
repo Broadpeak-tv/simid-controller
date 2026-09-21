@@ -27,6 +27,7 @@ import androidx.media3.common.util.UnstableApi
 import tv.broadpeak.simid.controller.CreativeData
 import tv.broadpeak.simid.controller.MediaState
 import tv.broadpeak.simid.controller.Dimensions
+import tv.broadpeak.simid.controller.SimidController
 import tv.broadpeak.smartlib.SmartLib
 import tv.broadpeak.smartlib.ad.AdBreakData
 import tv.broadpeak.smartlib.ad.AdData
@@ -35,10 +36,11 @@ import tv.broadpeak.smartlib.ad.simid.GenericSimidControllerApi
 import tv.broadpeak.smartlib.session.streaming.StreamingSession
 import java.net.URL
 
-// Create a class that extends GenericSimidControllerApi
-class BpkSimidController : GenericSimidControllerApi() {
+// Create a SIMID controller adapter that extends GenericSimidControllerApi,
+// and provide SIMID controller name for logging purpose
+class SimidControllerAdapter : GenericSimidControllerApi() {
     override fun getSimidControllerName(): String {
-        return "Bpk SIMID Controller"
+        return "MySIMIDController"
     }
 }
 
@@ -55,7 +57,7 @@ class PlayerActivity : AppCompatActivity() {
     private var simidControllers: MutableMap<String, SimidController>  = mutableMapOf()
     private var simidWebViews: MutableMap<String, WebView>  = mutableMapOf()
 
-    private var bpkSimidController: BpkSimidController? = null
+    private var simidControllerAdapter: SimidControllerAdapter? = null
 
     // Global flag to control animation usage
     private var useAnimations: Boolean = true
@@ -206,12 +208,12 @@ class PlayerActivity : AppCompatActivity() {
                 }
             })
 
-            bpkSimidController = BpkSimidController()
+            simidControllerAdapter = SimidControllerAdapter()
 
             sSession.attachPlayer(player!!)
 
-            // Attach bpkSimidController to the session
-            sSession.attachSimidController(bpkSimidController)
+            // Attach SimidController adapter to the session
+            sSession.attachSimidController(simidControllerAdapter)
         }
     }
 
@@ -230,6 +232,9 @@ class PlayerActivity : AppCompatActivity() {
         val simidController = SimidController(this, applicationContext, playerDimensions, playerDimensions, creativeUri, creativeData, duration)
 
         simidController.let { controller ->
+            controller.onMessageReceived { message -> simidControllerAdapter?.onMessageReceived(message) }
+            controller.onMessageSent { message -> simidControllerAdapter?.onMessageSent(message) }
+
             controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
             controller.onShowSimid { show -> showSimidWebView(adId, show) }
             controller.onResizeSimid { dimensions -> resizeSimid(adId, dimensions) }
@@ -240,9 +245,6 @@ class PlayerActivity : AppCompatActivity() {
             controller.onOpenPage { uri -> openPage(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
             controller.onError { messageType, errorCode, errorMessage -> onError(messageType, errorCode, errorMessage) }
-
-            controller.simidControllerApi(bpkSimidController!!)
-
             Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
             controller.load(autoStart)
 
