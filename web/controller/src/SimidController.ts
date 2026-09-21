@@ -32,6 +32,18 @@ const MEDIA_TIMEUPDATE_INTERVAL_MS = 250
 declare const __VERSION__: string;
 
 /**
+ * Callback function called to be notified of a received SIMID message, for information and debug purpose.
+ * @param message the message a stringified JSON
+ */
+export type MessageReceivedCallback = (message: string) => void
+
+/**
+ * Callback function called to be notified of a sent SIMID message, for information and debug purpose.
+ * @param message the message a stringified JSON
+ */
+export type MessageSentCallback = (message: string) => void
+
+/**
  * Callback function called to retrieve current media state.
  * @return the current media state
  */
@@ -138,6 +150,8 @@ export class SimidController extends SimidComponent {
   private _adDuration: number
 
   // Callback functions
+  private _onMessageReceived: MessageReceivedCallback | undefined
+  private _onMessageSent: MessageSentCallback | undefined
   private _onGetMediaState: GetMediaStateCallback | undefined
   private _onPlayMedia: PlayMediaCallabck | undefined
   private _onPauseMedia: PauseMediaCallback | undefined
@@ -207,6 +221,22 @@ export class SimidController extends SimidComponent {
   }
 
   // #region PUBLIC METHODS 
+
+  /**
+   * Set the callback function called to be notified of received SIMID messages.
+   * @param cb the callback function
+   */
+  public set onMessageReceived(cb: MessageReceivedCallback) {
+    this._onMessageReceived = cb
+  }
+
+  /**
+   * Set the callback function called to be notified of sent SIMID messages.
+   * @param cb the callback function
+   */
+  public set onMessageSent(cb: MessageSentCallback) {
+    this._onMessageSent = cb
+  }
 
   /**
    * Set the callback function called to retrieve current media state.
@@ -351,6 +381,24 @@ export class SimidController extends SimidComponent {
   }
 
   // #endregion PUBLIC METHODS
+
+  protected postMessage(message: Message): void {
+    try {
+      this._onMessageSent?.(JSON.stringify(message))
+    } catch(e) {
+      console.warn('Sent message handler thrown an exception:', e)
+    }
+    super.postMessage(message)
+  }
+
+  protected receiveMessage(event: MessageEvent): void {
+    try {
+      this._onMessageReceived?.(event.data)
+    } catch(e) {
+      console.warn('Received message handler thrown an exception:', e)
+    }
+    super.receiveMessage(event)
+  }
 
   protected addCreativeMessageListeners() {
     this.addMessageListener(ProtocolMessage.CREATE_SESSION, (message: Message) => this.onCreateSession(message))
