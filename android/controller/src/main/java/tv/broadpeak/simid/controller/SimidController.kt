@@ -315,7 +315,7 @@ public open class SimidController (
         try {
             onMessageSent?.invoke(message)
         } catch(e: Exception) {
-            Log.w(TAG, "Received message handler thrown an exception: $e")
+            Log.w(TAG, "Sent message handler thrown an exception: $e")
         }
 
         val script =
@@ -332,7 +332,7 @@ public open class SimidController (
         try {
             this.onMessageReceived?.invoke(messageStr)
         } catch(e: Exception) {
-            Log.w(TAG, "Sent message handler thrown an exception: $e")
+            Log.w(TAG, "Received message handler thrown an exception: $e")
         }
         super.receiveMessage(messageStr)
     }
