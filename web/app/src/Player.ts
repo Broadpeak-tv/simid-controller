@@ -1,5 +1,4 @@
-import { CreativeData, MediaState } from '@broadpeak-tv/simid-controller'
-import SimidController from './SimidController'
+import { CreativeData, MediaState, SimidController } from '@broadpeak-tv/simid-controller'
 import { SmartLib } from '@broadpeak/smartlib'
 import '@broadpeak/smartlib-ad'
 import '@broadpeak/smartlib-shaka'
@@ -7,6 +6,14 @@ import '@broadpeak/smartlib-analytics'
 import { GenericSimidControllerApi } from '@broadpeak/smartlib-simid'
 
 declare const shaka: any
+
+// Create a SIMID controller adapter that extends GenericSimidControllerApi,
+// and provide SIMID controller name for logging purpose
+class SimidControllerAdapter extends GenericSimidControllerApi {
+  getSimidControllerName(): String {
+      return "MySIMIDController"
+  }
+}
 
 export default class Player {
 
@@ -20,7 +27,7 @@ export default class Player {
   private adDatas: Map<string, any> = new Map<string, any>()
   private simidControllers: Map<string, SimidController> = new Map<string, SimidController>()
   private simidIframes: Map<string, HTMLIFrameElement> = new Map<string, HTMLIFrameElement>()
-  private bpkSimidController: any /* GenericSimidControllerApi */
+  private simidControllerAdapter?: SimidControllerAdapter
 
   constructor(playerContainer: HTMLElement, playerElement: HTMLElement, videoElement: HTMLMediaElement) {
     this.playerContainer = playerContainer
@@ -40,13 +47,13 @@ export default class Player {
     this.smartlibSession = SmartLib.getInstance().createStreamingSession()
     this.setAdEventsListeners(this.smartlibSession)
 
-    this.bpkSimidController = new GenericSimidControllerApi()
+    this.simidControllerAdapter = new SimidControllerAdapter()
 
     // Attach player to smartlib session
     this.smartlibSession.attachPlayer(this.player)
 
-    // Attach bpkSimidController to the session
-    this.smartlibSession.attachSimidController(this.bpkSimidController)
+    // Attach SimidController adapter to the session
+    this.smartlibSession.attachSimidController(this.simidControllerAdapter)
 
     const result = await this.smartlibSession.getURL(url)
 
@@ -78,6 +85,9 @@ export default class Player {
     }
     const simidController = new SimidController(playerRect, playerRect, creativeUri, creativeData, duration, false)
 
+    simidController.onMessageReceived = (message: string) => this.simidControllerAdapter?.onMessageReceived(message)
+    simidController.onMessageSent = (message: string) => this.simidControllerAdapter?.onMessageSent(message)
+
     simidController.onGetMediaState = () => this.getMediaState()
     simidController.onAddSimid = (iframe: HTMLIFrameElement) => this.addSimidIframe(adId, iframe)
     simidController.onShowSimid = (show: boolean) => this.showSimidIframe(adId, show)
@@ -88,8 +98,6 @@ export default class Player {
     simidController.onOpenPage = (uri: string) => this.openPage(uri)
     simidController.onComplete = (skipped: boolean) => this.completeAd(adId, skipped)
     simidController.onError = (messageType: string, errorCode: number, errorMessage: string) => this.onError(messageType, errorCode, errorMessage)
-
-    simidController.simidControllerApi = this.bpkSimidController
 
     console.log(`[Player] Load SIMID controller v${simidController.getVersion()}`)
     simidController.load(autoStart)

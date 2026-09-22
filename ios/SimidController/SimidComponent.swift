@@ -31,6 +31,10 @@ open class SimidComponent: NSObject {
     // Response listeners for sent messages
     var responseListeners: [Int: MessageCallback] = [:]
 
+    // Indicates the session has been reset/disposed. This component is one-shot:
+    // once reset, it can no longer send or receive messages and must be discarded.
+    var disposed: Bool = false
+
     // JSON endoder/decoder
     let jsonEncoder = JSONEncoder()
     let jsonDecoder = JSONDecoder()
@@ -47,6 +51,12 @@ open class SimidComponent: NSObject {
     }
 
     func sendMessage(_ type: String, args: MessageArgs? = nil) async throws {
+        guard !disposed else {
+            throw RejectError(
+                errorCode: Int(PlayerErrorCode.UNSPECIFIED),
+                message: "Cannot send message: SIMID session has been reset (one-shot lifecycle)"
+            )
+        }
         let message = createMessage(type: type, args: args)
         try await sendSimidMessage(message)
     }
@@ -56,6 +66,9 @@ open class SimidComponent: NSObject {
     }
 
     open func receiveMessage(_ messageStr: String) {
+        // Ignore any message once the session has been reset
+        guard !disposed else { return }
+
         SimidLogger.d("[SIMID][Player][R] \(messageStr)")
         guard let data = messageStr.data(using: .utf8),
               let message = try? jsonDecoder.decode(Message.self, from: data) else {
@@ -102,6 +115,9 @@ open class SimidComponent: NSObject {
     }
 
     func resetSession() {
+        guard !disposed else { return }
+        disposed = true
+
         messageListeners.removeAll()
         responseListeners.removeAll()
         sessionId = ""

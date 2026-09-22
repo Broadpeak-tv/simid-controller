@@ -27,6 +27,7 @@ import androidx.media3.common.util.UnstableApi
 import tv.broadpeak.simid.controller.CreativeData
 import tv.broadpeak.simid.controller.MediaState
 import tv.broadpeak.simid.controller.Dimensions
+import tv.broadpeak.simid.controller.SimidController
 import tv.broadpeak.smartlib.SmartLib
 import tv.broadpeak.smartlib.ad.AdBreakData
 import tv.broadpeak.smartlib.ad.AdData
@@ -35,10 +36,11 @@ import tv.broadpeak.smartlib.ad.simid.GenericSimidControllerApi
 import tv.broadpeak.smartlib.session.streaming.StreamingSession
 import java.net.URL
 
-// Create a class that extends GenericSimidControllerApi
-class BpkSimidController : GenericSimidControllerApi() {
+// Create a SIMID controller adapter that extends GenericSimidControllerApi,
+// and provide SIMID controller name for logging purpose
+class SimidControllerAdapter : GenericSimidControllerApi() {
     override fun getSimidControllerName(): String {
-        return "Bpk SIMID Controller"
+        return "MySIMIDController"
     }
 }
 
@@ -55,7 +57,7 @@ class PlayerActivity : AppCompatActivity() {
     private var simidControllers: MutableMap<String, SimidController>  = mutableMapOf()
     private var simidWebViews: MutableMap<String, WebView>  = mutableMapOf()
 
-    private var bpkSimidController: BpkSimidController? = null
+    private var simidControllerAdapter: SimidControllerAdapter? = null
 
     // Global flag to control animation usage
     private var useAnimations: Boolean = true
@@ -168,10 +170,8 @@ class PlayerActivity : AppCompatActivity() {
 
                     adDatas[adData.adId] = adData
                     if (adData.nonLinearIframeResources.isNotEmpty()) {
-                        runOnUiThread {
-                            val iframeResource = adData.nonLinearIframeResources[0]
-                            loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, (adData.duration.toFloat() / 1000.0F))
-                        }
+                        val iframeResource = adData.nonLinearIframeResources[0]
+                        loadSimid(adData.adId, iframeResource.url, iframeResource.parameters, iframeResource.clickURL, (adData.duration.toFloat() / 1000.0F))
                     }
                 }
 
@@ -192,13 +192,24 @@ class PlayerActivity : AppCompatActivity() {
 
                 override fun onAdEnd(adData: AdData, adBreakData: AdBreakData) {
                     Log.d(TAG, "onAdEnd: ${adData.adId}")
-                    val simidController = simidControllers[adData.adId]
-                    if (simidController != null) {
-                        simidController.reset()
-                        simidControllers.remove(adData.adId)
-                        removeWebView(adData.adId)
+                    // Must run on the UI thread, and in particular after any pending
+                    // onPrepareAd/onAdBegin runnables for this same adId that were already
+                    // queued via runOnUiThread below. Ad event callbacks can be invoked off
+                    // the UI thread, and onPrepareAd/onAdBegin defer their work via
+                    // runOnUiThread; if onAdEnd ran immediately on that calling thread
+                    // instead, it could execute before those queued runnables, find no
+                    // controller yet in simidControllers, and no-op — leaving a SIMID WebView
+                    // that gets created and shown moments later with nothing left to ever
+                    // tear it down.
+                    runOnUiThread {
+                        val simidController = simidControllers[adData.adId]
+                        if (simidController != null) {
+                            simidController.reset()
+                            simidControllers.remove(adData.adId)
+                            removeWebView(adData.adId)
+                        }
+                        adDatas.remove(adData.adId)
                     }
-                    adDatas.remove(adData.adId)
                 }
 
                 override fun onAdBreakEnd(adBreakData: AdBreakData) {
@@ -206,12 +217,12 @@ class PlayerActivity : AppCompatActivity() {
                 }
             })
 
-            bpkSimidController = BpkSimidController()
+            simidControllerAdapter = SimidControllerAdapter()
 
             sSession.attachPlayer(player!!)
 
-            // Attach bpkSimidController to the session
-            sSession.attachSimidController(bpkSimidController)
+            // Attach SimidController adapter to the session
+            sSession.attachSimidController(simidControllerAdapter)
         }
     }
 
@@ -230,6 +241,9 @@ class PlayerActivity : AppCompatActivity() {
         val simidController = SimidController(this, applicationContext, playerDimensions, playerDimensions, creativeUri, creativeData, duration)
 
         simidController.let { controller ->
+            controller.onMessageReceived { message -> simidControllerAdapter?.onMessageReceived(message) }
+            controller.onMessageSent { message -> simidControllerAdapter?.onMessageSent(message) }
+
             controller.onAddSimid { webView -> addSimidWebView(adId, webView) }
             controller.onShowSimid { show -> showSimidWebView(adId, show) }
             controller.onResizeSimid { dimensions -> resizeSimid(adId, dimensions) }
@@ -240,13 +254,14 @@ class PlayerActivity : AppCompatActivity() {
             controller.onOpenPage { uri -> openPage(uri) }
             controller.onComplete { skipped -> completeAd(adId, skipped) }
             controller.onError { messageType, errorCode, errorMessage -> onError(messageType, errorCode, errorMessage) }
-
-            controller.simidControllerApi(bpkSimidController!!)
-
             Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
-            controller.load(autoStart)
 
             simidControllers[adId] = controller
+
+            runOnUiThread {
+                Log.d(TAG, "Load SIMID controller v${controller.getVersion()} and creative from $creativeUri")
+                controller.load(autoStart)
+            }
         }
     }
 

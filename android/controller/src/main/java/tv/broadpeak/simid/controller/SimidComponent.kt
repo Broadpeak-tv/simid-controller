@@ -53,6 +53,11 @@ abstract class SimidComponent (
     // Response listeners for sent messages
     val responseListeners: MutableMap<Int, MessageCallback> = mutableMapOf()
 
+    // Indicates the session has been reset/disposed. This component is one-shot:
+    // once reset, it can no longer send or receive messages and must be discarded.
+    protected var disposed: Boolean = false
+        private set
+
     protected fun addMessageListener(messageType: String, callback: MessageCallback) {
         if (!messageListeners.contains(messageType)) {
             messageListeners[messageType] = ArrayList<MessageCallback>()
@@ -61,13 +66,24 @@ abstract class SimidComponent (
     }
 
     /**
-     * Send a message and await its response, enforcing a response timeout when the message type expects one.
+     * Send a message and await its response, enforcing a response timeout when
+     * the message type expects one.
      *
      * @param type the message type
      * @param args optional message args
-     * @param timeoutMs timeout in ms
+     * @param timeoutMs timeout in ms (defaults to [responseTimeoutMs]; <= 0 disables)
+     * @throws RejectException on reject, timeout, or if the session is disposed.
      */
-    protected suspend fun sendMessage(type: String, args: JsonElement? = null, timeoutMs: Long = responseTimeoutMs): Message? {
+    protected suspend fun sendMessage(type: String, args: JsonElement? = null, timeoutMs: Long = responseTimeoutMs
+    ): Message? {
+        // One-shot lifecycle guard: refuse to send once the session is reset.
+        if (disposed) {
+            throw RejectException(
+                PlayerErrorCode.UNSPECIFIED.toInt(),
+                "Cannot send message: SIMID session has been reset (one-shot lifecycle)"
+            )
+        }
+
         val message = createMessage(type, args)
         val deferred = sendSimidMessage(message)
 
@@ -79,14 +95,35 @@ abstract class SimidComponent (
         if (result == null && deferred.isActive) {
             responseListeners.remove(message.messageId)
             Log.w(TAG, "Response timeout for \"$type\" (messageId: ${message.messageId})")
-            throw RejectException(PlayerErrorCode.RESPONSE_TIMEOUT.toInt(), "No response received for \"$type\" within ${timeoutMs}ms")
+            throw RejectException(
+                PlayerErrorCode.RESPONSE_TIMEOUT.toInt(),
+                "No response received for \"$type\" within ${timeoutMs}ms"
+            )
         }
         return result
+    }
+
+    protected fun sendMessage(type: String, args: JsonElement? = null): Deferred<Message?> {
+        if (disposed) {
+            val deferred = CompletableDeferred<Message?>()
+            deferred.completeExceptionally(
+                RejectException(
+                    PlayerErrorCode.UNSPECIFIED.toInt(),
+                    "Cannot send message: SIMID session has been reset (one-shot lifecycle)"
+                )
+            )
+            return deferred
+        }
+        val message: Message = createMessage(type, args)
+        return sendSimidMessage(message)
     }
 
     protected abstract fun postMessage(message: String)
 
     protected open fun receiveMessage(messageStr: String) {
+        // Ignore any message once the session has been reset (one-shot lifecycle).
+        if (disposed) return
+
         Log.v(TAG, "[SIMID][$type][R]: $messageStr")
 
         val message: Message = json.decodeFromString<Message>(messageStr)
@@ -136,12 +173,20 @@ abstract class SimidComponent (
         postMessage(message)
     }
 
+    /**
+     * Reset/revert this protocol to its original state.
+     *
+     * IMPORTANT: This component follows a ONE-SHOT lifecycle. After calling
+     * resetSession() the instance can no longer send or receive messages.
+     * To run another SIMID session, create a new SimidComponent/SimidController.
+     */
     protected fun resetSession() {
+        if (disposed) return
+        disposed = true
+
         messageListeners.clear()
         sessionId = ""
         nextMessageId = 1
-        // Reject all pending response promises before clearing them so awaiting coroutines don't hang forever
-        responseListeners.values.forEach { /* listeners are settled by callers */ }
         responseListeners.clear()
     }
 

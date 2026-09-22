@@ -11,12 +11,26 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.RelativeLayout
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.encodeToJsonElement
+
+/**
+ * Callback function called to be notified of a received SIMID message, for information and debug purpose.
+ * @param message the message a stringified JSON
+ */
+typealias MessageReceivedCallback = (message: String) -> Unit
+
+/**
+ * Callback function called to be notified of a sent SIMID message, for information and debug purpose.
+ * @param message the message a stringified JSON
+ */
+typealias MessageSentCallback = (message: String) -> Unit
 
 /**
  * Callback function called to retrieve current media state.
@@ -123,6 +137,9 @@ public open class SimidController (
     private var _isStopping: Boolean = false
     private var _timerMediaTimeupdate: Job? = null
 
+
+    private var onMessageReceived: MessageReceivedCallback? = null
+    private var onMessageSent: MessageSentCallback? = null
     private var onGetMediaState: GetMediaStateCallback? = null
     private var onPlayMedia: PlayMediaCallback? = null
     private var onPauseMedia: PauseMediaCallback? = null
@@ -141,6 +158,22 @@ public open class SimidController (
     }
 
     //region Callbacks
+    /**
+     * Set the callback function called to be notified of received SIMID messages.
+     * @param cb the callback function
+     */
+    fun onMessageReceived(cb: MessageReceivedCallback) {
+        this.onMessageReceived = cb
+    }
+
+    /**
+     * Set the callback function called to be notified of sent SIMID messages.
+     * @param cb the callback function
+     */
+    fun onMessageSent(cb: MessageSentCallback) {
+        this.onMessageSent = cb
+    }
+
     /**
      * Set the callback function called to retrieve current media state.
      * @param cb the callback function
@@ -281,6 +314,12 @@ public open class SimidController (
     override fun postMessage(message: String) {
         Log.v(TAG, "[SIMID][Player][S]: $message")
 
+        try {
+            onMessageSent?.invoke(message)
+        } catch(e: Exception) {
+            Log.w(TAG, "Sent message handler thrown an exception: $e")
+        }
+
         val script =
             """
             window.originalPostMessage('$message', '*');
@@ -289,6 +328,15 @@ public open class SimidController (
         activity.runOnUiThread {
             webView?.evaluateJavascript(script, null)
         }
+    }
+
+    override fun receiveMessage(messageStr: String) {
+        try {
+            this.onMessageReceived?.invoke(messageStr)
+        } catch(e: Exception) {
+            Log.w(TAG, "Received message handler thrown an exception: $e")
+        }
+        super.receiveMessage(messageStr)
     }
 
     private fun addCreativeMessageListeners() {
@@ -461,19 +509,34 @@ public open class SimidController (
                     }
                 }, "Android")
 
-                sWebView.webViewClient = object : WebViewClient() {
-                    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                        super.onPageStarted(view, url, favicon)
-                        view?.evaluateJavascript(
-                            """
-                            console.log("[Android] override postMessage")
-                            window.originalPostMessage = window.postMessage;
-                            window.postMessage = function(message) {
-                                // Send the message to the Android interface
-                                Android.postMessage(message);
-                            };
-                            """.trimIndent(), null
-                        )
+                // Override window.postMessage so creative -> player messages reach the native
+                // Android bridge. This must run before the creative's own script executes, or its
+                // initial createSession call will self-loop instead of reaching the native
+                // controller, and the session handshake will never complete.
+                //
+                // WebViewFeature.DOCUMENT_START_SCRIPT guarantees the script runs before any page
+                // script. Prefer it over injecting from onPageStarted()'s evaluateJavascript(),
+                // which runs asynchronously and can lose the race under load.
+                val postMessageOverrideScript = """
+                    console.log("[Android] override postMessage")
+                    window.originalPostMessage = window.postMessage;
+                    window.postMessage = function(message) {
+                        // Send the message to the Android interface
+                        Android.postMessage(message);
+                    };
+                """.trimIndent()
+
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                    WebViewCompat.addDocumentStartJavaScript(sWebView, postMessageOverrideScript, setOf("*"))
+                    sWebView.webViewClient = WebViewClient()
+                } else {
+                    // Fallback for devices/WebView versions without DOCUMENT_START_SCRIPT support.
+                    // Same race as before, but only affects very old WebView versions.
+                    sWebView.webViewClient = object : WebViewClient() {
+                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                            super.onPageStarted(view, url, favicon)
+                            view?.evaluateJavascript(postMessageOverrideScript, null)
+                        }
                     }
                 }
 

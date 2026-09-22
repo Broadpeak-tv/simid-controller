@@ -3,6 +3,18 @@ import WebKit
 import Foundation
 
 /**
+ * Callback function called to be notified of a received SIMID message, for information and debug purpose.
+ * - Parameter message the message a stringified JSON
+ */
+public typealias MessageReceivedCallback = (_ message: string) -> Void
+
+/**
+ * Callback function called to be notified of a sent SIMID message, for information and debug purpose.
+ * - Parameter message the message a stringified JSON
+ */
+public typealias MessageSentCallback = (_ message: string) -> Void
+
+/**
  * Callback function called to retrieve current media state.
  * - Returns: the current media state
  */
@@ -90,6 +102,8 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
     private var mediaTimeupdateTask: Task<Void, Error>?
 
+    private var onMessageReceived: MessageReceivedCallback?
+    private var onMessageSent: MessageSentCallback?
     private var onGetMediaState: GetMediaStateCallback?
     private var onPlayMedia: PlayMediaCallabck?
     private var onPauseMedia: PauseMediaCallback?
@@ -133,6 +147,18 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         addCreativeMessageListeners()
     }
     
+    /**
+     * Set the callback function called to be notified of received SIMID messages.
+     * - Parameter cb: the callback function
+     */
+    public func onMessageReceived(_ cb: @escaping MessageReceivedCallback) { self.onMessageReceived = cb }
+
+    /**
+     * Set the callback function called to be notified of sent SIMID messages.
+     * - Parameter cb: the callback function
+     */
+    public func onMessageSent(_ cb: @escaping MessageSentCallback) { self.onMessageSent = cb }
+
     /**
      * Set the callback function called to retrieve current media state.
      * - Parameter cb: the callback function
@@ -259,6 +285,14 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         SimidLogger.d("[SIMID][Player][S] \(message)")
         
         Task { @MainActor in
+            do {
+                try onMessageSent?(message)
+            } catch let error as Error {
+                SimidLogger.w("Sent message handler thrown an exception: $e")
+            }  
+        }
+
+        Task { @MainActor in
             guard let webView = self.webView else { return }
 
             let script = "window.originalPostMessage('\(message)', '*');"
@@ -269,6 +303,16 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
         }
     }
 
+    open override func receiveMessage(_ message: String) {
+        Task { @MainActor in
+            do {
+                try onMessageReceived?(message)
+            } catch let error as Error {
+                SimidLogger.w("Received message handler thrown an exception: $e")
+            }
+        }
+        super.receiveMessage(message)
+    }
     // MARK: CREATIVE MESSAGE HANDLERS
 
     private func addCreativeMessageListeners() {

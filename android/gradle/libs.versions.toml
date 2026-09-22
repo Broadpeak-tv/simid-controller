@@ -19,6 +19,7 @@ media3Exoplayer = "1.4.1"
 smartlibMedia3 = "06.01.03.8ebf0c1"
 tvFoundation = "1.0.0-alpha12"
 tvMaterial = "1.0.0"
+webkit = "1.12.1"
 
 [libraries]
 androidx-activity = { group = "androidx.activity", name = "activity", version.ref = "activity" }
@@ -46,6 +47,7 @@ kotlinx-datetime = { module = "org.jetbrains.kotlinx:kotlinx-datetime", version.
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
 smartlib-media3 = { module = "tv.broadpeak.smartlib:smartlib-media3", version.ref = "smartlibMedia3" }
+androidx-webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

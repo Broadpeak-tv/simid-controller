@@ -5,9 +5,11 @@ import WebKit
 import SmartLib
 import SimidSDK
 
-class BpkSimidController : GenericSimidControllerApi {
+// Create a SIMID controller adapter that extends GenericSimidControllerApi,
+// and provide SIMID controller name for logging purpose
+class SimidControllerAdapter : GenericSimidControllerApi {
     override func getSimidControllerName() -> String {
-        return "Bpk SIMID Controller"
+        return "MySIMIDController"
     }
 }
 
@@ -34,7 +36,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
     private var simidControllers: [String: SimidController] = [:]
     private var simidWebViews: [String: WKWebView] = [:]
 
-    private var bpkSimidController: BpkSimidController?
+    private var simidControllerAdapter: SimidControllerAdapter?
     
     // MARK: - Lifecycle
 
@@ -113,10 +115,10 @@ final class PlayerViewController: UIViewController, AdEventsListener {
         session.activateAdvertising()
         session.setAdEventsListener(self)
         
-        self.bpkSimidController = BpkSimidController()
+        self.simidControllerAdapter = SimidControllerAdapter()
         
         session.attachPlayer(player!)
-        session.attachSimidController(self.bpkSimidController as Any)
+        session.attachSimidController(self.simidControllerAdapter as Any)
     }
 
     private func loadStream() {
@@ -226,6 +228,14 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             adDuration: duration
         )
 
+        controller.onMessageReceived { [weak self] message in
+            self?.simidControllerAdapter?.onMessageReceived(message)
+        }
+
+        controller.onMessageSent { [weak self] message in
+            self?.simidControllerAdapter?.onMessageSent(message)
+        }
+
         controller.onAddSimid { [weak self] webView in
             self?.addWebView(adId: adId, webView: webView)
             return true
@@ -279,9 +289,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
         controller.onError { messageType, errorCode, errorMessage in
             print("[SIMID] Error: message=\(messageType) errorCode=\(errorCode) errorMessage=\(errorMessage)")
         }
-        
-        controller.simidControllerApi(self.bpkSimidController!)
-        
+                
         controller.load(autoStart: autoStart)
 
         simidControllers[adId] = controller

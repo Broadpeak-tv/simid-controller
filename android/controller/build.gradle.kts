@@ -45,6 +45,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.kotlinx.datetime)
+    implementation(libs.androidx.webkit)
 
 //    implementation("androidx.core:core-ktx:1.16.0")
 //    implementation("androidx.appcompat:appcompat:1.7.1")
