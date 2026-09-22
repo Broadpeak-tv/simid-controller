@@ -45,6 +45,11 @@ abstract class SimidComponent (
     // Response listeners for sent messages
     val responseListeners: MutableMap<Int, MessageCallback> = mutableMapOf()
 
+    // Indicates the session has been reset/disposed. This component is one-shot:
+    // once reset, it can no longer send or receive messages and must be discarded.
+    protected var disposed: Boolean = false
+        private set
+
     protected fun addMessageListener(messageType: String, callback: MessageCallback) {
         if (!messageListeners.contains(messageType)) {
             messageListeners[messageType] = ArrayList<MessageCallback>()
@@ -53,6 +58,16 @@ abstract class SimidComponent (
     }
 
     protected fun sendMessage(type: String, args: JsonElement? = null): Deferred<Message?> {
+        if (disposed) {
+            val deferred = CompletableDeferred<Message?>()
+            deferred.completeExceptionally(
+                RejectException(
+                    PlayerErrorCode.UNSPECIFIED.toInt(),
+                    "Cannot send message: SIMID session has been reset (one-shot lifecycle)"
+                )
+            )
+            return deferred
+        }
         val message: Message = createMessage(type, args)
         return sendSimidMessage(message)
     }
@@ -60,6 +75,9 @@ abstract class SimidComponent (
     protected abstract fun postMessage(message: String)
 
     protected open fun receiveMessage(messageStr: String) {
+        // Ignore any message once the session has been reset (one-shot lifecycle).
+        if (disposed) return
+
         Log.v(TAG, "[SIMID][$type][R]: $messageStr")
 
         val message: Message = json.decodeFromString<Message>(messageStr)
@@ -110,6 +128,9 @@ abstract class SimidComponent (
     }
 
     protected fun resetSession() {
+        if (disposed) return
+        disposed = true
+
         messageListeners.clear()
         sessionId = ""
         nextMessageId = 1
