@@ -47,6 +47,10 @@ export class SimidComponent {
 
   // Response listeners for sent messages
   protected _responseListeners: Map<number, MessageCallback> 
+
+  // Indicates the session has been reset/disposed. This component is one-shot:
+  // once reset, it can no longer send or receive messages and must be discarded.
+  protected _disposed: boolean
   // #endregion MEMBERS
 
   // #region CONSTRUCTOR
@@ -61,6 +65,7 @@ export class SimidComponent {
     this._sessionId = ''
     this._nextMessageId = 0
     this._responseListeners = new Map<number, MessageCallback>()
+    this._disposed = false
 
     // By default target window is parent window, that will be used by the creative
     // The SIMID controller should use the creative iframe window as target window (see SimidController)
@@ -101,11 +106,21 @@ export class SimidComponent {
   protected sendMessage(messageType: string, messageArgs?: any): Promise<void> {
     // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
 
+    if (this._disposed) {
+      return Promise.reject({
+        errorCode: undefined,
+        message: 'Cannot send message: SIMID session has been reset',
+      } as RejectMessageArgsValue)
+    }
+
     const message: Message = this._createMessage(messageType, messageArgs)
     return this._sendMessage(message)
 	}
 
   protected receiveMessage(event: MessageEvent) {
+    // Ignore any message once the session has been reset
+    if (this._disposed) return
+
     // Filter messages coming from target (e.g. iframe) if set
     if (this._target && event.source !== this._target) return
 
@@ -192,9 +207,12 @@ export class SimidComponent {
   }
 
   /**
-   * Reset/revert this protocol to its original state
+   * Reset/revert this protocol to its original state.
    */
   protected resetSession() {
+    if (this._disposed) return
+    this._disposed = true
+
     this._listeners.clear()
     this._sessionId = ''
     this._nextMessageId = 1
