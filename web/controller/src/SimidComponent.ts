@@ -12,7 +12,7 @@ import {
 const SIMID_NS = 'SIMID:' 
 const SIMID_VERSION = '1.1'
 
-// Default timeout (ms) to wait for a response to a message requiring one
+// Default timeout (ms) for messages awaiting a response
 const DEFAULT_RESPONSE_TIMEOUT_MS = 5000
 
 const LOG_COLORS = {
@@ -55,7 +55,7 @@ export class SimidComponent {
   // Pending response timeout timers keyed by messageId
   private _responseTimeouts: Map<number, number>
 
-  // The timeout (ms) applied to messages requiring a response
+  // The timeout (ms) for messages awaiting a response
   protected _responseTimeoutMs: number
   // #endregion MEMBERS
 
@@ -269,7 +269,7 @@ export class SimidComponent {
   private _armResponseTimeout(messageId: number, messageType: string, reject: (args: RejectMessageArgsValue) => void, timeoutMs?: number) {
     const delay = timeoutMs ?? this._responseTimeoutMs
     if (!delay || delay <= 0) return
-    
+
     const timer = window.setTimeout(() => {
       // Drop the pending listener/timer and reject the caller's promise.
       this._responseListeners.delete(messageId)
