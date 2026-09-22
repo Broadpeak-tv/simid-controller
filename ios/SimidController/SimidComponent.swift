@@ -173,8 +173,7 @@ open class SimidComponent: NSObject {
                 group.cancelAll()
             } catch {
                 group.cancelAll()
-                // Drop the pending response listener on timeout so a late
-                // response doesn't invoke a stale continuation.
+                // Drop the pending response listener on timeout so a late response doesn't invoke a stale continuation.
                 self.responseListeners.removeValue(forKey: message.messageId)
                 SimidLogger.w("Response timeout for \"\(message.type)\" (messageId: \(message.messageId))")
                 throw error
