@@ -158,13 +158,6 @@ abstract class SimidComponent (
         postMessage(message)
     }
 
-    /**
-     * Reset/revert this protocol to its original state.
-     *
-     * IMPORTANT: This component follows a ONE-SHOT lifecycle. After calling
-     * resetSession() the instance can no longer send or receive messages.
-     * To run another SIMID session, create a new SimidComponent/SimidController.
-     */
     protected fun resetSession() {
         if (disposed) return
         disposed = true

@@ -703,10 +703,7 @@ public open class SimidController (
                 val mediaState = onGetMediaState?.invoke()
                 val currentTime = mediaState?.currentTime ?: 0.0F
                 // Already in a coroutine — call sendMessage directly.
-                sendMessage(
-                    MediaMessage.TIME_UPDATE,
-                    json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime))
-                )
+                sendMessage(MediaMessage.TIME_UPDATE,json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
                 // ...existing nonlinear-duration-complete check...
                 delay(mediaTimeupdateInterval)
             }
