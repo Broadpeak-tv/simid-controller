@@ -51,6 +51,8 @@ export {
   CompleteCallback,
   ErrorCallback,
   GetMediaStateCallback,
+  MessageReceivedCallback,
+  MessageSentCallback,
   OpenPageCallback,
   PauseMediaCallback,
   PlayMediaCallabck,
