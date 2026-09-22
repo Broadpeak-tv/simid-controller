@@ -10,6 +10,12 @@ open class SimidComponent: NSObject {
     // The protocol actor type ('Player' or 'Creative')
     let type: String
 
+    // Default timeout (ms) for messages awaiting a response
+    static let DEFAULT_RESPONSE_TIMEOUT_MS: UInt64 = 5000
+
+    // The timeout (ms) for messages awaiting a response
+    var responseTimeoutMs: UInt64 = SimidComponent.DEFAULT_RESPONSE_TIMEOUT_MS
+
     // The SIMID protocol supported version
     let protocolVersion: String = "1.1"
 
@@ -116,28 +122,64 @@ open class SimidComponent: NSObject {
     }
         
     private func sendSimidMessage(_ message: Message) async throws {
-        if MessagesWithResponse.contains(message.type) {
+        guard MessagesWithResponse.contains(message.type) else {
+            // "fire and forget" like JS: resolve immediately.
+            postMessage(message)
+            return
+        }
 
-            return try await withCheckedThrowingContinuation { continuation in
+        let timeoutMs = responseTimeoutMs
 
+        // Await the creative's resolve/reject.
+        let awaitResponse: () async throws -> Void = {
+            try await withCheckedThrowingContinuation { continuation in
                 self.addResponseListener(message.messageId) { response in
-
                     if response.type == ProtocolMessage.RESOLVE {
                         continuation.resume(returning: ())
                     } else if response.type == ProtocolMessage.REJECT {
-                        guard let rejectArgs = response.args as? ResolveRejectMessageArgs else { return }
-                        guard case .reject(let value) = rejectArgs.value else { return }
+                        guard let rejectArgs = response.args as? ResolveRejectMessageArgs,
+                              case .reject(let value) = rejectArgs.value else {
+                            continuation.resume(returning: ())
+                            return
+                        }
                         let error = RejectError(errorCode: Int(value.errorCode), message: value.message)
                         continuation.resume(throwing: error)
                     }
                 }
-
                 self.postMessage(message)
             }
         }
 
-        // "fire and forget" like JS resolve immediately
-        postMessage(message)
+        // No timeout requested: await normally.
+        guard timeoutMs > 0 else {
+            try await awaitResponse()
+            return
+        }
+
+        // Race the response against a timeout.
+        try await withThrowingTaskGroup(of: Void.self) { group in
+            group.addTask { try await awaitResponse() }
+            group.addTask {
+                try await Task.sleep(nanoseconds: timeoutMs * 1_000_000)
+                throw RejectError(
+                    errorCode: Int(PlayerErrorCode.RESPONSE_TIMEOUT),
+                    message: "No response received for \"\(message.type)\" within \(timeoutMs)ms"
+                )
+            }
+
+            do {
+                // First task to finish wins; cancel the other.
+                try await group.next()
+                group.cancelAll()
+            } catch {
+                group.cancelAll()
+                // Drop the pending response listener on timeout so a late
+                // response doesn't invoke a stale continuation.
+                self.responseListeners.removeValue(forKey: message.messageId)
+                SimidLogger.w("Response timeout for \"\(message.type)\" (messageId: \(message.messageId))")
+                throw error
+            }
+        }
     }
 
     private func postMessage(_ message: Message) {

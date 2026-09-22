@@ -504,7 +504,10 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
                 if autoStart { startCreative() }
             } catch let error as RejectError {
                 SimidLogger.d("Init failed: \(error)")
-                self.onError?(PlayerMessage.INIT, error.errorCode, error.message)
+                let errorCode = error.errorCode == Int(PlayerErrorCode.RESPONSE_TIMEOUT)
+                    ? Int(PlayerErrorCode.CREATIVE_DID_NOT_REPLY_TO_INIT)
+                    : error.errorCode
+                self.onError?(PlayerMessage.INIT, errorCode, error.message)
                 self.stopAd()
             }
         }
@@ -521,7 +524,11 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
                 startMediaTimeupdateInterval()
             } catch let error as RejectError {
                 SimidLogger.d("Failed to start creative: \(error)")
-                self.onError?(PlayerMessage.START_CREATIVE, error.errorCode, error.message)
+                let errorCode = error.errorCode == Int(PlayerErrorCode.RESPONSE_TIMEOUT)
+                    ? Int(PlayerErrorCode.CREATIVE_DID_NOT_REPLY_TO_START_CREATIVE)
+                    : error.errorCode
+                self.onError?(PlayerMessage.START_CREATIVE, errorCode, error.message)
+                self.stopAd()
             }
         }
     }
