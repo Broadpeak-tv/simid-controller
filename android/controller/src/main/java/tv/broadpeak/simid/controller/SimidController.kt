@@ -11,6 +11,8 @@ import android.webkit.WebChromeClient
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.RelativeLayout
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.delay
@@ -461,19 +463,34 @@ public open class SimidController (
                     }
                 }, "Android")
 
-                sWebView.webViewClient = object : WebViewClient() {
-                    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                        super.onPageStarted(view, url, favicon)
-                        view?.evaluateJavascript(
-                            """
-                            console.log("[Android] override postMessage")
-                            window.originalPostMessage = window.postMessage;
-                            window.postMessage = function(message) {
-                                // Send the message to the Android interface
-                                Android.postMessage(message);
-                            };
-                            """.trimIndent(), null
-                        )
+                // Override window.postMessage so creative -> player messages reach the native
+                // Android bridge. This must run before the creative's own script executes, or its
+                // initial createSession call will self-loop instead of reaching the native
+                // controller, and the session handshake will never complete.
+                //
+                // WebViewFeature.DOCUMENT_START_SCRIPT guarantees the script runs before any page
+                // script. Prefer it over injecting from onPageStarted()'s evaluateJavascript(),
+                // which runs asynchronously and can lose the race under load.
+                val postMessageOverrideScript = """
+                    console.log("[Android] override postMessage")
+                    window.originalPostMessage = window.postMessage;
+                    window.postMessage = function(message) {
+                        // Send the message to the Android interface
+                        Android.postMessage(message);
+                    };
+                """.trimIndent()
+
+                if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+                    WebViewCompat.addDocumentStartJavaScript(sWebView, postMessageOverrideScript, setOf("*"))
+                    sWebView.webViewClient = WebViewClient()
+                } else {
+                    // Fallback for devices/WebView versions without DOCUMENT_START_SCRIPT support.
+                    // Same race as before, but only affects very old WebView versions.
+                    sWebView.webViewClient = object : WebViewClient() {
+                        override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                            super.onPageStarted(view, url, favicon)
+                            view?.evaluateJavascript(postMessageOverrideScript, null)
+                        }
                     }
                 }
 
