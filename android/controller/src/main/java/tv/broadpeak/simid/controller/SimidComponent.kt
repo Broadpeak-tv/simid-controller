@@ -103,21 +103,6 @@ abstract class SimidComponent (
         return result
     }
 
-    protected fun sendMessage(type: String, args: JsonElement? = null): Deferred<Message?> {
-        if (disposed) {
-            val deferred = CompletableDeferred<Message?>()
-            deferred.completeExceptionally(
-                RejectException(
-                    PlayerErrorCode.UNSPECIFIED.toInt(),
-                    "Cannot send message: SIMID session has been reset (one-shot lifecycle)"
-                )
-            )
-            return deferred
-        }
-        val message: Message = createMessage(type, args)
-        return sendSimidMessage(message)
-    }
-
     protected abstract fun postMessage(message: String)
 
     protected open fun receiveMessage(messageStr: String) {
