@@ -535,8 +535,10 @@ export class SimidController extends SimidComponent {
       }
     } catch (e) {
       console.error('[PLAYER] Init failed', e)
-      // e as RejectMessageArgs
-      this._onError?.(PlayerMessage.INIT, e.errorCode, e.message)
+      const errorCode = e?.errorCode === PlayerErrorCode.RESPONSE_TIMEOUT
+        ? PlayerErrorCode.CREATIVE_DID_NOT_REPLY_TO_INIT
+        : e?.errorCode
+      this._onError?.(PlayerMessage.INIT, errorCode, e?.message)
       this._stopAd()
     }
   }
@@ -591,8 +593,11 @@ export class SimidController extends SimidComponent {
       this._startMediaTimeupdateInterval()
     } catch (e) {
       console.error('[PLAYER] Failed to start creative', e)
-      // e as RejectMessageArgs
-      this._onError?.(PlayerMessage.START_CREATIVE, e.errorCode, e.message)
+      const errorCode = e?.errorCode === PlayerErrorCode.RESPONSE_TIMEOUT
+        ? PlayerErrorCode.CREATIVE_DID_NOT_REPLY_TO_START_CREATIVE
+        : e?.errorCode
+      this._onError?.(PlayerMessage.START_CREATIVE, errorCode, e?.message)
+      this._stopAd()
     }
   }
 
@@ -618,11 +623,15 @@ export class SimidController extends SimidComponent {
 
     // Wait for the SIMID creative to acknowledge stop and then clean up the iframe.
     if (this._initialized) {
-      skipped ? 
-        await this.sendMessage(PlayerMessage.AD_SKIPPED) :
-        await this.sendMessage(PlayerMessage.AD_STOPPED, {
-          code: reason
-        } as PlayerAdStoppedMessageArgs)
+      try {
+        skipped ? 
+          await this.sendMessage(PlayerMessage.AD_SKIPPED) :
+          await this.sendMessage(PlayerMessage.AD_STOPPED, {
+            code: reason
+          } as PlayerAdStoppedMessageArgs)
+      } catch (e) {
+        console.warn('[PLAYER] Stop acknowledgement failed/timed out', e)
+      }
     }
     
     this._destroySimidIframe()

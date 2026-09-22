@@ -2,6 +2,7 @@ import {
   Message,
   MessageCallback,
   MessagesWithResponse,
+  PlayerErrorCode,
   ProtocolMessage,
   RejectMessageArgsValue,
   ResolveMessageArgs
@@ -10,6 +11,9 @@ import {
 
 const SIMID_NS = 'SIMID:' 
 const SIMID_VERSION = '1.1'
+
+// Default timeout (ms) to wait for a response to a message requiring one
+const DEFAULT_RESPONSE_TIMEOUT_MS = 5000
 
 const LOG_COLORS = {
   'Creative': '#33CCCC',
@@ -47,6 +51,12 @@ export class SimidComponent {
 
   // Response listeners for sent messages
   protected _responseListeners: Map<number, MessageCallback> 
+
+  // Pending response timeout timers keyed by messageId
+  private _responseTimeouts: Map<number, number>
+
+  // The timeout (ms) applied to messages requiring a response
+  protected _responseTimeoutMs: number
   // #endregion MEMBERS
 
   // #region CONSTRUCTOR
@@ -61,6 +71,8 @@ export class SimidComponent {
     this._sessionId = ''
     this._nextMessageId = 0
     this._responseListeners = new Map<number, MessageCallback>()
+    this._responseTimeouts = new Map<number, number>()
+    this._responseTimeoutMs = DEFAULT_RESPONSE_TIMEOUT_MS
 
     // By default target window is parent window, that will be used by the creative
     // The SIMID controller should use the creative iframe window as target window (see SimidController)
@@ -94,16 +106,16 @@ export class SimidComponent {
   /**
    * Sends a message using post message.
    * Returns a promise that will resolve or reject after the message receives a response.
-   * @param messageType The name of the message.
-   * @param messageArgs The arguments for the message, may be null.
+   * @param messageType The name of the message
+   * @param messageArgs The arguments for the message, may be null
+   * @param timeoutMs timeout in ms
    * @return A promise that will be fulfilled when client resolves or rejects.
    */
-  protected sendMessage(messageType: string, messageArgs?: any): Promise<void> {
+  protected sendMessage(messageType: string, messageArgs?: any, timeoutMs?: number): Promise<void> {
     // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
-
     const message: Message = this._createMessage(messageType, messageArgs)
-    return this._sendMessage(message)
-	}
+    return this._sendMessage(message, timeoutMs)
+  }
 
   protected receiveMessage(event: MessageEvent) {
     // Filter messages coming from target (e.g. iframe) if set
@@ -198,7 +210,9 @@ export class SimidComponent {
     this._listeners.clear()
     this._sessionId = ''
     this._nextMessageId = 1
-    // TODO: Perhaps we should reject all associated promises.
+    // Reject/clear all pending response timeouts.
+    this._responseTimeouts.forEach((timer) => window.clearTimeout(timer))
+    this._responseTimeouts.clear()
     this._responseListeners.clear()
     window.removeEventListener('message', this._messageHandler, false)
     this._messageHandler = undefined
@@ -223,17 +237,14 @@ export class SimidComponent {
     return message
   }
 
-  private _sendMessage(message: Message): Promise<void> {
+  private _sendMessage(message: Message, timeoutMs?: number): Promise<void> {
     if (MessagesWithResponse.includes(message.type)) {
-      // If the message requires a callback this code will set
-      // up a promise that will call resolve or reject with its parameters.
       return new Promise((resolve, reject) => {
         this._addResponseListener(message.messageId, resolve, reject)
+        this._armResponseTimeout(message.messageId, message.type, reject, timeoutMs)
         this.postMessage(message)
       })
     }
-    // A default promise will just resolve immediately.
-    // It is assumed no one would listen to these promises, but if they do it will "just work".
     return new Promise((resolve, reject) => {
       this.postMessage(message)
       resolve()
@@ -255,9 +266,35 @@ export class SimidComponent {
     this._responseListeners.set(messageId, listener.bind(this))
   }
 
+  private _armResponseTimeout(messageId: number, messageType: string, reject: (args: RejectMessageArgsValue) => void, timeoutMs?: number) {
+    const delay = timeoutMs ?? this._responseTimeoutMs
+    if (!delay || delay <= 0) return
+    
+    const timer = window.setTimeout(() => {
+      // Drop the pending listener/timer and reject the caller's promise.
+      this._responseListeners.delete(messageId)
+      this._responseTimeouts.delete(messageId)
+      this.log(`[SIMID][${this._type}] Response timeout for "${messageType}" (messageId: ${messageId})`)
+      reject({
+        errorCode: PlayerErrorCode.RESPONSE_TIMEOUT,
+        message: `No response received for "${messageType}" within ${delay}ms`,
+      })
+    }, delay)
+    this._responseTimeouts.set(messageId, timer)
+  }
+
+  private _clearResponseTimeout(messageId: number) {
+    const timer = this._responseTimeouts.get(messageId)
+    if (timer !== undefined) {
+      window.clearTimeout(timer)
+      this._responseTimeouts.delete(messageId)
+    }
+  }
+
   private _invokeResponseListener(message: Message) {
     const args = message.args as ResolveMessageArgs
     const correlatingId = args.messageId
+    this._clearResponseTimeout(correlatingId)
     this._responseListeners.get(correlatingId)?.(message)
     this._responseListeners.delete(correlatingId)
   }
