@@ -269,13 +269,13 @@ public open class SimidController (
      * @param fullscreen true if in fullscreen mode
      */
     fun notifyResize(playerDimensions: Dimensions, creativeDimensions: Dimensions, fullscreen: Boolean) {
-        if (!this._initialized) {
-            return
-        }
+        if (!_initialized) return
         this.playerDimensions = playerDimensions
         this.creativeDimensions = creativeDimensions
         val args = PlayerResizeMessageArgs(playerDimensions, creativeDimensions, fullscreen)
-        this.sendMessage(PlayerMessage.RESIZE, json.encodeToJsonElement(args))
+        mainScope.launch {
+            sendMessage(PlayerMessage.RESIZE, json.encodeToJsonElement(args))
+        }
     }
 
     override fun postMessage(message: String) {
@@ -527,14 +527,17 @@ public open class SimidController (
 
         mainScope.launch {
             try {
-                sendMessage(PlayerMessage.INIT, json.encodeToJsonElement(args)).await()
+                sendMessage(PlayerMessage.INIT, json.encodeToJsonElement(args))
                 _initialized = true
                 if (_autoStart) {
                     startCreative()
                 }
             } catch (e: RejectException) {
-                Log.v(TAG, "Init failed: $e")
-                onError?.invoke(PlayerMessage.INIT, e.errorCode, e.message)
+                Log.v(TAG, "Init failed: ${e.message}")
+                val errorCode = if (e.errorCode == PlayerErrorCode.RESPONSE_TIMEOUT.toInt())
+                    PlayerErrorCode.CREATIVE_DID_NOT_REPLY_TO_INIT.toInt()
+                else e.errorCode
+                onError?.invoke(PlayerMessage.INIT, errorCode, e.message)
                 stopSession()
             }
         }
@@ -543,17 +546,18 @@ public open class SimidController (
     private fun startCreative() {
         mainScope.launch {
             val mediaState = onGetMediaState?.invoke()
-            _nonLinearStartTime = mediaState?.currentTime!!
-        }
-
-        mainScope.launch {
+            _nonLinearStartTime = mediaState?.currentTime ?: 0.0F
             try {
-                sendMessage(PlayerMessage.START_CREATIVE).await()
+                sendMessage(PlayerMessage.START_CREATIVE)
                 onShowSimid?.invoke(true)
                 startMediaTimeupdateInterval()
             } catch (e: RejectException) {
-                Log.v(TAG, "Failed to start creative: " + e.message)
-                onError?.invoke(PlayerMessage.START_CREATIVE, e.errorCode, e.message)
+                Log.v(TAG, "Failed to start creative: ${e.message}")
+                val errorCode = if (e.errorCode == PlayerErrorCode.RESPONSE_TIMEOUT.toInt())
+                    PlayerErrorCode.CREATIVE_DID_NOT_REPLY_TO_START_CREATIVE.toInt()
+                else e.errorCode
+                onError?.invoke(PlayerMessage.START_CREATIVE, errorCode, e.message)
+                stopAd()
             }
         }
     }
@@ -590,10 +594,15 @@ public open class SimidController (
         // Wait for the SIMID creative to acknowledge stop and then clean up the iframe.
         mainScope.launch {
             if (_initialized) {
-                (when (skipped) {
-                    true -> sendMessage(PlayerMessage.AD_SKIPPED)
-                    false -> sendMessage(PlayerMessage.AD_STOPPED, json.encodeToJsonElement(PlayerAdStoppedMessageArgs(reason)))
-                }).await()
+                try {
+                    when (skipped) {
+                        true -> sendMessage(PlayerMessage.AD_SKIPPED)
+                        false -> sendMessage(PlayerMessage.AD_STOPPED, json.encodeToJsonElement(PlayerAdStoppedMessageArgs(reason)))
+                    }
+                } catch (e: RejectException) {
+                    // Cleanup must proceed even if the creative did not acknowledge.
+                    Log.v(TAG, "Stop acknowledgement failed/timed out: ${e.message}")
+                }
             }
             clearWebView()
             resetSession()
@@ -629,9 +638,13 @@ public open class SimidController (
         _timerMediaTimeupdate = mainScope.launch {
             while (true) {
                 val mediaState = onGetMediaState?.invoke()
-                if (mediaState != null) {
-                    mediaTimeUpdated(mediaState.currentTime!!)
-                }
+                val currentTime = mediaState?.currentTime ?: 0.0F
+                // Already in a coroutine — call sendMessage directly.
+                sendMessage(
+                    MediaMessage.TIME_UPDATE,
+                    json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime))
+                )
+                // ...existing nonlinear-duration-complete check...
                 delay(mediaTimeupdateInterval)
             }
         }
@@ -643,8 +656,9 @@ public open class SimidController (
     }
 
     private fun mediaTimeUpdated(currentTime: Float) {
-
-        this.sendMessage(MediaMessage.TIME_UPDATE, json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
+        mainScope.launch {
+            sendMessage(MediaMessage.TIME_UPDATE, json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
+        }
 
         // For nonlinear ads, stop the ad once requested duration is over
         if (adDuration > 0 &&

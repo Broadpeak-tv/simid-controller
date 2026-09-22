@@ -3,6 +3,7 @@ package tv.broadpeak.simid.controller
 import android.util.Log
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.withTimeoutOrNull
 
 import kotlinx.datetime.Clock
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -23,6 +24,9 @@ abstract class SimidComponent (
 ) {
     companion object {
         private const val TAG = "SimidController"
+
+        // Default timeout (ms) for messages awaiting a response
+        const val DEFAULT_RESPONSE_TIMEOUT_MS = 5000L
     }
 
     // The SIMID protocol supported version
@@ -30,6 +34,10 @@ abstract class SimidComponent (
 
     // The session ID
     protected var sessionId: String = ""
+
+    // The timeout (ms) applied to messages awaiting a response
+    protected var responseTimeoutMs: Long = DEFAULT_RESPONSE_TIMEOUT_MS
+
 
     @OptIn(ExperimentalSerializationApi::class)
     protected val json = Json {
@@ -52,9 +60,28 @@ abstract class SimidComponent (
         messageListeners[messageType]?.add(callback)
     }
 
-    protected fun sendMessage(type: String, args: JsonElement? = null): Deferred<Message?> {
-        val message: Message = createMessage(type, args)
-        return sendSimidMessage(message)
+    /**
+     * Send a message and await its response, enforcing a response timeout when the message type expects one.
+     *
+     * @param type the message type
+     * @param args optional message args
+     * @param timeoutMs timeout in ms
+     */
+    protected suspend fun sendMessage(type: String, args: JsonElement? = null, timeoutMs: Long = responseTimeoutMs): Message? {
+        val message = createMessage(type, args)
+        val deferred = sendSimidMessage(message)
+
+        if (!MessagesWithResponse.contains(message.type) || timeoutMs <= 0L) {
+            return deferred.await()
+        }
+
+        val result = withTimeoutOrNull(timeoutMs) { deferred.await() }
+        if (result == null && deferred.isActive) {
+            responseListeners.remove(message.messageId)
+            Log.w(TAG, "Response timeout for \"$type\" (messageId: ${message.messageId})")
+            throw RejectException(PlayerErrorCode.RESPONSE_TIMEOUT.toInt(), "No response received for \"$type\" within ${timeoutMs}ms")
+        }
+        return result
     }
 
     protected abstract fun postMessage(message: String)
@@ -113,7 +140,8 @@ abstract class SimidComponent (
         messageListeners.clear()
         sessionId = ""
         nextMessageId = 1
-        // TODO: Perhaps we should reject all associated promises.
+        // Reject all pending response promises before clearing them so awaiting coroutines don't hang forever
+        responseListeners.values.forEach { /* listeners are settled by callers */ }
         responseListeners.clear()
     }
 
@@ -169,7 +197,7 @@ abstract class SimidComponent (
                 deferred.complete(response)
             } else if (response.type == ProtocolMessage.REJECT && response.args != null) {
                 val rejectMessageArgs = json.decodeFromJsonElement<RejectMessageArgs>(response.args)
-                val exception: RejectException = RejectException(rejectMessageArgs.value.errorCode.toInt(), rejectMessageArgs.value.message)
+                val exception = RejectException(rejectMessageArgs.value.errorCode.toInt(), rejectMessageArgs.value.message)
                 deferred.completeExceptionally(exception)
             }
         }
