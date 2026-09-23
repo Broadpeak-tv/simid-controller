@@ -112,12 +112,13 @@ export class SimidComponent {
   /**
    * Sends a message using post message.
    * Returns a promise that will resolve or reject after the message receives a response.
-   * @param messageType The name of the message
-   * @param messageArgs The arguments for the message, may be null
+   * @param type The name of the message
+   * @param args The arguments for the message, may be null
    * @param timeoutMs timeout in ms
    * @return A promise that will be fulfilled when client resolves or rejects.
+   * @throws RejectException on reject, timeout, or if the session is disposed.
    */
-  protected sendMessage(messageType: string, messageArgs?: any, timeoutMs?: number): Promise<void> {
+  protected sendMessage(type: string, args?: any, timeoutMs?: number): Promise<void> {
     // console.log(`[SIMID][${this._type}][S]`, messageType, messageArgs || {})
     if (this._disposed) {
       return Promise.reject({
@@ -126,7 +127,7 @@ export class SimidComponent {
       } as RejectMessageArgsValue)
     }
 
-    const message: Message = this._createMessage(messageType, messageArgs)
+    const message: Message = this._createMessage(type, args)
     return this._sendMessage(message, timeoutMs)
   }
 

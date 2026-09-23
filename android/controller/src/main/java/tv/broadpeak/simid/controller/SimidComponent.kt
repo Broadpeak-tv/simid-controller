@@ -65,17 +65,17 @@ abstract class SimidComponent (
         messageListeners[messageType]?.add(callback)
     }
 
+
     /**
-     * Send a message and await its response, enforcing a response timeout when
-     * the message type expects one.
-     *
-     * @param type the message type
-     * @param args optional message args
-     * @param timeoutMs timeout in ms (defaults to [responseTimeoutMs]; <= 0 disables)
+     * Sends a message using post message.
+     * Returns a promise that will resolve or reject after the message receives a response.
+     * @param type The name of the message
+     * @param args The arguments for the message, may be null
+     * @param timeoutMs timeout in ms
+     * @return A promise that will be fulfilled when client resolves or rejects.
      * @throws RejectException on reject, timeout, or if the session is disposed.
      */
-    protected suspend fun sendMessage(type: String, args: JsonElement? = null, timeoutMs: Long = responseTimeoutMs
-    ): Message? {
+    protected suspend fun sendMessage(type: String, args: JsonElement? = null, timeoutMs: Long = responseTimeoutMs): Message? {
         // One-shot lifecycle guard: refuse to send once the session is reset.
         if (disposed) {
             throw RejectException(
