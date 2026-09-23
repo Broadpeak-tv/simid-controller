@@ -139,7 +139,6 @@ open class SimidComponent: NSObject {
         
     private func sendSimidMessage(_ message: Message) async throws {
         guard MessagesWithResponse.contains(message.type) else {
-            // "fire and forget" like JS: resolve immediately.
             postMessage(message)
             return
         }
