@@ -220,7 +220,7 @@ final class PlayerViewController: UIViewController, AdEventsListener {
             clickThruUrl: clickThruUrl
         )
 
-        let controller = GenericSimidController(
+        let controller = SimidController(
             playerDimensions: dims,
             creativeDimensions: dims,
             creativeUri: creativeUri,

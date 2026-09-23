@@ -6,13 +6,13 @@ import Foundation
  * Callback function called to be notified of a received SIMID message, for information and debug purpose.
  * - Parameter message the message a stringified JSON
  */
-public typealias MessageReceivedCallback = (_ message: string) -> Void
+public typealias MessageReceivedCallback = (_ message: String) -> Void
 
 /**
  * Callback function called to be notified of a sent SIMID message, for information and debug purpose.
  * - Parameter message the message a stringified JSON
  */
-public typealias MessageSentCallback = (_ message: string) -> Void
+public typealias MessageSentCallback = (_ message: String) -> Void
 
 /**
  * Callback function called to retrieve current media state.
