@@ -702,9 +702,7 @@ public open class SimidController (
             while (true) {
                 val mediaState = onGetMediaState?.invoke()
                 val currentTime = mediaState?.currentTime ?: 0.0F
-                // Already in a coroutine — call sendMessage directly.
-                sendMessage(MediaMessage.TIME_UPDATE,json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
-                // ...existing nonlinear-duration-complete check...
+                mediaTimeUpdated(currentTime)
                 delay(mediaTimeupdateInterval)
             }
         }
@@ -715,10 +713,8 @@ public open class SimidController (
         _timerMediaTimeupdate = null
     }
 
-    private fun mediaTimeUpdated(currentTime: Float) {
-        mainScope.launch {
-            sendMessage(MediaMessage.TIME_UPDATE, json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
-        }
+    private suspend fun mediaTimeUpdated(currentTime: Float) {
+        sendMessage(MediaMessage.TIME_UPDATE, json.encodeToJsonElement(MediaTimeUpdateMessageArgs(currentTime)))
 
         // For nonlinear ads, stop the ad once requested duration is over
         if (adDuration > 0 &&
