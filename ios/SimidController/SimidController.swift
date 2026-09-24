@@ -349,7 +349,7 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
 
     private func onCreativeRequestPause(_ message: Message) {
         guard self.initialized else {
-            SimidLogger.w("Session not initialized, requestPause ignored")
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
             return
         }
         (self.onPauseMedia?() ?? false) ? self.resolveMessage(message) : self.rejectMessage(message)
@@ -357,13 +357,17 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     
     private func onCreativeRequestPlay(_ message: Message) {
         guard self.initialized else {
-            SimidLogger.w("Session not initialized, requestPlay ignored")
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
             return
         }
         (self.onPlayMedia?() ?? false) ? self.resolveMessage(message) : self.rejectMessage(message)
     }
     
     private func onCreativeRequestResize(_ message: Message) {
+        guard self.initialized else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
+            return
+        }
         guard let onResizeSimid = self.onResizeSimid,
               let onResizePlayer = self.onResizePlayer
         else {
@@ -396,18 +400,26 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
 
     private func onCreativeRequestSkip(_ message: Message) {
+        guard self.initialized else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
+            return
+        }
         self.resolveMessage(message)
         self.skipAd()
     }
 
     private func onCreativeRequestStop(_ message: Message) {
+        guard self.initialized else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
+            return
+        }
         self.resolveMessage(message)
         self.stopAd()
     }
     
     private func onCreativeExpandNonlinear(_ message: Message) {
         guard self.initialized else {
-            SimidLogger.w("Session not initialized, expandNonlinear ignored")
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
             return
         }
         // Under normal circumstances, the player pauses the media.
@@ -428,6 +440,10 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
 
     private func onCreativeClickThru(_ message: Message) {
+        guard self.initialized else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
+            return
+        }
         guard let args = message.args as? CreativeClickThruMessageArgs else {
             self.rejectMessage(message)
             return
@@ -443,6 +459,10 @@ open class SimidController: SimidComponent, WKScriptMessageHandler, WKNavigation
     }
     
     private func onCreativeRequestNavigation(_ message: Message) {
+        guard self.initialized else {
+            self.rejectMessage(message, errorCode: PlayerErrorCode.UNSPECIFIED, errorMessage: "Session not initialized")
+            return
+        }
         guard let args = message.args as? CreativeRequestNavigationMessageArgs else {
             return
         }
