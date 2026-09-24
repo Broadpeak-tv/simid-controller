@@ -376,7 +376,7 @@ public open class SimidController (
 
     private fun onCreativeRequestPause(message: Message) {
         if (!_initialized) {
-            Log.w(TAG, "Session not initialized, requestPause ignored")
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
             return
         }
         if (onPauseMedia?.invoke() == true) resolveMessage(message) else rejectMessage(message)
@@ -384,13 +384,17 @@ public open class SimidController (
 
     private fun onCreativeRequestPlay(message: Message) {
         if (!_initialized) {
-            Log.w(TAG, "Session not initialized, requestPlay ignored")
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
             return
         }
         if (onPlayMedia?.invoke() == true) resolveMessage(message) else rejectMessage(message)
     }
 
     private fun onCreativeRequestResize(message: Message) {
+        if (!_initialized) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
+            return
+        }
         if (onResizeSimid == null || onResizePlayer == null) {
             this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Resize not supported by the player")
             return
@@ -422,7 +426,7 @@ public open class SimidController (
 
     private fun onCreativeExpandNonlinear(message: Message) {
         if (!_initialized) {
-            Log.w(TAG, "Session not initialized, expandNonlinear ignored")
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
             return
         }
         // Under normal circumstances, the player pauses the media.
@@ -447,16 +451,28 @@ public open class SimidController (
     }
 
     private fun onCreativeRequestSkip(message: Message) {
+        if (!_initialized) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
+            return
+        }
         resolveMessage(message)
         skipAd()
     }
 
     protected fun onCreativeRequestStop(message: Message) {
+        if (!_initialized) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
+            return
+        }
         this.resolveMessage(message)
         stopAd(StopCode.CREATIVE_INITIATED)
     }
 
     private fun onCreativeClickThru(message: Message) {
+        if (!_initialized) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
+            return
+        }
         val args: CreativeClickThruMessageArgs = json.decodeFromJsonElement<CreativeClickThruMessageArgs>(message.args!!)
 
         // Open landing page only when playerHandles is true
@@ -465,9 +481,14 @@ public open class SimidController (
         }
 
         val uri = args.uri ?: args.url // url deprecated in favor of uri
-        this.onOpenUri(message, args.url)
+        this.onOpenUri(message, uri)
     }
+
     private fun onCreativeRequestNavigation(message: Message) {
+        if (!_initialized) {
+            this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, "Session not initialized")
+            return
+        }
         val args: CreativeRequestNavigationMessageArgs = json.decodeFromJsonElement<CreativeRequestNavigationMessageArgs>(message.args!!)
         this.onOpenUri(message, args.uri)
     }

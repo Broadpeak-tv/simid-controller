@@ -132,10 +132,10 @@ export class SimidController extends SimidComponent {
   private _simidIframe: HTMLIFrameElement
   
   // Auto start the creative once loaded
-  private _autoStart: Boolean
+  private _autoStart: boolean
 
   // Creative initialized state
-  private _initialized: Boolean
+  private _initialized: boolean
 
   // A boolean indicating if current is stopping
   private _isStopping: boolean
@@ -446,7 +446,7 @@ export class SimidController extends SimidComponent {
 
   protected onCreativeExpandNonlinear(message: Message) {
     if (!this._initialized) {
-      console.warn('[Player] Session not initialized, expandNonlinear ignored')
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
       return
     }
     // Under normal circumstances, the player pauses the media.
@@ -472,7 +472,7 @@ export class SimidController extends SimidComponent {
 
   protected onCreativeRequestPause(message: Message) {
     if (!this._initialized) {
-      console.warn('[Player] Session not initialized, requestPause ignored')
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
       return
     }
     this._onPauseMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
@@ -480,13 +480,17 @@ export class SimidController extends SimidComponent {
 
   protected onCreativeRequestPlay(message: Message) {
     if (!this._initialized) {
-      console.warn('[Player] Session not initialized, requestPlay ignored')
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
       return
     }
     this._onPlayMedia?.() ? this.resolveMessage(message) : this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, '')
   }
 
   protected onCreativeRequestResize(message: Message) {
+    if (!this._initialized) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
+      return
+    }
     if (!this._onResizeSimid || !this._onResizePlayer) {
       this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Resize not supported by the player')
       return
@@ -518,16 +522,28 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestSkip(message: Message) {
+    if (!this._initialized) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
+      return
+    }
     this.resolveMessage(message)
     this._skipAd()
   }
 
   protected onCreativeRequestStop(message: Message) {
+    if (!this._initialized) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
+      return
+    }
     this.resolveMessage(message)
     this._stopAd(StopCode.CREATIVE_INITIATED)
   }
 
   protected onCreativeClickThru(message: Message) {
+    if (!this._initialized) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
+      return
+    }
     const args = message.args as CreativeClickThruMessageArgs
 
     // Open landing page only when playerHandles is true
@@ -540,6 +556,10 @@ export class SimidController extends SimidComponent {
   }
 
   protected onCreativeRequestNavigation(message: Message) {
+    if (!this._initialized) {
+      this.rejectMessage(message, PlayerErrorCode.UNSPECIFIED, 'Session not initialized')
+      return
+    }
     const args = message.args as CreativeRequestNavigationMessageArgs
     this._onOpenUri(message, args.uri)
   }
@@ -559,6 +579,7 @@ export class SimidController extends SimidComponent {
       fullscreenAllowed: true,
       variableDurationAllowed: true,
       skippableState: this._adSkippable ? SkippableState.AD_HANDLES : SkippableState.NOT_SKIPPABLE,
+      skipoffset: this._adSkippable ? '00:00:00' : undefined,
       version: this._protocolVersion,
       siteUrl: document.location.host,
       appId: '', // This is not relevant on desktop
@@ -633,7 +654,7 @@ export class SimidController extends SimidComponent {
   // #region CREATIVE AD MANAGEMENT
   private async _startCreative() {
     const mediaState = this._onGetMediaState?.()
-    this._nonLinearStartTime = mediaState?.currentTime
+    this._nonLinearStartTime = mediaState?.currentTime ?? 0
 
     try {
       await this.sendMessage(PlayerMessage.START_CREATIVE)
