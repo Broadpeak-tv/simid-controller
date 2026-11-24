@@ -1,7 +1,5 @@
--keepattributes *Annotation*, Signature, InnerClasses, EnclosingMethod
+-keepattributes RuntimeVisibleAnnotations
 
--keep class com.google.gson.** { *; }
--dontwarn com.google.gson.**
-
--keep class tv.broadpeak.simid.controller.** { *; }
--keep class tv.broadpeak.simid.controller.SimidMessagesKt { *; }
+-keepclassmembers class tv.broadpeak.simid.controller.** {
+    @android.webkit.JavascriptInterface <methods>;
+}
