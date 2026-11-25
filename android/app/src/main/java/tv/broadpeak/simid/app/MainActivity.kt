@@ -4,7 +4,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.ComponentActivity
-import androidx.tv.material3.ExperimentalTvMaterial3Api
 
 const val DEFAULT_STREAM_URL = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
 
@@ -16,7 +15,6 @@ const val DEFAULT_STREAM_BPKIO_URL = "https://dcv5s0ei7csoc.cloudfront.net/2ab56
 
 class MainActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalTvMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
