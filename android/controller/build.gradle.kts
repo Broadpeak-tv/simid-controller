@@ -6,7 +6,7 @@ plugins {
 
 android {
     namespace = "tv.broadpeak.simid.controller"
-    compileSdk = libs.versions.android.compileSdk.get().toInt()
+    compileSdk = libs.versions.compileSdk.get().toInt()
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -14,7 +14,7 @@ android {
     }
 
     defaultConfig {
-        minSdk = libs.versions.android.minSdk.get().toInt()
+        minSdk = libs.versions.minSdk.get().toInt()
         buildConfigField("String", "VERSION", "\"${rootProject.version}\"")
         consumerProguardFiles("consumer-rules.pro")
     }
