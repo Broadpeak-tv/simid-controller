@@ -108,8 +108,10 @@ class PlayerActivity : AppCompatActivity() {
         super.onDestroy()
         simidControllers.forEach { (key, controller) ->  controller.reset() }
         simidControllers.clear()
+        session?.stopStreamingSession()
         player?.stop()
-        SmartLib.getInstance().release();
+        player?.release()
+        SmartLib.getInstance().release()
     }
 
     @OptIn(UnstableApi::class)
@@ -150,7 +152,7 @@ class PlayerActivity : AppCompatActivity() {
     private fun initSmartLib(url: String) {
         val domain = URL(url).host
 
-        SmartLib.getInstance().init(this, "", "", domain);
+        SmartLib.getInstance().init(applicationContext, "", "", domain);
 
         session = SmartLib.getInstance().createStreamingSession()
         session?.let { sSession ->
